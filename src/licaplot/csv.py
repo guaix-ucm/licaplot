@@ -13,7 +13,6 @@
 import logging
 
 # Typing hints
-from typing import Iterable, Sequence, Optional
 from argparse import ArgumentParser, Namespace
 
 # ---------------------
@@ -26,14 +25,13 @@ from lica.cli import execute
 from lica.validators import vfile
 
 import astropy.io.ascii
-from astropy.table import Table
 
 # ------------------------
 # Own modules and packages
 # ------------------------
 
 from ._version import __version__
-from . import Markers, MONOCROMATOR_FILTERS_LABELS
+from .utils.mpl import Markers, mpl_plot_overlapped, mpl_plot_single, mpl_plot_rows, mpl_plot_grid
 
 
 # -----------------------
@@ -41,7 +39,6 @@ from . import Markers, MONOCROMATOR_FILTERS_LABELS
 # -----------------------
 
 log = logging.getLogger(__name__)
-MARKERS = ["+", ".", "o", "x"]
 
 # -----------------
 # Matplotlib styles
@@ -53,146 +50,6 @@ plt.style.use("licaplot.resources.global")
 # -------------------
 # Auxiliary functions
 # -------------------
-
-def markers() -> str:
-    """Cilces throigh the markers enum for overlapping plots"""
-    values = [marker.value for marker in Markers]
-    i = 0
-    N = len(values)
-    while True:
-        yield values[i]
-        i = (i + 1) % N
-
-
-def mpl_plot_overlapped(
-    title: Optional[str],
-    tables: Sequence[Table],
-    labels: Iterable[str],
-    filters: Optional[bool],
-    x: int,
-    y: int,
-) -> None:
-    """Plot up to 4 datasets in the same axes"""
-    fig, axes = plt.subplots(nrows=1, ncols=1)
-    if title is not None:
-        fig.suptitle(title)
-    axes.set_xlabel(tables[0].columns[x].name)
-    axes.set_ylabel(tables[0].columns[y].name)
-    for table, label, marker in zip(tables, labels, markers()):
-        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
-    if filters:
-        for filt in MONOCROMATOR_FILTERS_LABELS:
-            axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
-    axes.grid(True, which="major", color="silver", linestyle="solid")
-    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-    axes.minorticks_on()
-    axes.legend()
-    plt.show()
-
-
-def mpl_plot_grid(
-    title: Optional[str],
-    tables: Sequence[Table],
-    labels: Iterable[str],
-    filters: Optional[bool],
-    nrows: int,
-    ncols: int,
-    x: int,
-    y: int,
-    marker: str,
-) -> None:
-    """Plot in different axes rows"""
-    N = len(tables)
-    if nrows * ncols < N:
-        raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
-    indexes = list(range(nrows * ncols))
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-    # From a numpy bidimensional array to a list if len(indexes) > 1
-    axes = axes.flatten() if len(indexes) > 1 else [axes]
-    if title is not None:
-        fig.suptitle(title)
-    for i, ax, table, label in zip(indexes, axes, tables, labels):
-        ax.set_title(label)
-        ax.set_xlabel(table.columns[x].name)
-        ax.set_ylabel(table.columns[y].name)
-        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1)
-        if filters:
-            for filt in MONOCROMATOR_FILTERS_LABELS:
-                ax.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
-        ax.grid(True, which="major", color="silver", linestyle="solid")
-        ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-        ax.minorticks_on()
-        if filters:
-            ax.legend()
-    # Do not draw in unusued axes
-    for ax in axes[N:]:
-        ax.set_axis_off()
-    plt.show()
-
-
-def mpl_plot_cols(
-    title: Optional[str],
-    tables: Sequence[Table],
-    labels: Iterable[str],
-    filters: Optional[bool],
-    x: int,
-    y: int,
-    marker: str,
-) -> None:
-    mpl_plot_grid(
-        title=title,
-        tables=tables,
-        labels=labels,
-        filters=filters,
-        nrows=1,
-        ncols=len(tables),
-        x=x,
-        y=y,
-        marker=marker,
-    )
-
-def mpl_plot_single(
-    title: Optional[str],
-    tables: Sequence[Table],
-    labels: Iterable[str],
-    filters: Optional[bool],
-    x: int,
-    y: int,
-    marker: str,
-) -> None:
-    mpl_plot_grid(
-        title=title,
-        tables=tables,
-        labels=labels,
-        filters=filters,
-        nrows=1,
-        ncols=1,
-        x=x,
-        y=y,
-        marker=marker,
-    )
-
-
-def mpl_plot_rows(
-    title: Optional[str],
-    tables: Sequence[Table],
-    labels: Iterable[str],
-    filters: Optional[bool],
-    x: int,
-    y: int,
-    marker: str,
-) -> None:
-    mpl_plot_grid(
-        title=title,
-        tables=tables,
-        labels=labels,
-        filters=filters,
-        nrows=len(tables),
-        ncols=1,
-        x=x,
-        y=y,
-        marker=marker,
-    )
 
 
 def validate_inputs(*args):
@@ -233,7 +90,7 @@ def csvs(args: Namespace) -> None:
             marker=args.marker,
         )
     elif N == 2:
-        mpl_plot_cols(
+        mpl_plot_rows(
             tables=tables,
             title=args.title,
             labels=args.labels,
