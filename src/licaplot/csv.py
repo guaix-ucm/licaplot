@@ -99,7 +99,7 @@ def mpl_plot_grid(
         raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
     indexes = list(range(nrows * ncols))
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-    axes = axes.flatten()  # From a numpy array to a list
+    axes = axes.flatten()  # From a numpy bidimensional array to a list
     if title is not None:
         fig.suptitle(title)
     for i, ax, table, label, marker in zip(indexes, axes, tables, labels, MARKERS[:N]):
