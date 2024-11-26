@@ -107,7 +107,8 @@ def mpl_plot_grid(
         raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
     indexes = list(range(nrows * ncols))
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-    axes = axes.flatten()  # From a numpy bidimensional array to a list
+    # From a numpy bidimensional array to a list if len(indexes) > 1
+    axes = axes.flatten() if len(indexes) > 1 else [axes]
     if title is not None:
         fig.suptitle(title)
     for i, ax, table, label in zip(indexes, axes, tables, labels):
@@ -145,6 +146,27 @@ def mpl_plot_cols(
         filters=filters,
         nrows=1,
         ncols=len(tables),
+        x=x,
+        y=y,
+        marker=marker,
+    )
+
+def mpl_plot_single(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+    marker: str,
+) -> None:
+    mpl_plot_grid(
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=1,
+        ncols=1,
         x=x,
         y=y,
         marker=marker,
@@ -189,6 +211,7 @@ def validate_inputs(*args):
 
 def csvs(args: Namespace) -> None:
     validate_inputs(args.input_files, args.labels)
+    N = len(args.input_files)
     tables = [astropy.io.ascii.read(f) for f in args.input_files]
     if args.overlap:
         mpl_plot_overlapped(
@@ -199,7 +222,17 @@ def csvs(args: Namespace) -> None:
             x=args.x_index,
             y=args.y_index,
         )
-    elif len(args.input_files) == 2:
+    elif N == 1:
+        mpl_plot_single(
+            tables=tables,
+            title=args.title,
+            labels=args.labels,
+            filters=args.filters,
+            x=args.x_index,
+            y=args.y_index,
+            marker=args.marker,
+        )
+    elif N == 2:
         mpl_plot_cols(
             tables=tables,
             title=args.title,
@@ -274,7 +307,7 @@ def add_args(parser: ArgumentParser) -> None:
         "-m",
         "--marker",
         type=str,
-        choices=(m.value for m in Markers),
+        choices=[m.value for m in Markers],
         default=Markers.Circle.value,
         help="Plot Marker",
     )
