@@ -1,0 +1,182 @@
+# ----------------------------------------------------------------------
+# Copyright (c) 2021
+#
+# See the LICENSE file for details
+# see the AUTHORS file for authors
+# ----------------------------------------------------------------------
+
+# --------------------
+# System wide imports
+# -------------------
+
+from enum import Enum
+from typing import Iterable, Sequence, Optional
+
+# ---------------------
+# Thrid-party libraries
+# ---------------------
+
+from astropy.table import Table
+import matplotlib.pyplot as plt
+
+class Markers(Enum):
+    TriUp = "2"
+    TriDown = "1"
+    Star = "*"
+    Point = "."
+    X = "x"
+    Plus = "+"
+    Diamond = "d"
+    Circle = "o"
+    Square = "s"
+
+
+MONOCROMATOR_FILTERS_LABELS = (
+    {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
+    {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
+)
+
+
+def markers() -> str:
+    """Cycles through the markers enum for overlapping plots"""
+    values = [marker.value for marker in Markers]
+    i = 0
+    N = len(values)
+    while True:
+        yield values[i]
+        i = (i + 1) % N
+
+
+def mpl_plot_overlapped(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+) -> None:
+    """Plot all datasets in the same Axes using different markers"""
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if title is not None:
+        fig.suptitle(title)
+    axes.set_xlabel(tables[0].columns[x].name)
+    axes.set_ylabel(tables[0].columns[y].name)
+    for table, label, marker in zip(tables, labels, markers()):
+        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
+    if filters:
+        for filt in MONOCROMATOR_FILTERS_LABELS:
+            axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+    axes.grid(True, which="major", color="silver", linestyle="solid")
+    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+    axes.minorticks_on()
+    axes.legend()
+    plt.show()
+
+
+def mpl_plot_grid(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    nrows: int,
+    ncols: int,
+    x: int,
+    y: int,
+    marker: str,
+) -> None:
+    """Plot datasets in a grid of axes"""
+    N = len(tables)
+    if nrows * ncols < N:
+        raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
+    indexes = list(range(nrows * ncols))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+    # From a numpy bidimensional array to a list if len(indexes) > 1
+    axes = axes.flatten() if len(indexes) > 1 else [axes]
+    if title is not None:
+        fig.suptitle(title)
+    for i, ax, table, label in zip(indexes, axes, tables, labels):
+        ax.set_title(label)
+        ax.set_xlabel(table.columns[x].name)
+        ax.set_ylabel(table.columns[y].name)
+        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1)
+        if filters:
+            for filt in MONOCROMATOR_FILTERS_LABELS:
+                ax.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+        ax.grid(True, which="major", color="silver", linestyle="solid")
+        ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+        ax.minorticks_on()
+        if filters:
+            ax.legend()
+    # Do not draw in unusued axes
+    for ax in axes[N:]:
+        ax.set_axis_off()
+    plt.show()
+
+
+def mpl_plot_cols(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+    marker: str,
+) -> None:
+    """Plot datasets as columns of axes"""
+    mpl_plot_grid(
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=1,
+        ncols=len(tables),
+        x=x,
+        y=y,
+        marker=marker,
+    )
+
+
+def mpl_plot_single(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+    marker: str,
+) -> None:
+    """Plot a single dataset"""
+    mpl_plot_grid(
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=1,
+        ncols=1,
+        x=x,
+        y=y,
+        marker=marker,
+    )
+
+
+def mpl_plot_rows(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+    marker: str,
+) -> None:
+    """Plot datasets as rows of axes"""
+    mpl_plot_grid(
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=len(tables),
+        ncols=1,
+        x=x,
+        y=y,
+        marker=marker,
+    )
