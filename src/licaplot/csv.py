@@ -291,5 +291,5 @@ def main():
         add_args_func=add_args,
         name=__name__,
         version=__version__,
-        description="Plot 2-column CSV files",
+        description="Plot CSV files",
     )
