@@ -38,6 +38,7 @@ Repository = "https://github.com/guaix-ucm/licaplot.git"
 
 [project.scripts]
 licaplot-csv = "licaplot.csv:main"
+licaplot-photod = "licaplot.photod:main"
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
@@ -65,4 +66,5 @@ namespaces = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"licaplot.resources" = ["*.csv", "*.mplstyle"]
+"licaplot.resources" = ["*.mplstyle"]
+"licaplot.photodiode" = ["*.csv"]
