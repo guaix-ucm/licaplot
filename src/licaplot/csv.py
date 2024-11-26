@@ -13,7 +13,7 @@
 import logging
 
 # Typing hints
-from typing import Iterable, Any, Optional
+from typing import Iterable, Sequence, Any, Optional
 from argparse import ArgumentParser, Namespace
 
 # ---------------------
@@ -42,7 +42,7 @@ from . import MONOCROMATOR_FILTERS_LABELS
 # -----------------------
 
 log = logging.getLogger(__name__)
-MARKERS = ['+','.','o','-']
+MARKERS = ["+", ".", "o", "x"]
 
 # -----------------
 # Matplotlib styles
@@ -55,21 +55,24 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary functions
 # -------------------
 
+
 def mpl_plot_overlapped(
-    tables: Table,
-    title: str,
+    title: Optional[str],
+    tables: Sequence[Table],
     labels: Iterable[str],
     filters: Optional[bool],
+    x: int,
+    y: int,
 ) -> None:
     """Plot up to 4 datasets in the same axes"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
-    fig.suptitle("Overlapped Plot")
-    axes.set_title(title)
-    axes.set_xlabel(tables[0].columns[0].name)
-    axes.set_ylabel(tables[0].columns[1].name)
+    if title is not None:
+        fig.suptitle(title)
+    axes.set_xlabel(tables[0].columns[x].name)
+    axes.set_ylabel(tables[0].columns[y].name)
     N = len(tables)
     for table, label, marker in zip(tables, labels, MARKERS[:N]):
-        axes.plot(table.columns[0], table.columns[1], marker=marker, linewidth=1, label=label)
+        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
@@ -80,12 +83,75 @@ def mpl_plot_overlapped(
     plt.show()
 
 
-def mpl_plot_dual() -> None:
-    pass
+def mpl_plot_grid(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    nrows: int,
+    ncols: int,
+    x: int,
+    y: int,
+) -> None:
+    """Plot in different axes rows"""
+    N = len(tables)
+    if nrows * ncols < N:
+        raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
+    indexes = list(range(nrows * ncols))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+    axes = axes.flatten()  # From a numpy array to a list
+    if title is not None:
+        fig.suptitle(title)
+    for i, ax, table, label, marker in zip(indexes, axes, tables, labels, MARKERS[:N]):
+        ax.set_title(label)
+        ax.set_xlabel(table.columns[x].name)
+        ax.set_ylabel(table.columns[y].name)
+        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1)
+        if filters:
+            for filt in MONOCROMATOR_FILTERS_LABELS:
+                ax.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+        ax.grid(True, which="major", color="silver", linestyle="solid")
+        ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+        ax.minorticks_on()
+        if filters:
+            ax.legend()
+    # Do not draw in unusued axes
+    for ax in axes[N:]:
+        ax.set_axis_off()
+    plt.show()
 
 
-def mpl_plot_quad() -> None:
-    pass
+def mpl_plot_cols(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+) -> None:
+    mpl_plot_grid(
+        title=title, tables=tables, labels=labels, filters=filters, nrows=1, ncols=len(tables)
+    )
+
+
+def mpl_plot_rows(
+    title: Optional[str],
+    tables: Sequence[Table],
+    labels: Iterable[str],
+    filters: Optional[bool],
+    x: int,
+    y: int,
+) -> None:
+    mpl_plot_grid(
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=len(tables),
+        ncols=1,
+        x=x,
+        y=y,
+    )
 
 
 def validate_inputs(*args):
@@ -106,9 +172,34 @@ def csvs(args: Namespace) -> None:
     validate_inputs(args.input_files, args.labels)
     tables = [astropy.io.ascii.read(f) for f in args.input_files]
     if args.overlap:
-        mpl_plot_overlapped(tables=tables, title="Generic CSV Plot", labels=args.labels, filters=args.filters)
+        mpl_plot_overlapped(
+            tables=tables,
+            title=args.title,
+            labels=args.labels,
+            filters=args.filters,
+            x=args.x_index,
+            y=args.y_index,
+        )
+    elif len(args.input_files) == 2:
+        mpl_plot_cols(
+            tables=tables,
+            title=args.title,
+            labels=args.labels,
+            filters=args.filters,
+            x=args.x_index,
+            y=args.y_index,
+        )
     else:
-        pass
+        mpl_plot_grid(
+            title=args.title,
+            tables=tables,
+            labels=args.labels,
+            filters=args.filters,
+            nrows=2,
+            ncols=2,
+            x=args.x_index,
+            y=args.y_index,
+        )
 
 
 # ===================================
@@ -118,15 +209,38 @@ def csvs(args: Namespace) -> None:
 
 def add_args(parser: ArgumentParser) -> None:
     parser.add_argument(
-        "-i", "--input-files", type=vfile, required=True, nargs="+", help="CSV input file(s) [1-4]"
+        "-i",
+        "--input-files",
+        type=vfile,
+        required=True,
+        nargs="+",
+        help="CSV input file(s) [1-4]. X axis is the first column",
     )
     parser.add_argument(
         "-l", "--labels", type=str, nargs="+", required=True, help="input labels [1-4]"
     )
     parser.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
-    parser.add_argument("-t", "--title", type=str, help="Overall plot title")
+    parser.add_argument(
+        "-t", "--title", type=str, default=None, help="Overall plot title, defaults to %(default)s"
+    )
     parser.add_argument(
         "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
+    )
+    parser.add_argument(
+        "-x",
+        "--x-index",
+        type=int,
+        metavar="<N>",
+        default=0,
+        help="Column index for X axis in CSV file, defaults tp %(default)d",
+    )
+    parser.add_argument(
+        "-y",
+        "--y-index",
+        type=int,
+        metavar="<N>",
+        default=1,
+        help="Column index for Y axis in CSV file, defaults tp %(default)d",
     )
 
 
