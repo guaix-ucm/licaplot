@@ -14,7 +14,7 @@ import re
 import csv
 import logging
 
-from argsparse import ArgsParser, Namespace
+from argparse import ArgumentParser, Namespace
 
 # ---------------------
 # Thrid-party libraries
@@ -45,16 +45,28 @@ log = logging.getLogger(__name__)
 # Load global style sheets
 plt.style.use("licaplot.resources.global")
 
-# ------------------
-# Auxiliary fnctions
-# ------------------
+# -------------------
+# Auxiliary functions
+# -------------------
 
+def mpl_plot_single() -> None:
+    pass
+
+def mpl_plot_overlapped() -> None:
+    pass
+
+def mpl_plot_dual() -> None:
+    pass
+
+def mpl_plot_quad() -> None:
+    pass
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
-def csvs(args: Namespace):
+
+def csvs(args: Namespace) -> None:
     log.info(args)
 
 
@@ -63,8 +75,8 @@ def csvs(args: Namespace):
 # ===================================
 
 
-def add_args(parser: ArgsParser) -> None:
-    pass
+def add_args(parser: ArgumentParser) -> None:
+    parser.add_argument("-i", "--input-file", type=vfile, nargs="+", help="CSV input file(s)")
 
 
 # ================

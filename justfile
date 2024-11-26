@@ -92,7 +92,10 @@ env-backup bak_dir:
         echo "Can't backup: {{ local_env }} doesn't exists"
         exit 1 
     fi
+    mkdir -p {{ bak_dir }}
     cp {{ local_env }} {{ bak_dir }}
+    mkdir -p {{ bak_dir }}/csv
+    cp csv/*.csv {{ bak_dir }}/csv
   
 [private]
 env-restore bak_dir:
@@ -103,3 +106,5 @@ env-restore bak_dir:
         exit 1 
     fi
     cp {{ bak_dir }}/.env {{ local_env }}
+    mkdir -p csv
+    cp {{ bak_dir }}/csv/*.csv csv

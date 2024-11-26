@@ -13,3 +13,5 @@ wheels/
 # Version control
 _version.py
 
+# Other directiries
+csv/
