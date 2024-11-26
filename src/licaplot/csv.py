@@ -34,6 +34,8 @@ from astropy.table import Table
 # ------------------------
 
 from ._version import __version__
+from . import MONOCROMATOR_FILTERS_LABELS
+
 
 # -----------------------
 # Module global variables
@@ -41,7 +43,6 @@ from ._version import __version__
 
 log = logging.getLogger(__name__)
 
-from . import MONOCROMATOR_FILTERS_LABELS
 
 # -----------------
 # Matplotlib styles
@@ -84,15 +85,16 @@ def mpl_plot_overlapped(
     filters: Optional[bool],
 ) -> None:
     fig, axes = plt.subplots(nrows=1, ncols=1)
-    # fig.suptitle("Corrected Spectral Response plot")
+    fig.suptitle("Overlapped Plot")
+    axes.set_title(title)
     axes.set_xlabel(tables[0].columns[0].name)
     axes.set_ylabel(tables[0].columns[1].name)
     for i, table in enumerate(tables):
         if labels:
             axes.plot(table.columns[0], table.columns[1], marker="+", linewidth=1)
         else:
+            log.info(labels[i])
             axes.plot(table.columns[0], table.columns[1], marker="+", linewidth=1, label=labels[i])
-    axes.set_title(title)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
