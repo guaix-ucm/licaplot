@@ -13,7 +13,7 @@
 import logging
 
 # Typing hints
-from typing import Iterable, Any
+from typing import Iterable, Any, Optional
 from argparse import ArgumentParser, Namespace
 
 # ---------------------
@@ -41,10 +41,7 @@ from ._version import __version__
 
 log = logging.getLogger(__name__)
 
-MONOCROMATOR_CUTOFF_FILTERS = [
-    {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
-    {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
-]
+from . import MONOCROMATOR_FILTERS_LABELS
 
 # -----------------
 # Matplotlib styles
@@ -61,16 +58,18 @@ plt.style.use("licaplot.resources.global")
 def mpl_plot_single(
     table: Table,
     title: str,
-    filters: Iterable[dict[str, Any]],
+    label: str,
+    filters: Optional[bool],
 ) -> None:
     fig, axes = plt.subplots(nrows=1, ncols=1)
     # fig.suptitle("Corrected Spectral Response plot")
     axes.set_xlabel(table.columns[0].name)
     axes.set_ylabel(table.columns[1].name)
     axes.plot(table.columns[0], table.columns[1], marker="+", linewidth=1)
-    axes.set_title(title)
-    for filt in filters:
-        axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+    axes.set_title(label)
+    if filters:
+        for filt in MONOCROMATOR_FILTERS_LABELS:
+            axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
     axes.grid(True, which="major", color="silver", linestyle="solid")
     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
     axes.minorticks_on()
@@ -78,8 +77,30 @@ def mpl_plot_single(
     plt.show()
 
 
-def mpl_plot_overlapped() -> None:
-    pass
+def mpl_plot_overlapped(
+    tables: Table,
+    title: str,
+    labels: Iterable[str],
+    filters: Optional[bool],
+) -> None:
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    # fig.suptitle("Corrected Spectral Response plot")
+    axes.set_xlabel(tables[0].columns[0].name)
+    axes.set_ylabel(tables[0].columns[1].name)
+    for i, table in enumerate(tables):
+        if labels:
+            axes.plot(table.columns[0], table.columns[1], marker="+", linewidth=1)
+        else:
+            axes.plot(table.columns[0], table.columns[1], marker="+", linewidth=1, label=labels[i])
+    axes.set_title(title)
+    if filters:
+        for filt in MONOCROMATOR_FILTERS_LABELS:
+            axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+    axes.grid(True, which="major", color="silver", linestyle="solid")
+    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+    axes.minorticks_on()
+    axes.legend()
+    plt.show()
 
 
 def mpl_plot_dual() -> None:
@@ -105,9 +126,12 @@ def validate_inputs(*args):
 
 
 def csvs(args: Namespace) -> None:
-    validate_inputs(args.input_files)
+    validate_inputs(args.input_files, args.labels)
     tables = [astropy.io.ascii.read(f) for f in args.input_files]
-    mpl_plot_single(table=tables[0], title="Hello", filters=MONOCROMATOR_CUTOFF_FILTERS)
+    if len(tables) == 1:
+        mpl_plot_single(table=tables[0], title="Hello", label=args.labels[0], filters=args.filters)
+    elif len(tables) > 1 and args.overlap:
+        mpl_plot_overlapped(tables=tables, title="Hello", labels=args.labels, filters=args.filters)
 
 
 # ===================================
@@ -119,8 +143,14 @@ def add_args(parser: ArgumentParser) -> None:
     parser.add_argument(
         "-i", "--input-files", type=vfile, required=True, nargs="+", help="CSV input file(s) [1-4]"
     )
+    parser.add_argument(
+        "-l", "--labels", type=str, nargs="+", required=True, help="input labels [1-4]"
+    )
     parser.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
     parser.add_argument("-t", "--title", type=str, help="Overall plot title")
+    parser.add_argument(
+        "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
+    )
 
 
 # ================

@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "matplotlib",
+    "PyQt5",
     "astropy",
     "scipy",
     "lica",
