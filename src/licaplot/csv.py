@@ -13,14 +13,13 @@
 import logging
 
 # Typing hints
-from typing import Iterable, Sequence, Any, Optional
+from typing import Iterable, Sequence, Optional
 from argparse import ArgumentParser, Namespace
 
 # ---------------------
 # Thrid-party libraries
 # ---------------------
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 from lica.cli import execute
@@ -34,7 +33,7 @@ from astropy.table import Table
 # ------------------------
 
 from ._version import __version__
-from . import MONOCROMATOR_FILTERS_LABELS
+from . import Markers, MONOCROMATOR_FILTERS_LABELS
 
 
 # -----------------------
@@ -55,6 +54,15 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary functions
 # -------------------
 
+def markers() -> str:
+    """Cilces throigh the markers enum for overlapping plots"""
+    values = [marker.value for marker in Markers]
+    i = 0
+    N = len(values)
+    while True:
+        yield values[i]
+        i = (i + 1) % N
+
 
 def mpl_plot_overlapped(
     title: Optional[str],
@@ -70,8 +78,7 @@ def mpl_plot_overlapped(
         fig.suptitle(title)
     axes.set_xlabel(tables[0].columns[x].name)
     axes.set_ylabel(tables[0].columns[y].name)
-    N = len(tables)
-    for table, label, marker in zip(tables, labels, MARKERS[:N]):
+    for table, label, marker in zip(tables, labels, markers()):
         axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
@@ -92,6 +99,7 @@ def mpl_plot_grid(
     ncols: int,
     x: int,
     y: int,
+    marker: str,
 ) -> None:
     """Plot in different axes rows"""
     N = len(tables)
@@ -102,7 +110,7 @@ def mpl_plot_grid(
     axes = axes.flatten()  # From a numpy bidimensional array to a list
     if title is not None:
         fig.suptitle(title)
-    for i, ax, table, label, marker in zip(indexes, axes, tables, labels, MARKERS[:N]):
+    for i, ax, table, label in zip(indexes, axes, tables, labels):
         ax.set_title(label)
         ax.set_xlabel(table.columns[x].name)
         ax.set_ylabel(table.columns[y].name)
@@ -128,9 +136,18 @@ def mpl_plot_cols(
     filters: Optional[bool],
     x: int,
     y: int,
+    marker: str,
 ) -> None:
     mpl_plot_grid(
-        title=title, tables=tables, labels=labels, filters=filters, nrows=1, ncols=len(tables)
+        title=title,
+        tables=tables,
+        labels=labels,
+        filters=filters,
+        nrows=1,
+        ncols=len(tables),
+        x=x,
+        y=y,
+        marker=marker,
     )
 
 
@@ -141,6 +158,7 @@ def mpl_plot_rows(
     filters: Optional[bool],
     x: int,
     y: int,
+    marker: str,
 ) -> None:
     mpl_plot_grid(
         title=title,
@@ -151,6 +169,7 @@ def mpl_plot_rows(
         ncols=1,
         x=x,
         y=y,
+        marker=marker,
     )
 
 
@@ -188,6 +207,7 @@ def csvs(args: Namespace) -> None:
             filters=args.filters,
             x=args.x_index,
             y=args.y_index,
+            marker=args.marker,
         )
     else:
         mpl_plot_grid(
@@ -199,6 +219,7 @@ def csvs(args: Namespace) -> None:
             ncols=2,
             x=args.x_index,
             y=args.y_index,
+            marker=args.marker,
         )
 
 
@@ -214,10 +235,17 @@ def add_args(parser: ArgumentParser) -> None:
         type=vfile,
         required=True,
         nargs="+",
+        metavar="<File>",
         help="CSV input file(s) [1-4]. X axis is the first column",
     )
     parser.add_argument(
-        "-l", "--labels", type=str, nargs="+", required=True, help="input labels [1-4]"
+        "-l",
+        "--labels",
+        type=str,
+        nargs="+",
+        required=True,
+        metavar="<Label>",
+        help="input labels [1-4]",
     )
     parser.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
     parser.add_argument(
@@ -241,6 +269,14 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<N>",
         default=1,
         help="Column index for Y axis in CSV file, defaults tp %(default)d",
+    )
+    parser.add_argument(
+        "-m",
+        "--marker",
+        type=str,
+        choices=(m.value for m in Markers),
+        default=Markers.Circle.value,
+        help="Plot Marker",
     )
 
 
