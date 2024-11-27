@@ -10,6 +10,7 @@
 # System wide imports
 # -------------------
 
+import argparse
 import logging
 
 # ---------------------
@@ -52,7 +53,7 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary fnctions
 # ------------------
 
-def mpl_photodiode_plot_loop(title: str, table: Table, marker: str):
+def plot_photodiode(title: str, table: Table, marker: str):
     w = Column.WAVELENGTH.value
     resp = Column.RESPONSIVITY.value
     qe = Column.QE.value
@@ -81,8 +82,8 @@ def export(args):
 def plot(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE PLOT === ")
     table = licaplot.photodiode.load(args.model, args.resolution)
-    log.info(table.info)
-    mpl_photodiode_plot_loop(
+    log.info("Table info is\n%s", table.info)
+    plot_photodiode(
         title=f"{args.model} characteristics",
         table=table,
         marker=args.marker,
@@ -103,30 +104,33 @@ def photod(args):
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
 
-
-def add_args(parser):
-    subparser = parser.add_subparsers(dest="command")
-
-    parser_plot = subparser.add_parser("plot", help="Plot Responsivity & Quantum Efficiency")
-    parser_expo = subparser.add_parser(
-        "export", help="Export Responsivity & Quantum Efficiency to CSV file"
-    )
-
-    parser_plot.add_argument(
+def common_parser():
+    """Common Options for subparsers"""
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
         "-m",
         "--model",
         default=Photodiode.OSI.value,
         choices=[p.value for p in Photodiode],
         help="Photodiode model. (default: %(default)s)",
     )
-    parser_plot.add_argument(
+    parser.add_argument(
         "-r",
         "--resolution",
         type=int,
         default=5,
-        choices=(1, 5),
+        choices=tuple(range(1,11)),
         help="Wavelength resolution (nm). (default: %(default)s nm)",
     )
+    return parser
+
+def add_args(parser):
+    subparser = parser.add_subparsers(dest="command")
+    parser_plot = subparser.add_parser("plot", parents=[common_parser()], help="Plot Responsivity & Quantum Efficiency")
+    parser_expo = subparser.add_parser(
+        "export",  parents=[common_parser()], help="Export Responsivity & Quantum Efficiency to CSV file"
+    )
+
     parser_plot.add_argument(
         "--marker",
         type=str,
@@ -135,22 +139,6 @@ def add_args(parser):
         help="Plot Marker",
     )
 
-
-    parser_expo.add_argument(
-        "-m",
-        "--model",
-        default=Photodiode.OSI.value,
-        choices=[p.value for p in Photodiode],
-        help="Photodiode model. (default: %(default)s)",
-    )
-    parser_expo.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        default=5,
-        choices=(1, 5),
-        help="Wavelength resolution (nm). (default: %(default)s nm)",
-    )
     parser_expo.add_argument(
         "-f", "--csv-file", type=str, required=True, help="CSV file name to export"
     )
