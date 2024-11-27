@@ -47,7 +47,7 @@ def markers() -> str:
         i = (i + 1) % N
 
 
-def mpl_plot_overlapped(
+def plot_overlapped(
     title: Optional[str],
     tables: Sequence[Table],
     labels: Iterable[str],
@@ -73,7 +73,7 @@ def mpl_plot_overlapped(
     plt.show()
 
 
-def mpl_plot_grid(
+def plot_grid(
     title: Optional[str],
     tables: Sequence[Table],
     labels: Iterable[str],
@@ -113,7 +113,7 @@ def mpl_plot_grid(
     plt.show()
 
 
-def mpl_plot_cols(
+def plot_cols(
     title: Optional[str],
     tables: Sequence[Table],
     labels: Iterable[str],
@@ -123,7 +123,7 @@ def mpl_plot_cols(
     marker: str,
 ) -> None:
     """Plot datasets as columns of axes"""
-    mpl_plot_grid(
+    plot_grid(
         title=title,
         tables=tables,
         labels=labels,
@@ -136,7 +136,7 @@ def mpl_plot_cols(
     )
 
 
-def mpl_plot_single(
+def plot_single(
     title: Optional[str],
     tables: Sequence[Table],
     labels: Iterable[str],
@@ -146,7 +146,7 @@ def mpl_plot_single(
     marker: str,
 ) -> None:
     """Plot a single dataset"""
-    mpl_plot_grid(
+    plot_grid(
         title=title,
         tables=tables,
         labels=labels,
@@ -159,7 +159,7 @@ def mpl_plot_single(
     )
 
 
-def mpl_plot_rows(
+def plot_rows(
     title: Optional[str],
     tables: Sequence[Table],
     labels: Iterable[str],
@@ -169,7 +169,7 @@ def mpl_plot_rows(
     marker: str,
 ) -> None:
     """Plot datasets as rows of axes"""
-    mpl_plot_grid(
+    plot_grid(
         title=title,
         tables=tables,
         labels=labels,

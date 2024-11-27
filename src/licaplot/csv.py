@@ -31,8 +31,8 @@ import astropy.io.ascii
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Markers, mpl_plot_overlapped, mpl_plot_single, mpl_plot_rows, mpl_plot_grid
-
+from .utils.mpl import Markers, plot_overlapped, plot_single, plot_rows, plot_grid
+from .utils.validators import vsequences
 
 # -----------------------
 # Module global variables
@@ -52,26 +52,17 @@ plt.style.use("licaplot.resources.global")
 # -------------------
 
 
-def validate_inputs(*args):
-    bounded = all(len(arg) <= 4 for arg in args)
-    if not bounded:
-        raise ValueError("An input argument list exceeds 4")
-    same_length = all(len(arg) == len(args[0]) for arg in args)
-    if not same_length:
-        raise ValueError("Not all input argument lists have the same length")
-
-
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
 
 def csvs(args: Namespace) -> None:
-    validate_inputs(args.input_files, args.labels)
+    vsequences(4, args.input_files, args.labels)
     N = len(args.input_files)
     tables = [astropy.io.ascii.read(f) for f in args.input_files]
     if args.overlap:
-        mpl_plot_overlapped(
+        plot_overlapped(
             tables=tables,
             title=args.title,
             labels=args.labels,
@@ -80,7 +71,7 @@ def csvs(args: Namespace) -> None:
             y=args.y_index,
         )
     elif N == 1:
-        mpl_plot_single(
+        plot_single(
             tables=tables,
             title=args.title,
             labels=args.labels,
@@ -90,7 +81,7 @@ def csvs(args: Namespace) -> None:
             marker=args.marker,
         )
     elif N == 2:
-        mpl_plot_rows(
+        plot_rows(
             tables=tables,
             title=args.title,
             labels=args.labels,
@@ -100,7 +91,7 @@ def csvs(args: Namespace) -> None:
             marker=args.marker,
         )
     else:
-        mpl_plot_grid(
+        plot_grid(
             title=args.title,
             tables=tables,
             labels=args.labels,

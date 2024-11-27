@@ -19,6 +19,7 @@ from importlib.resources import files
 # ---------------------
 
 import astropy.io.ascii
+import astropy.units as u
 from astropy.table import Table
 
 # ------------------------
@@ -66,5 +67,9 @@ def load(model: Photodiode, resolution: int) -> Table:
     log.info("Reading LICA photodiode model %s, resolution %d nm", model, resolution)
     f = files("licaplot.photodiode").joinpath(model + ".csv")
     table = astropy.io.ascii.read(f, delimiter=";")
-    mask = (table["Wavelength [nm]"] % resolution) == 0
+    # Add units
+    table[Column.WAVELENGTH.value] =  table[Column.WAVELENGTH.value] * u.nm
+    table[Column.RESPONSIVITY.value] =  table[Column.RESPONSIVITY.value] * u.ampere / u.watt
+    table[Column.RESPONSIVITY.value] =  table[Column.RESPONSIVITY.value] * u.dimensionless_unscaled
+    mask = (table.columns[0].astype(int) % resolution) == 0
     return table[mask]
