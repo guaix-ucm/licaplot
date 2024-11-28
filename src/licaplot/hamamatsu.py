@@ -157,9 +157,13 @@ def stage2(args: Namespace) -> None:
         )
 
     if args.save:
-        astropy.table.join(npl_table, dsht_table, keys="Wavelength")
+        dsht_mask = dsht_table["Wavelength"] >= npl_table.meta["Processing"][0]["End Wavelength"] + (1 * u.nm)
+        #dsht_table = dsht_table[dsht_mask]
+        merged_table = astropy.table.vstack([npl_table, dsht_table])
+        merged_table.meta["Processing"].append(STAGE_2_PROCESSING)
+        output_path = "kk.ecsv"
         log.info("Generating %s", output_path)
-        table.write(output_path, overwrite=True)
+        merged_table.write(output_path, overwrite=True)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
