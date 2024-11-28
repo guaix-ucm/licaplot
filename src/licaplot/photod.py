@@ -148,7 +148,6 @@ def add_args(parser):
 # MAIN ENTRY POINT
 # ================
 
-
 def main():
     execute(
         main_func=photod,
