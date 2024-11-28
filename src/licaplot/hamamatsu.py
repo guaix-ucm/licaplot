@@ -120,6 +120,7 @@ def stage1(args: Namespace) -> None:
 
 
 def stage2(args: Namespace) -> None:
+    """Iterative merge curves and saves the combined results"""
     log.info("Loading NPL ECSV calibration File: %s", args.npl_file)
     npl_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
     log.info("Loading datasheet CSV calibration File: %s", args.input_file)
@@ -176,6 +177,10 @@ def stage2(args: Namespace) -> None:
         log.info("Generating %s", output_path)
         merged_table.write(output_path, overwrite=True)
 
+def stage3(args: Namespace) -> None:
+    log.info("Loading NPL + Datasheet ECSV calibration File: %s", args.npl_file)
+    merged_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
+    log.info(merged_table.info)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -183,6 +188,7 @@ def stage2(args: Namespace) -> None:
 
 
 def add_args(parser: ArgumentParser) -> None:
+
     subparser = parser.add_subparsers(dest="command")
     parser_stage1 = subparser.add_parser(
         "stage1", help="Load NPL calibration CSV and convert to ECSV"
@@ -190,6 +196,10 @@ def add_args(parser: ArgumentParser) -> None:
     parser_stage2 = subparser.add_parser(
         "stage2", help="Merges datasheet data to NPL calibration data"
     )
+    parser_stage3 = subparser.add_parser(
+        "stage3", help="Resamples calibration data to uniform 1nm wavelength step"
+    )
+
     parser_stage1.add_argument(
         "-i",
         "--input-file",
@@ -258,6 +268,14 @@ def add_args(parser: ArgumentParser) -> None:
         help="Plot title",
     )
 
+    parser_stage3.add_argument(
+        "-n",
+        "--npl-file",
+        type=vfile,
+        required=True,
+        metavar="<NPL ECSV>",
+        help="ECSV with NPL + Datasheet calibration",
+    )
 
 # ================
 # MAIN ENTRY POINT
@@ -267,6 +285,7 @@ def add_args(parser: ArgumentParser) -> None:
 COMMAND_TABLE = {
     "stage1": stage1,
     "stage2": stage2,
+    "stage3": stage3,
 }
 
 
