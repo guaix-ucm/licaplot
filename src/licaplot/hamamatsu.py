@@ -52,7 +52,7 @@ METADATA = {
         "Dark current": 50 * (u.pA),
     },
     # stage1 processing
-    "Processing": [
+    "History": [
         {
             "Label": "NPL",
             "Description": "NPL Calibration",
@@ -63,20 +63,6 @@ METADATA = {
         },
     ],
 }
-
-STAGE_2_PROCESSING = {
-    "Label": "datasheet",
-    "Description": "Datasheet + PlotDigitizer extraction",
-    "Date": "2024-01-01",
-    "Start Wavelength": 1002.18231 * u.nm,
-    "End Wavelength": 1111.56568 * u.nm,
-    "Additional Processing": {
-        "Comment": "Added offset to match datasheet curve to NPL Calibration",
-        "X Offset": 0 * u.nm,
-        "Y Offset": 0 * (u.A / u.W),
-    },
-}
-
 
 # -----------------
 # Matplotlib styles
@@ -125,45 +111,71 @@ def stage1(args: Namespace) -> None:
         plot_overlapped(
             title=args.title,
             tables=[table],
-            labels=[METADATA["Processing"][0]["Label"]],
+            labels=[METADATA["History"][0]["Label"]],
             filters=False,
             x=0,
             y=1,
             linewidth=0,
         )
 
+
 def stage2(args: Namespace) -> None:
     log.info("Loading NPL ECSV calibration File: %s", args.npl_file)
     npl_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
     log.info("Loading datasheet CSV calibration File: %s", args.input_file)
-    dsht_table = astropy.io.ascii.read(
+    datasheet_table = astropy.io.ascii.read(
         args.input_file,
         delimiter=";",
         data_start=1,
         names=("Wavelength", "Responsivity"),
         converters={"Wavelength": np.float64, "Responsivity": np.float64},
     )
-    dsht_table["Wavelength"] = (dsht_table["Wavelength"] + args.x )* u.nm
-    dsht_table["Responsivity"] = (dsht_table["Responsivity"] +args.y ) * (u.A / u.W)
-    dsht_table["QE"] = quantum_efficiency(dsht_table)
+    datasheet_table["Wavelength"] = (datasheet_table["Wavelength"] + args.x) * u.nm
+    datasheet_table["Responsivity"] = np.round(datasheet_table["Responsivity"] + args.y, 5) * (
+        u.A / u.W
+    )
+    datasheet_table["QE"] = quantum_efficiency(datasheet_table)
     plot_overlapped(
-            title=args.title,
-            tables=[npl_table, dsht_table],
-            labels=[METADATA["Processing"][0]["Label"], STAGE_2_PROCESSING["Label"]],
-            filters=False,
-            x=0,
-            y=1,
-            linewidth=0,
-        )
-
+        title=args.title + " overlapped curves",
+        tables=[npl_table, datasheet_table],
+        labels=["NPL", "datasheet"],
+        filters=False,
+        x=0,
+        y=1,
+        linewidth=0,
+    )
+    log.info("Selecting new datapoints outside the initial NPL data")
+    mask = datasheet_table["Wavelength"] >= (np.max(npl_table["Wavelength"]) + 1)
+    additional_table = datasheet_table[mask]
+    plot_overlapped(
+        title=args.title + " trimmed curves",
+        tables=[npl_table, additional_table],
+        labels=["NPL", "datasheet"],
+        filters=False,
+        x=0,
+        y=1,
+        linewidth=0,
+    )
     if args.save:
-        dsht_mask = dsht_table["Wavelength"] >= npl_table.meta["Processing"][0]["End Wavelength"] + (1 * u.nm)
-        #dsht_table = dsht_table[dsht_mask]
-        merged_table = astropy.table.vstack([npl_table, dsht_table])
-        merged_table.meta["Processing"].append(STAGE_2_PROCESSING)
-        output_path = "kk.ecsv"
+        history = {
+            "Label": "datasheet",
+            "Description": "Datasheet + PlotDigitizer extraction",
+            "Date": "2024-01-01",
+            "Start Wavelength": np.min(npl_table["Wavelength"]),
+            "End Wavelength": np.max(npl_table["Wavelength"]),
+            "Additional Processing": {
+                "Comment": "Added offset to match input datasheet curve to NPL Calibration curve",
+                "X Offset": args.x * u.nm,
+                "Y Offset": args.y * (u.A / u.W),
+            },
+        }
+        merged_table = astropy.table.vstack([npl_table, additional_table])
+        merged_table.meta["History"].append(history)
+        output_path, _ = os.path.splitext(args.npl_file)
+        output_path += "-Combined.ecsv"
         log.info("Generating %s", output_path)
         merged_table.write(output_path, overwrite=True)
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -220,7 +232,7 @@ def add_args(parser: ArgumentParser) -> None:
         "-x",
         "--x",
         type=np.float64,
-        default = 0.0,
+        default=0.0,
         metavar="<X offset>",
         help="X (wavelength) offset to apply to input CSV file (defaults to %(default)f)",
     )
@@ -228,7 +240,7 @@ def add_args(parser: ArgumentParser) -> None:
         "-y",
         "--y",
         type=np.float64,
-        default = 0.0,
+        default=0.0,
         metavar="<Y offset>",
         help="Y (responsivity) offset to apply to input CSV file (defaults to %(default)f)",
     )
