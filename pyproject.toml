@@ -40,6 +40,7 @@ Repository = "https://github.com/guaix-ucm/licaplot.git"
 licaplot-csv = "licaplot.csv:main"
 licaplot-photod = "licaplot.photod:main"
 licaplot-ecsv = "licaplot.ecsv:main"
+licaplot-hama = "licaplot.hamamatsu:main"
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]

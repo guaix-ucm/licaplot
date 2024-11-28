@@ -20,16 +20,15 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 
 class Markers(Enum):
+    Circle = "o"
+    Square = "s"
+    Diamond = "d"
     TriUp = "2"
     TriDown = "1"
     Star = "*"
     Point = "."
     X = "x"
     Plus = "+"
-    Diamond = "d"
-    Circle = "o"
-    Square = "s"
-
 
 MONOCROMATOR_FILTERS_LABELS = (
     {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
@@ -54,6 +53,7 @@ def plot_overlapped(
     filters: Optional[bool],
     x: int,
     y: int,
+    linewidth: int = 0
 ) -> None:
     """Plot all datasets in the same Axes using different markers"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -62,7 +62,7 @@ def plot_overlapped(
     axes.set_xlabel(tables[0].columns[x].name)
     axes.set_ylabel(tables[0].columns[y].name)
     for table, label, marker in zip(tables, labels, markers()):
-        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
+        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth, label=label)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
