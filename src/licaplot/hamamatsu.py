@@ -51,33 +51,32 @@ METADATA = {
         "Photosensitive area": 50 * (u.mm**2),
         "Dark current": 50 * (u.pA),
     },
+    # stage1 processing
     "Processing": [
         {
             "Label": "NPL",
             "Description": "NPL Calibration",
             "Date": None,
-            "from_index": 0,
-            "to_index": 33,
             "Start Wavelength": 350 * u.nm,
             "End Wavelength": 1000 * u.nm,
             "Additional Processing": None,
         },
-        {
-            "Label": "datasheet",
-            "Description": "Datasheet + PlotDigitizer extraction",
-            "Date": "2024-01-01",
-            "from_index": 34,
-            "to_index": 74,
-            "Start Wavelength": 1002.18231 * u.nm,
-            "End Wavelength": 1111.56568 * u.nm,
-            "Additional Processing": {
-                "Comment": "Added offset to match datasheet curve to NPL Calibration",
-                "X Offset": 18 * u.nm,
-                "Y Offset": 0.009 * (u.A / u.W),
-            },
-        },
     ],
 }
+
+STAGE_2_PROCESSING = {
+    "Label": "datasheet",
+    "Description": "Datasheet + PlotDigitizer extraction",
+    "Date": "2024-01-01",
+    "Start Wavelength": 1002.18231 * u.nm,
+    "End Wavelength": 1111.56568 * u.nm,
+    "Additional Processing": {
+        "Comment": "Added offset to match datasheet curve to NPL Calibration",
+        "X Offset": 0 * u.nm,
+        "Y Offset": 0 * (u.A / u.W),
+    },
+}
+
 
 # -----------------
 # Matplotlib styles
@@ -115,7 +114,7 @@ def stage1(args: Namespace) -> None:
     )
     table["Wavelength"] = np.round(table["Wavelength"], 0) * u.nm
     table["Responsivity"] = table["Responsivity"] * (u.A / u.W)
-    table["QE"] = table["QE"] = quantum_efficiency(table)
+    table["QE"] = quantum_efficiency(table)
     table.meta = METADATA
     log.info("Generated table is\n%s", table.info)
     output_path, _ = os.path.splitext(path)
@@ -123,18 +122,44 @@ def stage1(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     table.write(output_path, overwrite=True)
     if args.plot:
-        npl_mask = table["Wavelength"] <= METADATA["Processing"][0]["End Wavelength"]
-        datasheet_mask = table["Wavelength"] > METADATA["Processing"][0]["End Wavelength"]
         plot_overlapped(
-            title="Hamamatsu S2281-04",
-            tables=[table[npl_mask], table[datasheet_mask]],
-            labels=[METADATA["Processing"][0]["Label"],  METADATA["Processing"][1]["Label"]],
+            title=args.title,
+            tables=[table],
+            labels=[METADATA["Processing"][0]["Label"]],
             filters=False,
             x=0,
             y=1,
             linewidth=0,
         )
 
+def stage2(args: Namespace) -> None:
+    log.info("Loading NPL ECSV calibration File: %s", args.npl_file)
+    npl_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
+    log.info("Loading datasheet CSV calibration File: %s", args.input_file)
+    dsht_table = astropy.io.ascii.read(
+        args.input_file,
+        delimiter=";",
+        data_start=1,
+        names=("Wavelength", "Responsivity"),
+        converters={"Wavelength": np.float64, "Responsivity": np.float64},
+    )
+    dsht_table["Wavelength"] = (dsht_table["Wavelength"] + args.x )* u.nm
+    dsht_table["Responsivity"] = (dsht_table["Responsivity"] +args.y ) * (u.A / u.W)
+    dsht_table["QE"] = quantum_efficiency(dsht_table)
+    plot_overlapped(
+            title=args.title,
+            tables=[npl_table, dsht_table],
+            labels=[METADATA["Processing"][0]["Label"], STAGE_2_PROCESSING["Label"]],
+            filters=False,
+            x=0,
+            y=1,
+            linewidth=0,
+        )
+
+    if args.save:
+        astropy.table.join(npl_table, dsht_table, keys="Wavelength")
+        log.info("Generating %s", output_path)
+        table.write(output_path, overwrite=True)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -144,20 +169,77 @@ def stage1(args: Namespace) -> None:
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_stage1 = subparser.add_parser(
-        "stage1", help="Load primary source CSV and convert to ECSV"
+        "stage1", help="Load NPL calibration CSV and convert to ECSV"
+    )
+    parser_stage2 = subparser.add_parser(
+        "stage2", help="Merges datasheet data to NPL calibration data"
     )
     parser_stage1.add_argument(
         "-i",
-        "--input_file",
+        "--input-file",
         type=vfile,
+        required=True,
         metavar="<CSV>",
-        help="Manually generated input CSV from NPL calibration & Datasheet",
+        help="input CSV with NPL calibration",
     )
     parser_stage1.add_argument(
         "-p",
         "--plot",
         action="store_true",
         help="Plot file too",
+    )
+    parser_stage1.add_argument(
+        "-t",
+        "--title",
+        type=str,
+        default="Hamamatsu S2281-04",
+        help="Plot title",
+    )
+
+    parser_stage2.add_argument(
+        "-n",
+        "--npl-file",
+        type=vfile,
+        required=True,
+        metavar="<NPL ECSV>",
+        help="ECSV with NPL calibration",
+    )
+    parser_stage2.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<CSV>",
+        help="aditions CSV with datasheet calibration values",
+    )
+    parser_stage2.add_argument(
+        "-x",
+        "--x",
+        type=np.float64,
+        default = 0.0,
+        metavar="<X offset>",
+        help="X (wavelength) offset to apply to input CSV file (defaults to %(default)f)",
+    )
+    parser_stage2.add_argument(
+        "-y",
+        "--y",
+        type=np.float64,
+        default = 0.0,
+        metavar="<Y offset>",
+        help="Y (responsivity) offset to apply to input CSV file (defaults to %(default)f)",
+    )
+    parser_stage2.add_argument(
+        "-s",
+        "--save",
+        action="store_true",
+        help="Save combined file to ECSV",
+    )
+    parser_stage2.add_argument(
+        "-t",
+        "--title",
+        type=str,
+        default="Hamamatsu S2281-04",
+        help="Plot title",
     )
 
 
@@ -168,6 +250,7 @@ def add_args(parser: ArgumentParser) -> None:
 
 COMMAND_TABLE = {
     "stage1": stage1,
+    "stage2": stage2,
 }
 
 
