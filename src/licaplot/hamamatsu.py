@@ -12,7 +12,7 @@
 
 import os
 import logging
-
+from enum import IntEnum
 # Typing hints
 from argparse import ArgumentParser, Namespace
 from typing import Tuple
@@ -54,6 +54,33 @@ log = logging.getLogger(__name__)
 # Load global style sheets
 plt.style.use("licaplot.resources.global")
 
+# Photodiode record
+class PHD:
+    MANUF = "Hamamatsu"
+    MODEL = "S2281-04"
+    SERIAL = "1097"
+    WINDOW = "Quartz Glass"
+    PHS_SIZE = 7.98 * u.mm  # Photosensitive size (diameter)
+    PHS_AREA = 50 * (u.mm**2)  # Photosensitive area
+    DARK = {
+        "typ": {
+            "Value": 50 * (u.pA),
+            "Temp": 25 * u.deg_C,
+        },
+        "max": {  # Dark current at given room Temp
+            "Value": 500 * (u.pA),
+            "Temp": 25 * u.deg_C,
+        },
+    }
+    # responsivity peak
+    PEAK = {
+        "typ": {
+            "Wave": 960 * (u.nm),
+            "Resp": 0.5 * (u.A / u.W),
+            "Temp": 25 * u.deg_C,
+        }
+    }
+
 
 class COL(StrEnum):
     """Calibration Table Columns"""
@@ -63,24 +90,26 @@ class COL(StrEnum):
     QE = "QE"
 
 
+class BENCH(IntEnum):
+    """LICA Optical bench Wavelength range"""
+
+    WAVE_START = 350
+    WAVE_END = 1050
+
+
 # -------------------
 # Auxiliary functions
 # -------------------
 
-def offset_box(x_offset: float, y_offset: float, x: float=0.5, y: float = 0.2):
+
+def offset_box(x_offset: float, y_offset: float, x: float = 0.5, y: float = 0.2):
     return ("\n".join((f"x offset= {x_offset:.1f}", f"y offset = {y_offset:0.3f}")), x, y)
+
 
 def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:
     """Computes the Quantum Efficiency given the Responsivity in A/W"""
     K = (const.h * const.c) / const.e
     return np.round(K * responsivity / wavelength.to(u.m), decimals=5) * u.dimensionless_unscaled
-
-
-def save_table(path: str, table: Table) -> None:
-    output_path, _ = os.path.splitext(path)
-    output_path += ".ecsv"
-    log.info("Generating %s", output_path)
-    table.write(output_path, format="ecsv", overwrite=True)
 
 
 def create_npl_table(npl_path: str) -> Table:
@@ -96,13 +125,14 @@ def create_npl_table(npl_path: str) -> Table:
     table[COL.RESP] = table[COL.RESP] * (u.A / u.W)
     table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
     table.meta = {
-        "Manufacturer": "Hamamatsu",
-        "Model": "S2281-04",
-        "Serial": 1097,
-        "Window": "Quartz glass",
-        "Photosensitive area diameter": 7.98 * u.mm,
-        "Photosensitive area": 50 * (u.mm**2),
-        "Dark current": 50 * (u.pA),
+        "Manufacturer": PHD.MANUF,
+        "Model": PHD.MODEL,
+        "Serial": PHD.SERIAL,
+        "Window": PHD.WINDOW,
+        "Photosensitive size diameter": PHD.PHS_SIZE,
+        "Photosensitive area": PHD.PHS_AREA,
+        "Dark current": PHD.DARK,
+        "Peak responsivity": PHD.PEAK,
         "History": [],
     }
     history = {
@@ -155,20 +185,16 @@ def combine_tables(table1: Table, table2: Table, x: float, y: float) -> Table:
 
 
 def interpolate_table(table: Table, method: str, resolution: int) -> Table:
-    wavelength = np.arange(350.0, 1051.0, resolution) * u.nm
+    wavelength = np.arange(BENCH.WAVE_START, BENCH.WAVE_END + 1, resolution) * u.nm
     if method == "linear":
         responsivity = np.round(
             np.interp(wavelength, table[COL.WAVE], table[COL.RESP]), decimals=5
         ) * (u.A / u.W)
     else:
-        interpolator = scipy.interpolate.Akima1DInterpolator(
-            table[COL.WAVE], table[COL.RESP]
-        )
+        interpolator = scipy.interpolate.Akima1DInterpolator(table[COL.WAVE], table[COL.RESP])
         responsivity = np.round(interpolator(wavelength), decimals=5) * (u.A / u.W)
     qe = quantum_efficiency(wavelength, responsivity)
-    qtable = Table(
-        [wavelength, responsivity, qe], names=(COL.WAVE, COL.RESP, COL.QE)
-    )
+    qtable = Table([wavelength, responsivity, qe], names=(COL.WAVE, COL.RESP, COL.QE))
     qtable.meta = table.meta
     history = {
         "Description": "Resampled calibration data at regular intervals",
@@ -278,7 +304,7 @@ def pipeline(args: Namespace) -> None:
     )
     combined_table = combine_tables(npl_table, sliced_table, args.x, args.y)
     interpolated_table = interpolate_table(combined_table, args.method, args.resolution)
-    output_path, _ = os.path.splitext(args.input_file)
+    output_path, _ = os.path.splitext(args.npl_file)
     output_path += f"+Datasheet+Interpolated@{args.resolution}nm.ecsv"
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
@@ -292,6 +318,7 @@ def pipeline(args: Namespace) -> None:
             x=0,
             y=1,
             linewidth=0,
+            box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
 
 
@@ -313,7 +340,7 @@ def plot_parser() -> ArgumentParser:
         "-t",
         "--title",
         type=str,
-        default="Hamamatsu S2281-04",
+        default=f"{PHD.MANUF} {PHD.MODEL}",
         help="Plot title",
     )
     return parser
@@ -328,7 +355,7 @@ def interp_parser() -> ArgumentParser:
         type=str,
         choices=("linear", "cubic"),
         default="linear",
-        help="Interpolation method (defaults to %(default)d nm)",
+        help="Interpolation method (defaults to %(default)s)",
     )
     parser.add_argument(
         "-r",
