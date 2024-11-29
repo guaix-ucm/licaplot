@@ -340,7 +340,7 @@ wheels = [
 
 [[package]]
 name = "licaplot"
-version = "0.1.dev3+g4fa3f9b.d20241126"
+version = "0.1.dev24+ga705720.d20241129"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -348,6 +348,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "pyqt5" },
     { name = "scipy" },
+    { name = "strenum" },
 ]
 
 [package.dev-dependencies]
@@ -362,6 +363,7 @@ requires-dist = [
     { name = "matplotlib" },
     { name = "pyqt5" },
     { name = "scipy" },
+    { name = "strenum" },
 ]
 
 [package.metadata.requires-dev]
@@ -783,6 +785,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/71/39/171f1c67cd00715f190ba0b100d606d440a28c93c7714febeca8b79af85e/six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926", size = 34041 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254", size = 11053 },
+]
+
+[[package]]
+name = "strenum"
+version = "0.4.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/ad/430fb60d90e1d112a62ff57bdd1f286ec73a2a0331272febfddd21f330e1/StrEnum-0.4.15.tar.gz", hash = "sha256:878fb5ab705442070e4dd1929bb5e2249511c0bcf2b0eeacf3bcd80875c82eff", size = 23384 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/69/297302c5f5f59c862faa31e6cb9a4cd74721cd1e052b38e464c5b402df8b/StrEnum-0.4.15-py3-none-any.whl", hash = "sha256:a30cda4af7cc6b5bf52c8055bc4bf4b2b6b14a93b574626da33df53cf7740659", size = 8851 },
 ]
 
 [[package]]

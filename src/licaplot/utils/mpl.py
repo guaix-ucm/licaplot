@@ -9,8 +9,7 @@
 # System wide imports
 # -------------------
 
-from enum import Enum
-from typing import Iterable, Sequence, Optional
+from typing import Iterable, Sequence, Optional, Tuple
 
 # ---------------------
 # Thrid-party libraries
@@ -18,18 +17,20 @@ from typing import Iterable, Sequence, Optional
 
 from astropy.table import Table
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
-class Markers(Enum):
+from .. import StrEnum
+
+class Markers(StrEnum):
+    Circle = "o"
+    Square = "s"
+    Star = "*"
+    Diamond = "d"
     TriUp = "2"
     TriDown = "1"
-    Star = "*"
     Point = "."
     X = "x"
     Plus = "+"
-    Diamond = "d"
-    Circle = "o"
-    Square = "s"
-
 
 MONOCROMATOR_FILTERS_LABELS = (
     {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
@@ -39,7 +40,7 @@ MONOCROMATOR_FILTERS_LABELS = (
 
 def markers() -> str:
     """Cycles through the markers enum for overlapping plots"""
-    values = [marker.value for marker in Markers]
+    values = [marker for marker in Markers]
     i = 0
     N = len(values)
     while True:
@@ -54,6 +55,8 @@ def plot_overlapped(
     filters: Optional[bool],
     x: int,
     y: int,
+    linewidth: int = 0,
+    box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     """Plot all datasets in the same Axes using different markers"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -62,10 +65,13 @@ def plot_overlapped(
     axes.set_xlabel(tables[0].columns[x].name)
     axes.set_ylabel(tables[0].columns[y].name)
     for table, label, marker in zip(tables, labels, markers()):
-        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1, label=label)
+        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth, label=label)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
+    if box:
+        props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+        axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
     axes.grid(True, which="major", color="silver", linestyle="solid")
     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
     axes.minorticks_on()

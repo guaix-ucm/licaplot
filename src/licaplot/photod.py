@@ -18,6 +18,7 @@ import logging
 # ---------------------
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
 from astropy.table import Table
 from lica.cli import execute
@@ -28,9 +29,10 @@ from lica.cli import execute
 
 from ._version import __version__
 from .utils.mpl import Markers
+from .utils.validators import vecsv
 
 import licaplot.photodiode
-from .photodiode import Photodiode, Column
+from .photodiode import PhotodiodeModel, COL
 
 # ----------------
 # Module constants
@@ -54,20 +56,21 @@ plt.style.use("licaplot.resources.global")
 # ------------------
 
 def plot_photodiode(title: str, table: Table, marker: str):
-    w = Column.WAVELENGTH.value
-    resp = Column.RESPONSIVITY.value
-    qe = Column.QE.value
     fig, axes = plt.subplots(nrows=1, ncols=1)
     fig.suptitle(title)
-    axes.set_xlabel(w)
-    axes.set_ylabel(resp + " & " + qe)
+    plot_single_photodiode(axes, table, marker)
+    plt.show()
+
+def plot_single_photodiode(axes: Axes, table: Table, marker: str):
+    axes.set_xlabel(COL.WAVE)
+    axes.set_ylabel(COL.RESP + " & " + COL.QE)
     axes.grid(True, which="major", color="silver", linestyle="solid")
     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-    axes.plot(table[w], table[resp], marker=marker, linewidth=0, label=resp)
-    axes.plot(table[w], table[qe], marker=marker, linewidth=0, label=qe)
+    axes.plot(table[COL.WAVE], table[COL.RESP], marker=marker, linewidth=0, label=COL.RESP)
+    axes.plot(table[COL.WAVE], table[COL.QE], marker=marker, linewidth=0, label=COL.QE)
     axes.minorticks_on()
     axes.legend()
-    plt.show()
+  
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
@@ -76,7 +79,7 @@ def plot_photodiode(title: str, table: Table, marker: str):
 
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
-    licaplot.photodiode.export(args.model, args.resolution, args.csv_file)
+    licaplot.photodiode.export(args.model, args.resolution, args.ecsv_file)
 
 
 def plot(args):
@@ -110,8 +113,8 @@ def common_parser():
     parser.add_argument(
         "-m",
         "--model",
-        default=Photodiode.OSI.value,
-        choices=[p.value for p in Photodiode],
+        default=PhotodiodeModel.OSI,
+        choices=[p for p in PhotodiodeModel],
         help="Photodiode model. (default: %(default)s)",
     )
     parser.add_argument(
@@ -134,20 +137,19 @@ def add_args(parser):
     parser_plot.add_argument(
         "--marker",
         type=str,
-        choices=[m.value for m in Markers],
-        default=Markers.Circle.value,
+        choices=[m for m in Markers],
+        default=Markers.Circle,
         help="Plot Marker",
     )
 
     parser_expo.add_argument(
-        "-f", "--csv-file", type=str, required=True, help="CSV file name to export"
+        "-f", "--ecsv-file", type=vecsv, required=True, help="ECSV file name to export"
     )
 
 
 # ================
 # MAIN ENTRY POINT
 # ================
-
 
 def main():
     execute(

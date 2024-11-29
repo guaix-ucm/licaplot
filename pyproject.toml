@@ -29,6 +29,7 @@ dependencies = [
     "astropy",
     "scipy",
     "lica",
+    "StrEnum",
 ]
 
 
@@ -40,6 +41,9 @@ Repository = "https://github.com/guaix-ucm/licaplot.git"
 licaplot-csv = "licaplot.csv:main"
 licaplot-photod = "licaplot.photod:main"
 licaplot-filters = "licaplot.filters:main"
+licaplot-hama = "licaplot.hamamatsu:main"
+licaplot-osi = "licaplot.osi:main"
+
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
