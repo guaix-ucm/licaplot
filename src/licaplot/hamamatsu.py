@@ -12,7 +12,6 @@
 
 import os
 import logging
-from enum import Enum
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
@@ -27,8 +26,7 @@ import matplotlib.pyplot as plt
 import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
-from astropy.table import Table, QTable
-from astropy.units import Quantity
+from astropy.table import Table
 
 import scipy.interpolate
 from lica.cli import execute
@@ -41,6 +39,7 @@ from lica.validators import vfile
 
 from ._version import __version__
 from .utils.mpl import plot_overlapped
+from . import StrEnum
 
 # -----------------------
 # Module global variables
@@ -56,7 +55,7 @@ log = logging.getLogger(__name__)
 plt.style.use("licaplot.resources.global")
 
 
-class COL(Enum):
+class COL(StrEnum):
     """Calibration Table Columns"""
 
     WAVE = "Wavelength"
@@ -68,6 +67,8 @@ class COL(Enum):
 # Auxiliary functions
 # -------------------
 
+def offset_box(x_offset: float, y_offset: float, x: float=0.5, y: float = 0.2):
+    return ("\n".join((f"x offset= {x_offset:.1f}", f"y offset = {y_offset:0.3f}")), x, y)
 
 def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:
     """Computes the Quantum Efficiency given the Responsivity in A/W"""
@@ -88,30 +89,31 @@ def create_npl_table(npl_path: str) -> Table:
         npl_path,
         delimiter=";",
         data_start=1,
-        names=(COL.WAVE.value, COL.RESP.value),
-        converters={COL.WAVE.value: np.float64, COL.RESP.value: np.float64},
+        names=(COL.WAVE, COL.RESP),
+        converters={COL.WAVE: np.float64, COL.RESP: np.float64},
     )
-    table[COL.WAVE.value] = np.round(table[COL.WAVE.value], decimals=0) * u.nm
-    table[COL.RESP.value] = table[COL.RESP.value] * (u.A / u.W)
-    table[COL.QE.value] = quantum_efficiency(table[COL.WAVE.value], table[COL.RESP.value])
+    table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
+    table[COL.RESP] = table[COL.RESP] * (u.A / u.W)
+    table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
     table.meta = {
-        "Global": {
-            "Manufacturer": "Hamamatsu",
-            "Model": "S2281-04",
-            "Serial": 1097,
-            "Photosensitive area": 50 * (u.mm**2),
-            "Dark current": 50 * (u.pA),
-        },
-        # stage1 processing
-        "History": [
-            {
-                "Description": "Created NPL Calibration Table",
-                "Date": None,
-                "Start Wavelength": np.min(table[COL.WAVE.value]) * u.nm,
-                "End Wavelength": np.max(table[COL.WAVE.value]) * u.nm,
-            },
-        ],
+        "Manufacturer": "Hamamatsu",
+        "Model": "S2281-04",
+        "Serial": 1097,
+        "Window": "Quartz glass",
+        "Photosensitive area diameter": 7.98 * u.mm,
+        "Photosensitive area": 50 * (u.mm**2),
+        "Dark current": 50 * (u.pA),
+        "History": [],
     }
+    history = {
+        "Description": "Created NPL Calibration Table",
+        "Date": None,
+        "Resolution": 20 * u.nm,
+        "Comment": "Resolution is constant except for the last data point",
+        "Start wavelength": np.min(table[COL.WAVE]) * u.nm,
+        "End wavelength": np.max(table[COL.WAVE]) * u.nm,
+    }
+    table.meta["History"].append(history)
     log.info("Generated table is\n%s", table.info)
     return table
 
@@ -123,14 +125,14 @@ def create_datasheet_table(path: str, x: float, y: float, threshold: float) -> T
         path,
         delimiter=";",
         data_start=1,
-        names=(COL.WAVE.value, COL.RESP.value),
-        converters={COL.WAVE.value: np.float64, COL.RESP.value: np.float64},
+        names=(COL.WAVE, COL.RESP),
+        converters={COL.WAVE: np.float64, COL.RESP: np.float64},
     )
-    table[COL.WAVE.value] = (table[COL.WAVE.value] + x) * u.nm
-    table[COL.RESP.value] = np.round(table[COL.RESP.value] + y, decimals=5) * (u.A / u.W)
-    table[COL.QE.value] = quantum_efficiency(table[COL.WAVE.value], table[COL.RESP.value])
+    table[COL.WAVE] = (table[COL.WAVE] + x) * u.nm
+    table[COL.RESP] = np.round(table[COL.RESP] + y, decimals=5) * (u.A / u.W)
+    table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
     log.info("Selecting new datapoints outside the initial NPL data")
-    mask = table[COL.WAVE.value] >= (threshold + 1.0)
+    mask = table[COL.WAVE] >= (threshold + 1.0)
     return table, table[mask]
 
 
@@ -138,14 +140,14 @@ def combine_tables(table1: Table, table2: Table, x: float, y: float) -> Table:
     log.info("Combining tables")
     table = astropy.table.vstack([table1, table2])
     history = {
-        "Description": "Datasheet + PlotDigitizer extraction",
+        "Description": "Datasheet with PlotDigitizer extraction",
         "Date": "2024-01-01",
-        "Start Wavelength": np.min(table2[COL.WAVE.value]) * u.nm,
-        "End Wavelength": np.max(table2[COL.WAVE.value]) * u.nm,
+        "Start wavelength": np.min(table2[COL.WAVE]) * u.nm,
+        "End wavelength": np.max(table2[COL.WAVE]) * u.nm,
         "Additional Processing": {
             "Comment": "Added offset to match input datasheet curve to NPL Calibration curve",
-            "X Offset": x * u.nm,
-            "Y Offset": y * (u.A / u.W),
+            "X offset": x * u.nm,
+            "Y offset": y * (u.A / u.W),
         },
     }
     table.meta["History"].append(history)
@@ -156,26 +158,26 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
     wavelength = np.arange(350.0, 1051.0, resolution) * u.nm
     if method == "linear":
         responsivity = np.round(
-            np.interp(wavelength, table[COL.WAVE.value], table[COL.RESP.value]), decimals=5
+            np.interp(wavelength, table[COL.WAVE], table[COL.RESP]), decimals=5
         ) * (u.A / u.W)
     else:
         interpolator = scipy.interpolate.Akima1DInterpolator(
-            table[COL.WAVE.value], table[COL.RESP.value]
+            table[COL.WAVE], table[COL.RESP]
         )
         responsivity = np.round(interpolator(wavelength), decimals=5) * (u.A / u.W)
     qe = quantum_efficiency(wavelength, responsivity)
     qtable = Table(
-        [wavelength, responsivity, qe], names=(COL.WAVE.value, COL.RESP.value, COL.QE.value)
+        [wavelength, responsivity, qe], names=(COL.WAVE, COL.RESP, COL.QE)
     )
     qtable.meta = table.meta
     history = {
         "Description": "Resampled calibration data at regular intervals",
         "Resolution": resolution * u.nm,
-        "Method": "linear"
-        if method == "linear interpolation"
+        "Method": "linear interpolation"
+        if method == "linear"
         else "Akima piecewise cubic polynomials",
-        "Start Wavelength": np.min(qtable[COL.WAVE.value]) * u.nm,
-        "End Wavelength": np.max(qtable[COL.WAVE.value]) * u.nm,
+        "Start wavelength": np.min(qtable[COL.WAVE]) * u.nm,
+        "End wavelength": np.max(qtable[COL.WAVE]) * u.nm,
     }
     qtable.meta["History"].append(history)
     return qtable
@@ -194,7 +196,7 @@ def stage1(args: Namespace) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         plot_overlapped(
-            title=f"{args.title} #{table.meta['Global']['Serial']}",
+            title=f"{args.title} #{table.meta['Serial']}",
             tables=[table],
             labels=["NPL Calib."],
             filters=False,
@@ -208,7 +210,7 @@ def stage2(args: Namespace) -> None:
     """Iterative merge curves and saves the combined results"""
     log.info("Loading NPL ECSV calibration File: %s", args.npl_file)
     npl_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
-    threshold = np.max(npl_table[COL.WAVE.value]) + 1
+    threshold = np.max(npl_table[COL.WAVE]) + 1
     datasheet_table, sliced_table = create_datasheet_table(
         path=args.input_file,
         x=args.x,
@@ -216,22 +218,24 @@ def stage2(args: Namespace) -> None:
         threshold=threshold,
     )
     plot_overlapped(
-        title=f"{args.title} #{npl_table.meta['Global']['Serial']} overlapped curves",
+        title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
         tables=[npl_table, datasheet_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
         x=0,
         y=1,
         linewidth=0,
+        box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     plot_overlapped(
-        title=f"{args.title} #{npl_table.meta['Global']['Serial']} combined curves",
+        title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
         tables=[npl_table, sliced_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
         x=0,
         y=1,
         linewidth=0,
+        box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     if args.save:
         merged_table = combine_tables(npl_table, sliced_table, args.x, args.y)
@@ -253,18 +257,19 @@ def stage3(args: Namespace) -> None:
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         plot_overlapped(
-            title=f"{args.title} #{table.meta['Global']['Serial']} interpolated curves @ {args.resolution} nm",
+            title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, table],
-            labels=["Interp.","NPL+Datasheet"],
+            labels=["Interp.", "NPL+Datasheet"],
             filters=False,
             x=0,
             y=1,
             linewidth=0,
         )
 
+
 def pipeline(args: Namespace) -> None:
     npl_table = create_npl_table(npl_path=args.npl_file)
-    threshold = np.max(npl_table[COL.WAVE.value]) + 1
+    threshold = np.max(npl_table[COL.WAVE]) + 1
     datasheet_table, sliced_table = create_datasheet_table(
         path=args.input_file,
         x=args.x,
@@ -280,14 +285,15 @@ def pipeline(args: Namespace) -> None:
     log.info(interpolated_table.info)
     if args.plot:
         plot_overlapped(
-            title=f"{args.title} #{npl_table.meta['Global']['Serial']} interpolated curves @ {args.resolution} nm",
+            title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, npl_table, sliced_table],
-            labels=["Interp.","NPL Calib.", "Datasheet"],
+            labels=["Interp.", "NPL Calib.", "Datasheet"],
             filters=False,
             x=0,
             y=1,
             linewidth=0,
         )
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
