@@ -12,7 +12,7 @@
 
 import os
 import logging
-from enum import IntEnum
+
 # Typing hints
 from argparse import ArgumentParser, Namespace
 from typing import Tuple
@@ -39,7 +39,7 @@ from lica.validators import vfile
 
 from ._version import __version__
 from .utils.mpl import plot_overlapped
-from . import StrEnum
+from .photodiode import COL, BENCH, Hamamatsu as PHD
 
 # -----------------------
 # Module global variables
@@ -53,49 +53,6 @@ log = logging.getLogger(__name__)
 
 # Load global style sheets
 plt.style.use("licaplot.resources.global")
-
-# Photodiode record
-class PHD:
-    MANUF = "Hamamatsu"
-    MODEL = "S2281-04"
-    SERIAL = "1097"
-    WINDOW = "Quartz Glass"
-    PHS_SIZE = 7.98 * u.mm  # Photosensitive size (diameter)
-    PHS_AREA = 50 * (u.mm**2)  # Photosensitive area
-    DARK = {
-        "typ": {
-            "Value": 50 * (u.pA),
-            "Temp": 25 * u.deg_C,
-        },
-        "max": {  # Dark current at given room Temp
-            "Value": 500 * (u.pA),
-            "Temp": 25 * u.deg_C,
-        },
-    }
-    # responsivity peak
-    PEAK = {
-        "typ": {
-            "Wave": 960 * (u.nm),
-            "Resp": 0.5 * (u.A / u.W),
-            "Temp": 25 * u.deg_C,
-        }
-    }
-
-
-class COL(StrEnum):
-    """Calibration Table Columns"""
-
-    WAVE = "Wavelength"
-    RESP = "Responsivity"
-    QE = "QE"
-
-
-class BENCH(IntEnum):
-    """LICA Optical bench Wavelength range"""
-
-    WAVE_START = 350
-    WAVE_END = 1050
-
 
 # -------------------
 # Auxiliary functions

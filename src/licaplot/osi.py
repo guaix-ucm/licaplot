@@ -17,7 +17,6 @@ from enum import IntEnum
 # Typing hints
 from argparse import ArgumentParser, Namespace
 
-
 # ---------------------
 # Thrid-party libraries
 # ---------------------
