@@ -31,20 +31,14 @@ from lica.validators import vfile
 
 from ._version import __version__
 from .utils.mpl import Markers
+from .utils.validators import vsequences
 
-import licaplot.photodiode
-from .photodiode import Photodiode, Column
+
+from .photodiode import PhotodiodeModel
 
 # ----------------
 # Module constants
 # ----------------
-
-WAVELENGTH_REG_EXP = re.compile(r"(\w+)_(\d+)nm_g(\d+)_(\d+)_(\d+)_(\w+).jpg")
-
-# Photodiode readings header columns
-WAVELENGTH_CSV_HEADER = "wavelength (nm)"
-CURRENT_CSV_HEADER = "current (A)"
-READ_NOISE_CSV_HEADER = "read noise (A)"
 
 # -----------------------
 # Module global variables
@@ -156,30 +150,17 @@ def get_info_from(args):
 
 def raw_spectrum(args):
     log.info(" === DRAFT SPECTRAL RESPONSE PLOT === ")
-    validate_lists(args)
-    wavelength, signal, labels, diode, model = get_info_from(args)
-
-    mpl_filters_plot_loop(
-        title=f"Raw response for {args.title}",
-        plot_func=plot_filter_spectrum,
-        xtitle="Wavelength [nm]",
-        ytitle="Signal [A]",
-        ylabels=labels,
-        x=wavelength,
-        y=signal,
-        # Optional arguments to be handled by the plotting function
-        diode=diode,
-        model=model,
-        filters=[
-            {"label": r"$BG38 \Rightarrow OG570$", "wave": 570, "style": "--"},
-            {"label": r"$OG570\Rightarrow RG830$", "wave": 860, "style": "-."},
-        ],  # where filters were changesd
-    )
+    vsequences(4, args.filters, args.labels, args.diodes)
+    tables = [astropy.io.ascii.read(f) for f in args.filters]
+    for table in tables:
+        table[""]
 
 
 def corrected_spectrum(args):
     log.info(" === COMPLETE SPECTRAL RESPONSE PLOT === ")
-    validate_lists(args)
+    vsequences(4, args.filters, args.labels, args.diodes)
+    return
+
     wavelength, signal, labels, diode, model = get_info_from(args)
     log.info
     responsivity, qe = photodiode_load(args.model, args.resolution)
@@ -272,7 +253,7 @@ def common_options():
         metavar="<CSV>",
         nargs="+",
         type=vfile,
-        help="reference photodiode CSV files",
+        help="photodiode readings CSV files",
     )
     parser.add_argument(
         "-m",
@@ -286,9 +267,8 @@ def common_options():
 
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
-    parser2 = common_options()
-    parser_raw = subparser.add_parser("raw", help="Raw spectrum", parents=[parser2])
-    parser_corr = subparser.add_parser("corrected", help="Correced spectrum", parents=[parser2])
+    parser_raw = subparser.add_parser("raw", help="Raw spectrum", parents=[common_options()])
+    parser_corr = subparser.add_parser("corrected", help="Correced spectrum", parents=[common_options()])
    
     # ---------------------------------------------------------------------------------------------------------------
 
