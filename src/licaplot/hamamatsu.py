@@ -28,6 +28,7 @@ import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
 from astropy.table import Table, QTable
+from astropy.units import Quantity
 
 import scipy.interpolate
 from lica.cli import execute
@@ -57,6 +58,7 @@ plt.style.use("licaplot.resources.global")
 
 class COL(Enum):
     """Calibration Table Columns"""
+
     WAVE = "Wavelength"
     RESP = "Responsivity"
     QE = "QE"
@@ -157,15 +159,21 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
             np.interp(wavelength, table[COL.WAVE.value], table[COL.RESP.value]), decimals=5
         ) * (u.A / u.W)
     else:
-        interpolator = scipy.interpolate.Akima1DInterpolator(table[COL.WAVE.value], table[COL.RESP.value])
+        interpolator = scipy.interpolate.Akima1DInterpolator(
+            table[COL.WAVE.value], table[COL.RESP.value]
+        )
         responsivity = np.round(interpolator(wavelength), decimals=5) * (u.A / u.W)
     qe = quantum_efficiency(wavelength, responsivity)
-    qtable = QTable([wavelength, responsivity, qe], names=(COL.WAVE.value, COL.RESP.value, COL.QE.value))
+    qtable = Table(
+        [wavelength, responsivity, qe], names=(COL.WAVE.value, COL.RESP.value, COL.QE.value)
+    )
     qtable.meta = table.meta
     history = {
         "Description": "Resampled calibration data at regular intervals",
         "Resolution": resolution * u.nm,
-        "Method": "linear" if method == "linear interpolation" else "Akima piecewise cubic polynomials",
+        "Method": "linear"
+        if method == "linear interpolation"
+        else "Akima piecewise cubic polynomials",
         "Start Wavelength": np.min(qtable[COL.WAVE.value]) * u.nm,
         "End Wavelength": np.max(qtable[COL.WAVE.value]) * u.nm,
     }
@@ -188,7 +196,7 @@ def stage1(args: Namespace) -> None:
         plot_overlapped(
             title=f"{args.title} #{table.meta['Global']['Serial']}",
             tables=[table],
-            labels=["NPL"],
+            labels=["NPL Calib."],
             filters=False,
             x=0,
             y=1,
@@ -210,7 +218,7 @@ def stage2(args: Namespace) -> None:
     plot_overlapped(
         title=f"{args.title} #{npl_table.meta['Global']['Serial']} overlapped curves",
         tables=[npl_table, datasheet_table],
-        labels=["NPL", "datasheet"],
+        labels=["NPL Calib", "Datasheet"],
         filters=False,
         x=0,
         y=1,
@@ -219,7 +227,7 @@ def stage2(args: Namespace) -> None:
     plot_overlapped(
         title=f"{args.title} #{npl_table.meta['Global']['Serial']} combined curves",
         tables=[npl_table, sliced_table],
-        labels=["NPL", "datasheet"],
+        labels=["NPL Calib", "Datasheet"],
         filters=False,
         x=0,
         y=1,
@@ -228,7 +236,7 @@ def stage2(args: Namespace) -> None:
     if args.save:
         merged_table = combine_tables(npl_table, sliced_table, args.x, args.y)
         output_path, _ = os.path.splitext(args.npl_file)
-        output_path += "-Combined.ecsv"
+        output_path += "+Datasheet.ecsv"
         log.info("Generating %s", output_path)
         merged_table.write(output_path, delimiter=",", overwrite=True)
 
@@ -240,36 +248,155 @@ def stage3(args: Namespace) -> None:
     interpolated_table = interpolate_table(table, args.method, args.resolution)
     log.info(interpolated_table.info)
     output_path, _ = os.path.splitext(args.input_file)
-    output_path += "-Interpolated.ecsv"
+    output_path += f"´+Interpolated@{args.resolution}nm.ecsv"
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         plot_overlapped(
             title=f"{args.title} #{table.meta['Global']['Serial']} interpolated curves @ {args.resolution} nm",
-            tables=[table, interpolated_table],
-            labels=["NPL+atasheet", "interpolated"],
+            tables=[interpolated_table, table],
+            labels=["Interp.","NPL+Datasheet"],
             filters=False,
             x=0,
             y=1,
             linewidth=0,
         )
 
+def pipeline(args: Namespace) -> None:
+    npl_table = create_npl_table(npl_path=args.npl_file)
+    threshold = np.max(npl_table[COL.WAVE.value]) + 1
+    datasheet_table, sliced_table = create_datasheet_table(
+        path=args.input_file,
+        x=args.x,
+        y=args.y,
+        threshold=threshold,
+    )
+    combined_table = combine_tables(npl_table, sliced_table, args.x, args.y)
+    interpolated_table = interpolate_table(combined_table, args.method, args.resolution)
+    output_path, _ = os.path.splitext(args.input_file)
+    output_path += f"+Datasheet+Interpolated@{args.resolution}nm.ecsv"
+    log.info("Generating %s", output_path)
+    interpolated_table.write(output_path, delimiter=",", overwrite=True)
+    log.info(interpolated_table.info)
+    if args.plot:
+        plot_overlapped(
+            title=f"{args.title} #{npl_table.meta['Global']['Serial']} interpolated curves @ {args.resolution} nm",
+            tables=[interpolated_table, npl_table, sliced_table],
+            labels=["Interp.","NPL Calib.", "Datasheet"],
+            filters=False,
+            x=0,
+            y=1,
+            linewidth=0,
+        )
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
 
 
+def plot_parser() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-p",
+        "--plot",
+        action="store_true",
+        help="Plot file",
+    )
+    parser.add_argument(
+        "-t",
+        "--title",
+        type=str,
+        default="Hamamatsu S2281-04",
+        help="Plot title",
+    )
+    return parser
+
+
+def interp_parser() -> ArgumentParser:
+    """Common options for interpolation"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--method",
+        type=str,
+        choices=("linear", "cubic"),
+        default="linear",
+        help="Interpolation method (defaults to %(default)d nm)",
+    )
+    parser.add_argument(
+        "-r",
+        "--resolution",
+        type=int,
+        choices=tuple(range(1, 11)),
+        default=1,
+        metavar="<N nm>",
+        help="Interpolate at equal resolution (defaults to %(default)d nm)",
+    )
+    return parser
+
+
+def combi_parser() -> ArgumentParser:
+    """Common options to combine tables"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-n",
+        "--npl-file",
+        type=vfile,
+        required=True,
+        metavar="<NPL ECSV>",
+        help="ECSV with NPL calibration",
+    )
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<CSV>",
+        help="CSV with datasheet calibration values",
+    )
+    parser.add_argument(
+        "-x",
+        "--x",
+        type=float,
+        default=0.0,
+        metavar="<X offset>",
+        help="X (wavelength) offset to apply to input CSV file (defaults to %(default)f)",
+    )
+    parser.add_argument(
+        "-y",
+        "--y",
+        type=float,
+        default=0.0,
+        metavar="<Y offset>",
+        help="Y (responsivity) offset to apply to input CSV file (defaults to %(default)f)",
+    )
+    return parser
+
+
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_stage1 = subparser.add_parser(
-        "stage1", help="Load NPL calibration CSV and convert to ECSV"
+        "stage1",
+        parents=[
+            plot_parser(),
+        ],
+        help="Load NPL calibration CSV and convert to ECSV",
     )
     parser_stage2 = subparser.add_parser(
-        "stage2", help="Merges datasheet data to NPL calibration data"
+        "stage2",
+        parents=[combi_parser(), plot_parser()],
+        help="Merges datasheet data to NPL calibration data and convert to ECSV",
     )
     parser_stage3 = subparser.add_parser(
-        "stage3", help="Resamples calibration data to uniform 1nm wavelength step"
+        "stage3",
+        parents=[plot_parser(), interp_parser()],
+        help="Resamples calibration data to uniform 1nm wavelength step and convert to ECSV",
+    )
+    subparser.add_parser(
+        "pipeline",
+        parents=[plot_parser(), combi_parser(), interp_parser()],
+        help="Pipleines all 3 stages",
     )
     # ------------------------------------------------------------------------
     parser_stage1.add_argument(
@@ -280,64 +407,12 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<CSV>",
         help="CSV with NPL calibration",
     )
-    parser_stage1.add_argument(
-        "-p",
-        "--plot",
-        action="store_true",
-        help="Plot file too",
-    )
-    parser_stage1.add_argument(
-        "-t",
-        "--title",
-        type=str,
-        default="Hamamatsu S2281-04",
-        help="Plot title",
-    )
     # ------------------------------------------------------------------------
-    parser_stage2.add_argument(
-        "-n",
-        "--npl-file",
-        type=vfile,
-        required=True,
-        metavar="<NPL ECSV>",
-        help="ECSV with NPL calibration",
-    )
-    parser_stage2.add_argument(
-        "-i",
-        "--input-file",
-        type=vfile,
-        required=True,
-        metavar="<CSV>",
-        help="CSV with datasheet calibration values",
-    )
-    parser_stage2.add_argument(
-        "-x",
-        "--x",
-        type=float,
-        default=0.0,
-        metavar="<X offset>",
-        help="X (wavelength) offset to apply to input CSV file (defaults to %(default)f)",
-    )
-    parser_stage2.add_argument(
-        "-y",
-        "--y",
-        type=float,
-        default=0.0,
-        metavar="<Y offset>",
-        help="Y (responsivity) offset to apply to input CSV file (defaults to %(default)f)",
-    )
     parser_stage2.add_argument(
         "-s",
         "--save",
         action="store_true",
         help="Save combined file to ECSV",
-    )
-    parser_stage2.add_argument(
-        "-t",
-        "--title",
-        type=str,
-        default="Hamamatsu S2281-04",
-        help="Plot title",
     )
     # ------------------------------------------------------------------------
     parser_stage3.add_argument(
@@ -348,36 +423,7 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<NPL ECSV>",
         help="ECSV with NPL + Datasheet calibration",
     )
-    parser_stage3.add_argument(
-        "-m",
-        "--method",
-        type=str,
-        choices=("linear", "cubic"),
-        default="linear",
-        help="Interpolation method (defaults to %(default)d nm)",
-    )
-    parser_stage3.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        choices=tuple(range(1, 11)),
-        default=1,
-        metavar="<N nm>",
-        help="Interpolate at equal resolution (defaults to %(default)d nm)",
-    )
-    parser_stage3.add_argument(
-        "-t",
-        "--title",
-        type=str,
-        default="Hamamatsu S2281-04",
-        help="Plot title",
-    )
-    parser_stage3.add_argument(
-        "-p",
-        "--plot",
-        action="store_true",
-        help="Plot file too",
-    )
+    # ------------------------------------------------------------------------
 
 
 # ================
@@ -388,6 +434,7 @@ COMMAND_TABLE = {
     "stage1": stage1,
     "stage2": stage2,
     "stage3": stage3,
+    "pipeline": pipeline,
 }
 
 
