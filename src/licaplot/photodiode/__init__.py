@@ -139,7 +139,30 @@ def export(
     name = f"{model}-Responsivity-Interpolated@1nm.ecsv"
     in_path = files("licaplot.photodiode").joinpath(name)
     table = astropy.io.ascii.read(in_path, format="ecsv")
-    #mask = (table[COL.WAVE] >= beg_wave)  (table[COL.WAVE] <= end_wave)
+    log.info(f"beg_wave = {beg_wave}, end_wave = {end_wave}")
+    if (beg_wave > BENCH.WAVE_START) and (end_wave < BENCH.WAVE_END):
+        history = {
+            "Description": "Trimmed both ends",
+            "Start wavelength": beg_wave * u.nm,
+            "End wavelength": end_wave * u.nm,
+        }
+        table.meta["History"].append(history)
+    elif beg_wave == BENCH.WAVE_START and end_wave < BENCH.WAVE_END:
+        history = {
+            "Description": "Trimmed higher end",
+            "Start wavelength": beg_wave * u.nm,
+            "End wavelength": end_wave * u.nm,
+        }
+        table.meta["History"].append(history)
+    elif beg_wave > BENCH.WAVE_START and end_wave == BENCH.WAVE_END:
+        history = {
+            "Description": "Trimmed lower end",
+            "Start wavelength": beg_wave * u.nm,
+            "End wavelength": end_wave * u.nm,
+        }
+        table.meta["History"].append(history)
+    else:
+        pass
     table = table[table[COL.WAVE] >= beg_wave]
     table = table[table[COL.WAVE] <= end_wave]
     if resolution > 1:
