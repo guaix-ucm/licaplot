@@ -32,7 +32,7 @@ from .utils.mpl import Markers
 from .utils.validators import vecsv
 
 import licaplot.photodiode
-from .photodiode import PhotodiodeModel, COL
+from .photodiode import PhotodiodeModel, COL, BENCH
 
 # ----------------
 # Module constants
@@ -55,11 +55,13 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary fnctions
 # ------------------
 
+
 def plot_photodiode(title: str, table: Table, marker: str):
     fig, axes = plt.subplots(nrows=1, ncols=1)
     fig.suptitle(title)
     plot_single_photodiode(axes, table, marker)
     plt.show()
+
 
 def plot_single_photodiode(axes: Axes, table: Table, marker: str):
     axes.set_xlabel(COL.WAVE)
@@ -70,7 +72,7 @@ def plot_single_photodiode(axes: Axes, table: Table, marker: str):
     axes.plot(table[COL.WAVE], table[COL.QE], marker=marker, linewidth=0, label=COL.QE)
     axes.minorticks_on()
     axes.legend()
-  
+
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
@@ -79,7 +81,9 @@ def plot_single_photodiode(axes: Axes, table: Table, marker: str):
 
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
-    licaplot.photodiode.export(args.model, args.resolution, args.ecsv_file)
+    licaplot.photodiode.export(
+        args.model, args.resolution, args.ecsv_file, args.wave_start, args.wave_end
+    )
 
 
 def plot(args):
@@ -92,6 +96,7 @@ def plot(args):
         marker=args.marker,
     )
 
+
 COMMAND_TABLE = {
     "plot": plot,
     "export": export,
@@ -100,12 +105,12 @@ COMMAND_TABLE = {
 
 def photod(args):
     COMMAND_TABLE[args.command](args)
-   
 
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
+
 
 def common_parser():
     """Common Options for subparsers"""
@@ -122,16 +127,21 @@ def common_parser():
         "--resolution",
         type=int,
         default=5,
-        choices=tuple(range(1,11)),
+        choices=tuple(range(1, 11)),
         help="Wavelength resolution (nm). (default: %(default)s nm)",
     )
     return parser
 
+
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
-    parser_plot = subparser.add_parser("plot", parents=[common_parser()], help="Plot Responsivity & Quantum Efficiency")
+    parser_plot = subparser.add_parser(
+        "plot", parents=[common_parser()], help="Plot Responsivity & Quantum Efficiency"
+    )
     parser_expo = subparser.add_parser(
-        "export",  parents=[common_parser()], help="Export Responsivity & Quantum Efficiency to CSV file"
+        "export",
+        parents=[common_parser()],
+        help="Export Responsivity & Quantum Efficiency to CSV file",
     )
 
     parser_plot.add_argument(
@@ -145,11 +155,26 @@ def add_args(parser):
     parser_expo.add_argument(
         "-f", "--ecsv-file", type=vecsv, required=True, help="ECSV file name to export"
     )
+    parser_expo.add_argument(
+        "-w1",
+        "--wave-start",
+        type=float,
+        default=BENCH.WAVE_START,
+        help="Starting wavelength in nm (defaults to %(default)d)",
+    )
+    parser_expo.add_argument(
+        "-w2",
+        "--wave-end",
+        type=float,
+        default=BENCH.WAVE_END,
+        help="End wavelength in nm (defaults to %(default)d)",
+    )
 
 
 # ================
 # MAIN ENTRY POINT
 # ================
+
 
 def main():
     execute(

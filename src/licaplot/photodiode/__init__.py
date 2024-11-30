@@ -126,29 +126,32 @@ log = logging.getLogger(__name__)
 # Auxiliary fnctions
 # ------------------
 
-def export(model: PhotodiodeModel, resolution: int, path: str) -> None:
+
+def export(
+    model: PhotodiodeModel,
+    resolution: int,
+    path: str,
+    beg_wave: float,
+    end_wave: float,
+) -> None:
     """Make a copy of the proper ECSV Astropy Table"""
     log.info("Exporting model %s, resolution %d nm to file %s", model, resolution, path)
     name = f"{model}-Responsivity-Interpolated@1nm.ecsv"
     in_path = files("licaplot.photodiode").joinpath(name)
-    t1 = astropy.io.ascii.read(in_path, format="ecsv")
-    if resolution == 1:
-         t1.write(path, delimiter=",", overwrite=True)
-    else:
-        # Subsamples the table
-        t2 = Table(
-            [t1[COL.WAVE][::resolution], t1[COL.RESP][::resolution], t1[COL.QE][::resolution]],
-            names=[n for n in COL],
-        )
-        t2.meta = t1.meta
+    table = astropy.io.ascii.read(in_path, format="ecsv")
+    #mask = (table[COL.WAVE] >= beg_wave)  (table[COL.WAVE] <= end_wave)
+    table = table[table[COL.WAVE] >= beg_wave]
+    table = table[table[COL.WAVE] <= end_wave]
+    if resolution > 1:
+        table = table[::resolution]
         history = {
             "Description": f"Subsampled calibration from {name}",
             "Resolution": resolution * u.nm,
-            "Start wavelength": np.min(t2[COL.WAVE]) * u.nm,
-            "End wavelength": np.max(t2[COL.WAVE]) * u.nm,
+            "Start wavelength": np.min(table[COL.WAVE]) * u.nm,
+            "End wavelength": np.max(table[COL.WAVE]) * u.nm,
         }
-        t2.meta["History"].append(history)
-        t2.write(path, delimiter=",", overwrite=True)
+        table.meta["History"].append(history)
+    table.write(path, delimiter=",", overwrite=True)
 
 
 def load(model: PhotodiodeModel, resolution: int) -> Table:
