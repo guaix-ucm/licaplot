@@ -127,19 +127,15 @@ log = logging.getLogger(__name__)
 # ------------------
 
 
-def export(
+def _load(
     model: PhotodiodeModel,
     resolution: int,
-    path: str,
     beg_wave: float,
     end_wave: float,
-) -> None:
-    """Make a copy of the proper ECSV Astropy Table"""
-    log.info("Exporting model %s, resolution %d nm to file %s", model, resolution, path)
+) -> Table:
     name = f"{model}-Responsivity-Interpolated@1nm.ecsv"
     in_path = files("licaplot.photodiode").joinpath(name)
     table = astropy.io.ascii.read(in_path, format="ecsv")
-    log.info(f"beg_wave = {beg_wave}, end_wave = {end_wave}")
     if (beg_wave > BENCH.WAVE_START) and (end_wave < BENCH.WAVE_END):
         history = {
             "Description": "Trimmed both ends",
@@ -174,16 +170,37 @@ def export(
             "End wavelength": np.max(table[COL.WAVE]) * u.nm,
         }
         table.meta["History"].append(history)
+    return table
+
+
+def export(
+    path: str,
+    model: PhotodiodeModel,
+    resolution: int,
+    beg_wave: float,
+    end_wave: float,
+) -> None:
+    """Make a copy of the proper ECSV Astropy Table"""
+    log.info(
+        "Exporting model %s, resolution %d nm to file %s [%dnm-%dnm]",
+        model,
+        resolution,
+        path,
+        beg_wave,
+        end_wave,
+    )
+    table = _load(model, resolution, beg_wave, end_wave)
     table.write(path, delimiter=",", overwrite=True)
 
 
-def load(model: PhotodiodeModel, resolution: int) -> Table:
+def load(model: PhotodiodeModel, resolution: int, beg_wave: float, end_wave: float) -> Table:
     """Return a ECSV as as Astropy Table"""
     log.info("Reading LICA photodiode model %s, resolution %d nm", model, resolution)
-    name = f"{model}-Responsivity-Interpolated@1nm.ecsv"
-    in_path = files("licaplot.photodiode").joinpath(name)
-    t = astropy.io.ascii.read(in_path, delimiter=";")
-    return Table(
-        [t[COL.WAVE][::resolution], t[COL.RESP][::resolution], t[COL.QE][::resolution]],
-        names=[n for n in COL],
+    log.info(
+        "Reading LICA photodiode model %s, resolution %d [%dnm-%dnm]",
+        model,
+        resolution,
+        beg_wave,
+        end_wave,
     )
+    return _load(model, resolution, beg_wave, end_wave)

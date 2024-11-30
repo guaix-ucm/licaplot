@@ -82,13 +82,13 @@ def plot_single_photodiode(axes: Axes, table: Table, marker: str):
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
     licaplot.photodiode.export(
-        args.model, args.resolution, args.ecsv_file, args.wave_start, args.wave_end
+        args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end
     )
 
 
 def plot(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE PLOT === ")
-    table = licaplot.photodiode.load(args.model, args.resolution)
+    table = licaplot.photodiode.load(args.model, args.resolution, args.wave_start, args.wave_end)
     log.info("Table info is\n%s", table.info)
     plot_photodiode(
         title=f"{args.model} characteristics",
@@ -112,6 +112,13 @@ def photod(args):
 # ===================================
 
 
+def vbench(x: str) -> float:
+    x = float(x)
+    if not (BENCH.WAVE_START <= x <= BENCH.WAVE_END):
+        raise ValueError(f"{x} outside LICA Optical Test Bench range")
+    return x
+
+
 def common_parser():
     """Common Options for subparsers"""
     parser = argparse.ArgumentParser(add_help=False)
@@ -130,6 +137,23 @@ def common_parser():
         choices=tuple(range(1, 11)),
         help="Wavelength resolution (nm). (default: %(default)s nm)",
     )
+    parser.add_argument(
+        "-w1",
+        "--wave-start",
+        type=vbench,
+        metavar="<W1 nm>",
+        default=BENCH.WAVE_START,
+        help="Start wavelength in nm (defaults to %(default)d)",
+    )
+    parser.add_argument(
+        "-w2",
+        "--wave-end",
+        type=vbench,
+        metavar="<W2 nm>",
+        default=BENCH.WAVE_END,
+        help="End wavelength in nm (defaults to %(default)d)",
+    )
+
     return parser
 
 
@@ -143,7 +167,6 @@ def add_args(parser):
         parents=[common_parser()],
         help="Export Responsivity & Quantum Efficiency to CSV file",
     )
-
     parser_plot.add_argument(
         "--marker",
         type=str,
@@ -151,23 +174,8 @@ def add_args(parser):
         default=Markers.Circle,
         help="Plot Marker",
     )
-
     parser_expo.add_argument(
         "-f", "--ecsv-file", type=vecsv, required=True, help="ECSV file name to export"
-    )
-    parser_expo.add_argument(
-        "-w1",
-        "--wave-start",
-        type=float,
-        default=BENCH.WAVE_START,
-        help="Starting wavelength in nm (defaults to %(default)d)",
-    )
-    parser_expo.add_argument(
-        "-w2",
-        "--wave-end",
-        type=float,
-        default=BENCH.WAVE_END,
-        help="End wavelength in nm (defaults to %(default)d)",
     )
 
 
