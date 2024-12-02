@@ -14,6 +14,7 @@ import logging
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
+from typing import Optional, Iterable
 
 # ---------------------
 # Thrid-party libraries
@@ -23,8 +24,17 @@ import matplotlib.pyplot as plt
 
 from lica.cli import execute
 from lica.validators import vfile
+import numpy as np
 
 import astropy.io.ascii
+import astropy.units as u
+from astropy.constants import astropyconst20 as const
+from astropy.table import Table
+from astropy.visualization import quantity_support
+
+
+import scipy.interpolate
+
 
 # ------------------------
 # Own modules and packages
@@ -32,7 +42,8 @@ import astropy.io.ascii
 
 from ._version import __version__
 from .utils.mpl import Markers, plot_overlapped, plot_single, plot_rows, plot_grid
-from .utils.validators import vsequences
+from .utils.validators import vsequences, vecsv
+from .photodiode import BENCH
 
 # -----------------------
 # Module global variables
@@ -57,7 +68,7 @@ plt.style.use("licaplot.resources.global")
 # -----------------------
 
 
-def csvs(args: Namespace) -> None:
+def multi(args: Namespace) -> None:
     vsequences(4, args.input_files, args.labels)
     N = len(args.input_files)
     tables = [astropy.io.ascii.read(f) for f in args.input_files]
@@ -104,13 +115,240 @@ def csvs(args: Namespace) -> None:
         )
 
 
+def read_csv(path: str, columns: Optional[Iterable[str]], delimiter: Optional[str]) -> Table:
+    if columns:
+        table = astropy.io.ascii.read(
+            path,
+            delimiter=delimiter,
+            data_start=1,
+            names=columns,
+        )
+    else:
+        table = astropy.io.ascii.read(path, delimiter)
+    return table
+
+
+def trim_table(
+    table: Table,
+    wave_idx: int,
+    from_wave: Optional[float],
+    to_wave: Optional[float],
+    lica: Optional[bool],
+) -> None:
+    x = table.columns[wave_idx]
+    xmax = to_wave or np.max(x)  # Trick to evaluate defauut value when None
+    xmin = from_wave or np.min(x)  # Trick to evaluate default value when None
+    xmax, xmin = max(xmax, xmin), min(xmax, xmin)
+    if lica:
+        xmax, xmin = min(xmax, BENCH.WAVE_END.value), max(xmin, BENCH.WAVE_START.value)
+    table = table[x <= xmax]
+    x = table.columns[wave_idx]
+    table = table[x >= xmin]
+    log.info("Trimmed table to wavelength [%.1f - %.1f] nm range", xmin, xmax)
+    return table
+
+
+def resample_column(table: Table, resolution: int, wave_idx: int, y_idx: int) -> Table:
+    x = table.columns[wave_idx]
+    y = table.columns[y_idx]
+    xmax = np.floor(np.max(x))
+    xmin = np.ceil(np.min(x))
+    wavelength = np.arange(xmin, xmax + 1, resolution) * u.nm
+    interpolator = scipy.interpolate.Akima1DInterpolator(x, y)
+    log.info(
+        "Resampled table to wavelength [%.1f -  %.1f] range with %d nm resolution",
+        xmin,
+        xmax,
+        resolution,
+    )
+    return wavelength, interpolator(wavelength)
+
+
+def build_table(
+    path: str,
+    columns: Optional[Iterable[str]],
+    delimiter: Optional[str],
+    wave_idx: int,
+    y_idx: int,
+    y_unit: u.Unit,
+    from_wave: Optional[float],
+    to_wave: Optional[float],
+    resolution: Optional[int],
+    lica_trim: Optional[bool],
+) -> Table:
+    table = read_csv(path, columns, delimiter)
+    log.info(table.info)
+    # Prefer resample before trimming to avoid generating extrapolation NaNs
+    if resolution is None:
+        log.info("Not resampling table")
+        table = trim_table(table, wave_idx, from_wave, to_wave, lica_trim)
+        table[table.columns[wave_idx].name] = table.columns[wave_idx] * u.nm
+        table[table.columns[y_idx].name] = table.columns[y_idx] * y_unit
+    else:
+        wavelength, resampled_col = resample_column(table, resolution, wave_idx, y_idx)
+        names = [c for c in table.columns]
+        values = [None, None]
+        values[wave_idx] = wavelength
+        values[y_idx] = resampled_col
+        table = Table(values, names=names)
+        table = trim_table(table, wave_idx, from_wave, to_wave, lica_trim)
+    log.info(table.info)
+
+
+def single(args: Namespace) -> None:
+    table = build_table(
+        path=args.input_file,
+        columns=args.columns,
+        delimiter=args.delimiter,
+        wave_idx=args.wavelength_order - 1,
+        y_idx=args.y_column_order - 1,
+        y_unit=args.y_unit,
+        from_wave=args.from_wavelength,
+        to_wave=args.to_wavelength,
+        resolution=args.resample,
+        lica_trim=args.lica,
+    )
+    with quantity_support():
+        plot_single(
+            tables=[
+                table,
+            ],
+            title=None,
+            labels=["LABEL"],
+            filters=None,
+            x=args.wavelength_order - 1,
+            y=args.y_column_order - 1,
+            marker="x",
+        )
+
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
 
 
-def add_args(parser: ArgumentParser) -> None:
+def columns_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
     parser.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV input file",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        default=None,
+        nargs="+",
+        metavar="<NAME>",
+        help="Ordered list of CSV Column names. If not specified, uses the columm names inside the CSV (default %(default)s)",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    return parser
+
+
+def column_plot_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-w",
+        "--wavelength-order",
+        type=int,
+        metavar="<N>",
+        default=1,
+        help="Column order for Wavelength, defaults tp %(default)d",
+    )
+    parser.add_argument(
+        "-y",
+        "--y-column-order",
+        type=int,
+        metavar="<N>",
+        default=2,
+        help="Column order for Y magnitude in CSV, defaults tp %(default)d",
+    )
+    parser.add_argument(
+        "-u",
+        "--y-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.dimensionless_unscaled,
+        help="Astropy Unit string (ie. nm, A/W, etc.) %(default)s",
+    )
+
+    return parser
+
+
+def wave_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-fw",
+        "--from-wavelength",
+        type=float,
+        metavar="<N nm>",
+        default=None,
+        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-tw",
+        "--to-wavelength",
+        type=float,
+        metavar="<N nm>",
+        default=None,
+        help="Wavelength upper limit index (if not specified, tacken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-r",
+        "--resample",
+        choices=tuple(range(1, 11)),
+        type=int,
+        metavar="<N nm>",
+        default=None,
+        help="Resample wavelength to N nm step size, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "--lica",
+        action="store_true",
+        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
+    )
+    return parser
+
+
+def add_args(parser: ArgumentParser) -> None:
+    subparser = parser.add_subparsers(dest="command")
+    parser_single = subparser.add_parser(
+        "single",
+        parents=[columns_parser(), column_plot_parser(), wave_parser()],
+        help="Plot single CSV file",
+    )
+    parser_multi = subparser.add_parser(
+        "multi",
+        help="Plot multiple CSV files",
+    )
+    # --------------------------------------------------------------------------------------------------
+    group = parser_single.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--plot",
+        action="store_true",
+        help="Plots CSV file",
+    )
+    group.add_argument(
+        "--export",
+        type=vecsv,
+        metavar="<FILE>",
+        default=None,
+        help="Export to ECSV",
+    )
+
+    # --------------------------------------------------------------------------------------------------
+    parser_multi.add_argument(
         "-i",
         "--input-files",
         type=vfile,
@@ -119,7 +357,7 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<File>",
         help="CSV input file(s) [1-4]. X axis is the first column",
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-l",
         "--labels",
         type=str,
@@ -128,14 +366,14 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<Label>",
         help="input labels [1-4]",
     )
-    parser.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
-    parser.add_argument(
+    parser_multi.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
+    parser_multi.add_argument(
         "-t", "--title", type=str, default=None, help="Overall plot title, defaults to %(default)s"
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-x",
         "--x-index",
         type=int,
@@ -143,7 +381,7 @@ def add_args(parser: ArgumentParser) -> None:
         default=0,
         help="Column index for X axis in CSV file, defaults tp %(default)d",
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-y",
         "--y-index",
         type=int,
@@ -151,7 +389,7 @@ def add_args(parser: ArgumentParser) -> None:
         default=1,
         help="Column index for Y axis in CSV file, defaults tp %(default)d",
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-m",
         "--marker",
         type=str,
@@ -164,6 +402,16 @@ def add_args(parser: ArgumentParser) -> None:
 # ================
 # MAIN ENTRY POINT
 # ================
+
+
+COMMAND_TABLE = {
+    "single": single,
+    "multi": multi,
+}
+
+
+def csvs(args):
+    COMMAND_TABLE[args.command](args)
 
 
 def main():
