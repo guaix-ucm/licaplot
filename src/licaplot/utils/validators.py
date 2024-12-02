@@ -4,6 +4,7 @@ import functools
 
 from typing import Iterable, Sequence, Any
 
+from lica.validation import vfile
 
 def vextension(path: str, extension: str) -> str:
     _, ext = os.path.splitext(path)
@@ -13,7 +14,10 @@ def vextension(path: str, extension: str) -> str:
     return path
 
 vecsv = functools.partial(vextension, extension=".ecsv")
-vcsv = functools.partial(vextension, extension=".csv")
+
+def vcsvfile(path: str):
+    path = vfile(path)
+    return vecsv(path)
 
 def vsequences(limit: int, *args: Iterable[Sequence[Any]]):
     bounded = tuple(len(arg) <= limit for arg in args)
