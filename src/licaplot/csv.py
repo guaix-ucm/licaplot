@@ -125,43 +125,51 @@ def read_csv(path: str, columns: Optional[Iterable[str]], delimiter: Optional[st
         )
     else:
         table = astropy.io.ascii.read(path, delimiter)
+
     return table
 
 
 def trim_table(
     table: Table,
     wave_idx: int,
+    wave_unit: u.Unit,
     from_wave: Optional[float],
     to_wave: Optional[float],
+    wl_unit: u.Unit,
     lica: Optional[bool],
 ) -> None:
     x = table.columns[wave_idx]
-    xmax = to_wave or np.max(x)  # Trick to evaluate defauut value when None
-    xmin = from_wave or np.min(x)  # Trick to evaluate default value when None
-    xmax, xmin = max(xmax, xmin), min(xmax, xmin)
+    xmax = np.max(x) * wave_unit if to_wave is None else to_wave * wl_unit
+    xmin = np.min(x) * wave_unit if from_wave is None else from_wave * wl_unit
     if lica:
-        xmax, xmin = min(xmax, BENCH.WAVE_END.value), max(xmin, BENCH.WAVE_START.value)
+        xmax, xmin = (
+            min(xmax, BENCH.WAVE_END.value * u.nm),
+            max(xmin, BENCH.WAVE_START.value * u.nm),
+        )
     table = table[x <= xmax]
     x = table.columns[wave_idx]
     table = table[x >= xmin]
-    log.info("Trimmed table to wavelength [%.1f - %.1f] nm range", xmin, xmax)
+    log.info("Trimmed table to wavelength [%s - %s] range", xmin, xmax)
     return table
 
 
-def resample_column(table: Table, resolution: int, wave_idx: int, y_idx: int) -> Table:
+def resample_column(
+    table: Table, resolution: int, wave_idx: int, wave_unit: u.Unit, y_idx: int, y_unit: u.Unit
+) -> Table:
     x = table.columns[wave_idx]
-    y = table.columns[y_idx]
+    y = table.columns[y_idx] * y_unit
     xmax = np.floor(np.max(x))
     xmin = np.ceil(np.min(x))
-    wavelength = np.arange(xmin, xmax + 1, resolution) * u.nm
+    steps = int((xmax - xmin) * wave_unit / (resolution * u.nm))
+    wavelength = np.linspace(xmin, xmax, num=steps, endpoint=True) * wave_unit
     interpolator = scipy.interpolate.Akima1DInterpolator(x, y)
     log.info(
-        "Resampled table to wavelength [%.1f -  %.1f] range with %d nm resolution",
+        "Resampled table to wavelength [%s - %s] range with %d nm resolution",
         xmin,
         xmax,
         resolution,
     )
-    return wavelength, interpolator(wavelength)
+    return wavelength, interpolator(wavelength) * y_unit
 
 
 def build_table(
@@ -169,29 +177,33 @@ def build_table(
     columns: Optional[Iterable[str]],
     delimiter: Optional[str],
     wave_idx: int,
+    wave_unit: u.Unit,
     y_idx: int,
     y_unit: u.Unit,
     from_wave: Optional[float],
     to_wave: Optional[float],
+    wl_unit: u.Unit,
     resolution: Optional[int],
     lica_trim: Optional[bool],
 ) -> Table:
     table = read_csv(path, columns, delimiter)
+    table[table.columns[wave_idx].name] = table.columns[wave_idx] * wave_unit
     log.info(table.info)
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
         log.info("Not resampling table")
-        table = trim_table(table, wave_idx, from_wave, to_wave, lica_trim)
-        table[table.columns[wave_idx].name] = table.columns[wave_idx] * u.nm
+        table = trim_table(table, wave_idx, wave_unit, from_wave, to_wave, wl_unit, lica_trim)
         table[table.columns[y_idx].name] = table.columns[y_idx] * y_unit
     else:
-        wavelength, resampled_col = resample_column(table, resolution, wave_idx, y_idx)
+        wavelength, resampled_col = resample_column(
+            table, resolution, wave_idx, wave_unit, y_idx, y_unit
+        )
         names = [c for c in table.columns]
         values = [None, None]
         values[wave_idx] = wavelength
         values[y_idx] = resampled_col
         table = Table(values, names=names)
-        table = trim_table(table, wave_idx, from_wave, to_wave, lica_trim)
+        table = trim_table(table, wave_idx, wave_unit, from_wave, to_wave, wl_unit, lica_trim)
     log.info(table.info)
 
 
@@ -201,10 +213,12 @@ def single(args: Namespace) -> None:
         columns=args.columns,
         delimiter=args.delimiter,
         wave_idx=args.wavelength_order - 1,
+        wave_unit=args.wavelength_unit,
         y_idx=args.y_column_order - 1,
         y_unit=args.y_unit,
         from_wave=args.from_wavelength,
         to_wave=args.to_wavelength,
+        wl_unit=args.wave_limit_unit,
         resolution=args.resample,
         lica_trim=args.lica,
     )
@@ -267,6 +281,14 @@ def column_plot_parser() -> ArgumentParser:
         help="Column order for Wavelength, defaults tp %(default)d",
     )
     parser.add_argument(
+        "-wu",
+        "--wavelength-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Wavelength units string (ie. nm, AA) %(default)s",
+    )
+    parser.add_argument(
         "-y",
         "--y-column-order",
         type=int,
@@ -275,14 +297,13 @@ def column_plot_parser() -> ArgumentParser:
         help="Column order for Y magnitude in CSV, defaults tp %(default)d",
     )
     parser.add_argument(
-        "-u",
+        "-yu",
         "--y-unit",
         type=u.Unit,
         metavar="<Unit>",
         default=u.dimensionless_unscaled,
         help="Astropy Unit string (ie. nm, A/W, etc.) %(default)s",
     )
-
     return parser
 
 
@@ -292,7 +313,7 @@ def wave_parser() -> ArgumentParser:
         "-fw",
         "--from-wavelength",
         type=float,
-        metavar="<N nm>",
+        metavar="<N>",
         default=None,
         help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
     )
@@ -300,9 +321,17 @@ def wave_parser() -> ArgumentParser:
         "-tw",
         "--to-wavelength",
         type=float,
-        metavar="<N nm>",
+        metavar="<N>",
         default=None,
-        help="Wavelength upper limit index (if not specified, tacken from CSV), defaults to %(default)s",
+        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wlu",
+        "--wave-limit-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Wavelength limit units string (ie. nm, AA) %(default)s",
     )
     parser.add_argument(
         "-r",
