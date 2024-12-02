@@ -30,7 +30,7 @@ import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
 from astropy.table import Table
-from astropy.visualization import quantity_support
+from astropy import visualization
 
 
 import scipy.interpolate
@@ -66,7 +66,6 @@ plt.style.use("licaplot.resources.global")
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
-
 
 def multi(args: Namespace) -> None:
     vsequences(4, args.input_files, args.labels)
@@ -133,14 +132,14 @@ def trim_table(
     table: Table,
     wave_idx: int,
     wave_unit: u.Unit,
-    from_wave: Optional[float],
-    to_wave: Optional[float],
+    wave_low: Optional[float],
+    wave_high: Optional[float],
     wl_unit: u.Unit,
     lica: Optional[bool],
 ) -> None:
     x = table.columns[wave_idx]
-    xmax = np.max(x) * wave_unit if to_wave is None else to_wave * wl_unit
-    xmin = np.min(x) * wave_unit if from_wave is None else from_wave * wl_unit
+    xmax = np.max(x) * wave_unit if wave_high is None else wave_high * wl_unit
+    xmin = np.min(x) * wave_unit if wave_low is None else wave_low * wl_unit
     if lica:
         xmax, xmin = (
             min(xmax, BENCH.WAVE_END.value * u.nm),
@@ -154,22 +153,23 @@ def trim_table(
 
 
 def resample_column(
-    table: Table, resolution: int, wave_idx: int, wave_unit: u.Unit, y_idx: int, y_unit: u.Unit
+    table: Table, resolution: int, wave_idx: int, wave_unit: u.Unit, y_idx: int
 ) -> Table:
     x = table.columns[wave_idx]
-    y = table.columns[y_idx] * y_unit
+    y = table.columns[y_idx]
+    resolution = resolution * u.nm
     xmax = np.floor(np.max(x))
     xmin = np.ceil(np.min(x))
-    steps = int((xmax - xmin) * wave_unit / (resolution * u.nm))
+    steps = int((xmax - xmin) * wave_unit / resolution)
     wavelength = np.linspace(xmin, xmax, num=steps, endpoint=True) * wave_unit
     interpolator = scipy.interpolate.Akima1DInterpolator(x, y)
     log.info(
-        "Resampled table to wavelength [%s - %s] range with %d nm resolution",
+        "Resampled table to wavelength [%s - %s] range with %s resolution",
         xmin,
         xmax,
         resolution,
     )
-    return wavelength, interpolator(wavelength) * y_unit
+    return wavelength, interpolator(wavelength)
 
 
 def build_table(
@@ -180,8 +180,8 @@ def build_table(
     wave_unit: u.Unit,
     y_idx: int,
     y_unit: u.Unit,
-    from_wave: Optional[float],
-    to_wave: Optional[float],
+    wave_low: Optional[float],
+    wave_high: Optional[float],
     wl_unit: u.Unit,
     resolution: Optional[int],
     lica_trim: Optional[bool],
@@ -192,19 +192,21 @@ def build_table(
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
         log.info("Not resampling table")
-        table = trim_table(table, wave_idx, wave_unit, from_wave, to_wave, wl_unit, lica_trim)
+        table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
         table[table.columns[y_idx].name] = table.columns[y_idx] * y_unit
     else:
         wavelength, resampled_col = resample_column(
-            table, resolution, wave_idx, wave_unit, y_idx, y_unit
+            table, resolution, wave_idx, wave_unit, y_idx
         )
         names = [c for c in table.columns]
         values = [None, None]
         values[wave_idx] = wavelength
         values[y_idx] = resampled_col
         table = Table(values, names=names)
-        table = trim_table(table, wave_idx, wave_unit, from_wave, to_wave, wl_unit, lica_trim)
+        table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
+        table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
     log.info(table.info)
+    return table
 
 
 def single(args: Namespace) -> None:
@@ -212,27 +214,26 @@ def single(args: Namespace) -> None:
         path=args.input_file,
         columns=args.columns,
         delimiter=args.delimiter,
-        wave_idx=args.wavelength_order - 1,
-        wave_unit=args.wavelength_unit,
-        y_idx=args.y_column_order - 1,
+        wave_idx=args.wave_col_order - 1,
+        wave_unit=args.wave_unit,
+        y_idx=args.y_col_order - 1,
         y_unit=args.y_unit,
-        from_wave=args.from_wavelength,
-        to_wave=args.to_wavelength,
+        wave_low=args.wave_low,
+        wave_high=args.wave_high,
         wl_unit=args.wave_limit_unit,
         resolution=args.resample,
         lica_trim=args.lica,
     )
-    with quantity_support():
+    with visualization.quantity_support():
         plot_single(
-            tables=[
-                table,
-            ],
+            tables=[table],
             title=None,
-            labels=["LABEL"],
+            labels=["hello"],
             filters=None,
-            x=args.wavelength_order - 1,
-            y=args.y_column_order - 1,
-            marker="x",
+            x=args.wave_col_order - 1,
+            y=args.y_col_order - 1,
+            marker=None,
+            linewidth=0
         )
 
 
@@ -273,24 +274,24 @@ def columns_parser() -> ArgumentParser:
 def column_plot_parser() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-w",
-        "--wavelength-order",
+        "-wc",
+        "--wave-col-order",
         type=int,
         metavar="<N>",
         default=1,
-        help="Column order for Wavelength, defaults tp %(default)d",
+        help="Wavelength column order in CSV, defaults tp %(default)d",
     )
     parser.add_argument(
         "-wu",
-        "--wavelength-unit",
+        "--wave-unit",
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
         help="Wavelength units string (ie. nm, AA) %(default)s",
     )
     parser.add_argument(
-        "-y",
-        "--y-column-order",
+        "-yc",
+        "--y-col-order",
         type=int,
         metavar="<N>",
         default=2,
@@ -310,18 +311,18 @@ def column_plot_parser() -> ArgumentParser:
 def wave_parser() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-fw",
-        "--from-wavelength",
+        "-wl",
+        "--wave-low",
         type=float,
-        metavar="<N>",
+        metavar="\u03BB",
         default=None,
         help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
     )
     parser.add_argument(
-        "-tw",
-        "--to-wavelength",
+        "-wh",
+        "--wave-high",
         type=float,
-        metavar="<N>",
+        metavar="\u03BB",
         default=None,
         help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
     )
@@ -331,7 +332,7 @@ def wave_parser() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
-        help="Wavelength limit units string (ie. nm, AA) %(default)s",
+        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
     )
     parser.add_argument(
         "-r",
