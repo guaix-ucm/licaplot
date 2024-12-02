@@ -29,7 +29,7 @@ import numpy as np
 import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
-from astropy.table import Table, QTable
+from astropy.table import Table
 from astropy import visualization
 
 
@@ -125,7 +125,6 @@ def read_csv(path: str, columns: Optional[Iterable[str]], delimiter: Optional[st
         )
     else:
         table = astropy.io.ascii.read(path, delimiter)
-
     return table
 
 
@@ -191,14 +190,14 @@ def build_table(
     lica_trim: Optional[bool],
 ) -> Table:
     table = read_csv(path, columns, delimiter)
-    table[table.columns[wave_idx].name] = table.columns[wave_idx] * wave_unit
-    log.info(table.info)
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
         log.info("Not resampling table")
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
     else:
-        wavelength, resampled_col = resample_column(table, resolution, wave_idx, wave_unit, y_idx, lica_trim)
+        wavelength, resampled_col = resample_column(
+            table, resolution, wave_idx, wave_unit, y_idx, lica_trim
+        )
         names = [c for c in table.columns]
         values = [None, None]
         units = [None, None]
@@ -206,10 +205,10 @@ def build_table(
         values[y_idx] = resampled_col
         units[wave_idx] = wave_unit
         units[y_idx] = y_unit
-        #table = QTable(data=values, names=names, units=units)
         table = Table(data=values, names=names)
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
     table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
+    table[table.columns[wave_idx].name] = table[table.columns[wave_idx].name] * wave_unit
     log.info(table.info)
     return table
 
