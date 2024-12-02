@@ -67,6 +67,7 @@ plt.style.use("licaplot.resources.global")
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
+
 def multi(args: Namespace) -> None:
     vsequences(4, args.input_files, args.labels)
     N = len(args.input_files)
@@ -145,23 +146,26 @@ def trim_table(
             min(xmax, BENCH.WAVE_END.value * u.nm),
             max(xmin, BENCH.WAVE_START.value * u.nm),
         )
-    table = table[x <= xmax]
+    table = table[x * wave_unit <= xmax]
     x = table.columns[wave_idx]
-    table = table[x >= xmin]
+    table = table[x * wave_unit >= xmin]
     log.info("Trimmed table to wavelength [%s - %s] range", xmin, xmax)
     return table
 
 
 def resample_column(
-    table: Table, resolution: int, wave_idx: int, wave_unit: u.Unit, y_idx: int
+    table: Table, resolution: int, wave_idx: int, wave_unit: u.Unit, y_idx: int, lica: bool
 ) -> Table:
     x = table.columns[wave_idx]
     y = table.columns[y_idx]
-    resolution = resolution * u.nm
-    xmax = np.floor(np.max(x))
-    xmin = np.ceil(np.min(x))
-    steps = int((xmax - xmin) * wave_unit / resolution)
-    wavelength = np.linspace(xmin, xmax, num=steps, endpoint=True) * wave_unit
+    if lica:
+        xmin = BENCH.WAVE_START.value
+        xmax = BENCH.WAVE_END.value
+    else:
+        xmax = np.floor(np.max(x))
+        xmin = np.ceil(np.min(x))
+    wavelength = np.arange(xmin, xmax + resolution, resolution)
+    log.info("Wavelengh grid to resample is\n%s", wavelength)
     interpolator = scipy.interpolate.Akima1DInterpolator(x, y)
     log.info(
         "Resampled table to wavelength [%s - %s] range with %s resolution",
@@ -193,18 +197,15 @@ def build_table(
     if resolution is None:
         log.info("Not resampling table")
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
-        table[table.columns[y_idx].name] = table.columns[y_idx] * y_unit
     else:
-        wavelength, resampled_col = resample_column(
-            table, resolution, wave_idx, wave_unit, y_idx
-        )
+        wavelength, resampled_col = resample_column(table, resolution, wave_idx, wave_unit, y_idx, lica_trim)
         names = [c for c in table.columns]
         values = [None, None]
         values[wave_idx] = wavelength
         values[y_idx] = resampled_col
         table = Table(values, names=names)
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
-        table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
+    table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
     log.info(table.info)
     return table
 
@@ -233,7 +234,7 @@ def single(args: Namespace) -> None:
             x=args.wave_col_order - 1,
             y=args.y_col_order - 1,
             marker=None,
-            linewidth=0
+            linewidth=0,
         )
 
 
@@ -314,7 +315,7 @@ def wave_parser() -> ArgumentParser:
         "-wl",
         "--wave-low",
         type=float,
-        metavar="\u03BB",
+        metavar="\u03bb",
         default=None,
         help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
     )
@@ -322,7 +323,7 @@ def wave_parser() -> ArgumentParser:
         "-wh",
         "--wave-high",
         type=float,
-        metavar="\u03BB",
+        metavar="\u03bb",
         default=None,
         help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
     )
