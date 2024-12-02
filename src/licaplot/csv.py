@@ -28,7 +28,6 @@ import numpy as np
 
 import astropy.io.ascii
 import astropy.units as u
-from astropy.constants import astropyconst20 as const
 from astropy.table import Table
 from astropy import visualization
 
@@ -41,8 +40,8 @@ import scipy.interpolate
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Markers, plot_overlapped, plot_single, plot_rows, plot_grid
-from .utils.validators import vsequences, vecsv
+from .utils.mpl import plot_overlapped, plot_single, plot_rows, plot_grid
+from .utils.validators import vsequences, vecsv, vecsvfile
 from .photodiode import BENCH
 
 # -----------------------
@@ -69,9 +68,9 @@ plt.style.use("licaplot.resources.global")
 
 
 def multi(args: Namespace) -> None:
-    vsequences(4, args.input_files, args.labels)
+    vsequences(4, args.input_files)
     N = len(args.input_files)
-    tables = [astropy.io.ascii.read(f) for f in args.input_files]
+    tables = [astropy.io.ascii.read(f, format="ecsv") for f in args.input_files]
     if args.overlap:
         plot_overlapped(
             tables=tables,
@@ -228,6 +227,9 @@ def single(args: Namespace) -> None:
         resolution=args.resample,
         lica_trim=args.lica,
     )
+    if args.export:
+        log.info("exporting to %s", args.export)
+        table.write(args.export, delimiter=",", overwrite=True)
     with visualization.quantity_support():
         plot_single(
             tables=[table],
@@ -247,6 +249,7 @@ def single(args: Namespace) -> None:
 
 
 def columns_parser() -> ArgumentParser:
+    """Generic parse option for CSV input files"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-i",
@@ -276,6 +279,7 @@ def columns_parser() -> ArgumentParser:
 
 
 def column_plot_parser() -> ArgumentParser:
+    """Generic parse options dealing with Y versus wavelenght tables and its units"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-wc",
@@ -313,6 +317,7 @@ def column_plot_parser() -> ArgumentParser:
 
 
 def wave_parser() -> ArgumentParser:
+    """Generic options dealing with wavelength trimming & resampling and its units"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-wl",
@@ -367,13 +372,7 @@ def add_args(parser: ArgumentParser) -> None:
         help="Plot multiple CSV files",
     )
     # --------------------------------------------------------------------------------------------------
-    group = parser_single.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--plot",
-        action="store_true",
-        help="Plots CSV file",
-    )
-    group.add_argument(
+    parser_single.add_argument(
         "--export",
         type=vecsv,
         metavar="<FILE>",
@@ -385,20 +384,11 @@ def add_args(parser: ArgumentParser) -> None:
     parser_multi.add_argument(
         "-i",
         "--input-files",
-        type=vfile,
+        type=vecsvfile,
         required=True,
         nargs="+",
         metavar="<File>",
-        help="CSV input file(s) [1-4]. X axis is the first column",
-    )
-    parser_multi.add_argument(
-        "-l",
-        "--labels",
-        type=str,
-        nargs="+",
-        required=True,
-        metavar="<Label>",
-        help="input labels [1-4]",
+        help="ECSV input file(s) [1-4]",
     )
     parser_multi.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
     parser_multi.add_argument(
@@ -407,31 +397,7 @@ def add_args(parser: ArgumentParser) -> None:
     parser_multi.add_argument(
         "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
     )
-    parser_multi.add_argument(
-        "-x",
-        "--x-index",
-        type=int,
-        metavar="<N>",
-        default=0,
-        help="Column index for X axis in CSV file, defaults tp %(default)d",
-    )
-    parser_multi.add_argument(
-        "-y",
-        "--y-index",
-        type=int,
-        metavar="<N>",
-        default=1,
-        help="Column index for Y axis in CSV file, defaults tp %(default)d",
-    )
-    parser_multi.add_argument(
-        "-m",
-        "--marker",
-        type=str,
-        choices=[m.value for m in Markers],
-        default=Markers.Circle.value,
-        help="Plot Marker",
-    )
-
+   
 
 # ================
 # MAIN ENTRY POINT
