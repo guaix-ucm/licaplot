@@ -55,7 +55,7 @@ def plot_overlapped(
     filters: Optional[bool],
     x: int,
     y: int,
-    linewidth: int = 0,
+    linewidth: Optional[int] = 0,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     """Plot all datasets in the same Axes using different markers"""
@@ -89,8 +89,10 @@ def plot_grid(
     x: int,
     y: int,
     marker: str,
+    linewidth: Optional[int] = 0,
 ) -> None:
     """Plot datasets in a grid of axes"""
+    marker = marker or next(markers())
     N = len(tables)
     if nrows * ncols < N:
         raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
@@ -104,7 +106,7 @@ def plot_grid(
         ax.set_title(label)
         ax.set_xlabel(table.columns[x].name)
         ax.set_ylabel(table.columns[y].name)
-        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=1)
+        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth)
         if filters:
             for filt in MONOCROMATOR_FILTERS_LABELS:
                 ax.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
@@ -126,7 +128,8 @@ def plot_cols(
     filters: Optional[bool],
     x: int,
     y: int,
-    marker: str,
+    marker:  Optional[str] = None,
+    linewidth: Optional[int] = 1,
 ) -> None:
     """Plot datasets as columns of axes"""
     plot_grid(
@@ -139,6 +142,7 @@ def plot_cols(
         x=x,
         y=y,
         marker=marker,
+        linewidth=linewidth,
     )
 
 
@@ -149,7 +153,8 @@ def plot_single(
     filters: Optional[bool],
     x: int,
     y: int,
-    marker: str,
+    marker: Optional[str] = None,
+    linewidth: Optional[int] = 1,
 ) -> None:
     """Plot a single dataset"""
     plot_grid(
@@ -162,6 +167,7 @@ def plot_single(
         x=x,
         y=y,
         marker=marker,
+        linewidth=linewidth,
     )
 
 
@@ -172,7 +178,8 @@ def plot_rows(
     filters: Optional[bool],
     x: int,
     y: int,
-    marker: str,
+    marker: Optional[str] = None,
+    linewidth: Optional[int] = 1,
 ) -> None:
     """Plot datasets as rows of axes"""
     plot_grid(
@@ -185,4 +192,5 @@ def plot_rows(
         x=x,
         y=y,
         marker=marker,
+        linewidth=linewidth,
     )
