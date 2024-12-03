@@ -25,15 +25,19 @@ Plots and exports to ESCV the original manufacturer's TSL237 spectral response f
 licaplot-csv --console single -i examples/TSL237_responsivity_manufacturer.csv --title TSL237 Responsivity from manufacturer --label TSL237 -r 5  --lica --export TSL237_manuf.ecsv
 ```
 
-Ditto for another light sensor.
-
-```bash 
-licaplot-csv --console single -i examples/S9705-01DT_responsivity_manufacturer.csv --title S9705-01DT Responsivity from manufacturer --label S9705-01DT -r 5  --lica --export S9705-01DT_manuf.ecsv
-```
-
 ## Generating LICA photodiodes reference data
+
+Hamamatsu S2281-01 diode
+
 ```bash
-licaplot-hama --console pipeline -p -t S2281-01 -n csv/calibration/hamamatsu/Hama-S2281-01-Responsivity-NPL.csv -i csv/calibration/hamamatsu/Hama-S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009 -m cubic -r 1
+licaplot-hama --console pipeline -p -n csv/calibration/hamamatsu/Hama-S2281-01-Responsivity-NPL.csv -i csv/calibration/hamamatsu/Hama-S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009 -m cubic -r 1
+```
+OSI PIN-10D photodiode
+
+Note: *This data is provisional based on the typical response provided in the manufacturer datasheet*
+
+```bash
+licaplot-osi --console method2 --plot  -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --save
 ```
 
 ## Plot the packaged ECSV file

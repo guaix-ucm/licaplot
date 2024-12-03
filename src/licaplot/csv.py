@@ -71,45 +71,47 @@ def multi(args: Namespace) -> None:
     vsequences(4, args.input_files)
     N = len(args.input_files)
     tables = [astropy.io.ascii.read(f, format="ecsv") for f in args.input_files]
+    labels = [t.meta["label"] for t in tables]
+    title = " ".join(args.title) if args.title else None
     if args.overlap:
         plot_overlapped(
             tables=tables,
-            title=args.title,
-            labels=args.labels,
+            title=title,
+            labels=labels,
             filters=args.filters,
-            x=args.x_index,
-            y=args.y_index,
+            x=args.wave_col_order-1,
+            y=args.y_col_order-1
         )
     elif N == 1:
         plot_single(
             tables=tables,
-            title=args.title,
+            title=title,
             labels=args.labels,
             filters=args.filters,
-            x=args.x_index,
-            y=args.y_index,
+            x=args.wave_col_order-1,
+            y=args.y_col_order-1,
             marker=args.marker,
         )
     elif N == 2:
         plot_rows(
             tables=tables,
-            title=args.title,
-            labels=args.labels,
+            title=title,
+            labels=labels,
             filters=args.filters,
-            x=args.x_index,
-            y=args.y_index,
+            x=args.wave_col_order-1,
+            y=args.y_col_order-1,
             marker=args.marker,
         )
     else:
         plot_grid(
-            title=args.title,
+            title=title,
             tables=tables,
-            labels=args.labels,
+            labels=labels,
             filters=args.filters,
             nrows=2,
             ncols=2,
-            x=args.x_index,
-            y=args.y_index,
+            x=args.wave_col_order-1,
+            y=args.y_col_order-1,
             marker=args.marker,
         )
 
@@ -410,10 +412,26 @@ def add_args(parser: ArgumentParser) -> None:
     )
     parser_multi.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
     parser_multi.add_argument(
-        "-t", "--title", type=str, default=None, help="Overall plot title, defaults to %(default)s"
+        "-t", "--title", nargs="+", type=str, default=None, help="Overall plot title, defaults to %(default)s"
     )
     parser_multi.add_argument(
         "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
+    )
+    parser.add_argument(
+        "-wc",
+        "--wave-col-order",
+        type=int,
+        metavar="<N>",
+        default=1,
+        help="Wavelength column order in CSV, defaults to %(default)d",
+    )
+    parser_multi.add_argument(
+        "-yc",
+        "--y-col-order",
+        type=int,
+        metavar="<N>",
+        default=2,
+        help="Column order for Y magnitude in CSV, defaults tp %(default)d",
     )
    
 
