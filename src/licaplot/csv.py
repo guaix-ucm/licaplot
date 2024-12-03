@@ -176,17 +176,19 @@ def resample_column(
 
 def build_table(
     path: str,
-    columns: Optional[Iterable[str]],
-    delimiter: Optional[str],
     wave_idx: int,
     wave_unit: u.Unit,
     y_idx: int,
     y_unit: u.Unit,
+    description: str,
+    label: str,
+    columns: Optional[Iterable[str]],
+    delimiter: Optional[str],
     wave_low: Optional[float],
     wave_high: Optional[float],
     wl_unit: u.Unit,
     resolution: Optional[int],
-    lica_trim: Optional[bool],
+    lica_trim: Optional[bool], 
 ) -> Table:
     table = read_csv(path, columns, delimiter)
     # Prefer resample before trimming to avoid generating extrapolation NaNs
@@ -208,6 +210,7 @@ def build_table(
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
     table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
     table[table.columns[wave_idx].name] = table[table.columns[wave_idx].name] * wave_unit
+    table.meta = {"description": description, "label": label}
     log.info(table.info)
     return table
 
@@ -226,6 +229,8 @@ def single(args: Namespace) -> None:
         wl_unit=args.wave_limit_unit,
         resolution=args.resample,
         lica_trim=args.lica,
+        description=" ".join(args.title),
+        label=args.label,
     )
     if args.export:
         log.info("exporting to %s", args.export)
@@ -233,8 +238,8 @@ def single(args: Namespace) -> None:
     with visualization.quantity_support():
         plot_single(
             tables=[table],
-            title=None,
-            labels=["hello"],
+            title=" ".join(args.title),
+            labels=[None],
             filters=None,
             x=args.wave_col_order - 1,
             y=args.y_col_order - 1,
@@ -282,12 +287,25 @@ def column_plot_parser() -> ArgumentParser:
     """Generic parse options dealing with Y versus wavelenght tables and its units"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
+        "--title",
+        type=str,
+        required=True,
+        nargs="+",
+        help="Plot title",
+    )
+    parser.add_argument(
+        "--label",
+        type=str,
+        required=True,
+        help="Label for legends",
+    )
+    parser.add_argument(
         "-wc",
         "--wave-col-order",
         type=int,
         metavar="<N>",
         default=1,
-        help="Wavelength column order in CSV, defaults tp %(default)d",
+        help="Wavelength column order in CSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-wu",

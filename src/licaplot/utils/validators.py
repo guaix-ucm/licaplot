@@ -4,7 +4,7 @@ import functools
 
 from typing import Iterable, Sequence, Any
 
-from lica.validation import vfile
+from lica.validators import vfile
 
 def vextension(path: str, extension: str) -> str:
     _, ext = os.path.splitext(path)
@@ -15,7 +15,7 @@ def vextension(path: str, extension: str) -> str:
 
 vecsv = functools.partial(vextension, extension=".ecsv")
 
-def vcsvfile(path: str):
+def vecsvfile(path: str):
     path = vfile(path)
     return vecsv(path)
 

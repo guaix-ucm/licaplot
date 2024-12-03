@@ -7,15 +7,15 @@
 # delimiter: ','
 # meta: !!omap
 # - {Manufacturer: Hamamatsu}
-# - {Model: S2281-04}
-# - {Serial: '1097'}
+# - {Model: S2281-01}
+# - {Serial: 01097}
 # - {Window: Quartz Glass}
 # - Photosensitive size diameter: !astropy.units.Quantity
 #     unit: !astropy.units.Unit {unit: mm}
-#     value: 7.98
+#     value: 11.3
 # - Photosensitive area: !astropy.units.Quantity
 #     unit: !astropy.units.Unit {unit: mm2}
-#     value: 50.0
+#     value: 100.0
 # - Dark current:
 #     max:
 #       Temp: !astropy.units.Quantity
@@ -44,8 +44,8 @@
 #         value: 960.0
 # - History:
 #   - Comment: Resolution is constant except for the last data point
-#     Date: null
-#     Description: Created NPL Calibration Table
+#     Date: '2010-10-08'
+#     Description: National Physical Laboratory (NPL) Calibration
 #     End wavelength: !astropy.units.Quantity
 #       unit: *id003
 #       value: 1000.0

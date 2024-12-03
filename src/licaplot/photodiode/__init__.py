@@ -38,11 +38,11 @@ from .. import StrEnum
 # Photodiode record
 class Hamamatsu:
     MANUF = "Hamamatsu"
-    MODEL = "S2281-04"
-    SERIAL = "1097"
+    MODEL = "S2281-01"
+    SERIAL = "01097"
     WINDOW = "Quartz Glass"
-    PHS_SIZE = 7.98 * u.mm  # Photosensitive size (diameter)
-    PHS_AREA = 50 * (u.mm**2)  # Photosensitive area
+    PHS_SIZE = 11.3 * u.mm  # Photosensitive size (diameter)
+    PHS_AREA = 100 * (u.mm**2)  # Photosensitive area
     DARK = {
         "typ": {
             "Value": 50 * (u.pA),

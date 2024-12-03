@@ -93,8 +93,8 @@ def create_npl_table(npl_path: str) -> Table:
         "History": [],
     }
     history = {
-        "Description": "Created NPL Calibration Table",
-        "Date": None,
+        "Description": "National Physical Laboratory (NPL) Calibration",
+        "Date": "2010-10-08",
         "Resolution": 20 * u.nm,
         "Comment": "Resolution is constant except for the last data point",
         "Start wavelength": np.min(table[COL.WAVE]) * u.nm,
