@@ -327,28 +327,34 @@ wheels = [
 
 [[package]]
 name = "lica"
-version = "1.0.5"
+version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-decouple" },
+    { name = "strenum" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/36/e11422af1e75048ac9e82f0b435b95886155e98a5c58fc83defce20c1763/lica-1.0.5.tar.gz", hash = "sha256:9489e88db35a456dbe6095644a234c4fc3f269cb0879990f2f7c6524f6d6476e", size = 51411 }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/46/48c5223edddd8efd18b613fa83ab94ba922494f618cd8f5766a7fdc7e9ff/lica-1.0.9.tar.gz", hash = "sha256:13b4317c171215b2c8aa0f3dae57d9c6a4eba06365382186d4fcc2d8023ae1f6", size = 67396 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/9c/9bdb89e3431ff8a8488fdd371102601b344ee6fe851fd01ec3cdadd9611e/lica-1.0.5-py3-none-any.whl", hash = "sha256:1bd14f074d27df6c256e7525ee568e3560e8744a0a706c9b3e42b6e261b1c21e", size = 34900 },
+    { url = "https://files.pythonhosted.org/packages/be/26/3f635fcab91ac5a6f0b8315caf712781ee254e826f442687481293c54167/lica-1.0.9-py3-none-any.whl", hash = "sha256:da404761de403b4cbcfb1aa88a26d4d0992dd90aba5aa19e666de74c89cd5137", size = 50113 },
+]
+
+[package.optional-dependencies]
+lica = [
+    { name = "astropy" },
+    { name = "numpy" },
 ]
 
 [[package]]
 name = "licaplot"
-version = "0.1.dev24+ga705720.d20241129"
+version = "0.1.dev51+g07f67fc.d20241203"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
-    { name = "lica" },
+    { name = "lica", extra = ["lica"] },
     { name = "matplotlib" },
     { name = "pyqt5" },
     { name = "scipy" },
-    { name = "strenum" },
 ]
 
 [package.dev-dependencies]
@@ -359,11 +365,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "astropy" },
-    { name = "lica" },
+    { name = "lica", extras = ["lica"], specifier = ">=1.0.8" },
     { name = "matplotlib" },
     { name = "pyqt5" },
     { name = "scipy" },
-    { name = "strenum" },
 ]
 
 [package.metadata.requires-dev]

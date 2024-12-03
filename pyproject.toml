@@ -28,8 +28,6 @@ dependencies = [
     "PyQt5",
     "astropy",
     "scipy",
-    "rawpy>=0.23.2",
-    "exifread>=3.0.0",
     "lica[lica]>=1.0.8",
 ]
 
