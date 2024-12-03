@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 
 from lica.cli import execute
 from lica.validators import vfile
+from lica.photodiode import PhotodiodeModel
+import lica.photodiode
 
 # ------------------------
 # Own modules and packages
@@ -101,25 +103,6 @@ def plot_filter_spectrum(axes, i, x, y, ylabels, **kwargs):
     axes.plot(wavelength, signal, marker=marker, color=color, linewidth=1, label=ylabels[i])
 
 
-def csv_readings_to_array(csv_path):
-    log.info("reading CSV file %s", csv_path)
-    with open(csv_path, newline="") as csvfile:
-        reader = csv.reader(csvfile, delimiter="\t")
-        contents = {int(round(float(row[1]), 0)): float(row[2]) for row in reader}
-    wavelength = np.array(sorted(contents.keys()))
-    signal = np.array(tuple(contents[key] for key in sorted(contents.keys())))
-    return wavelength, signal
-
-
-def validate_lists(args):
-    if len(args.filters) != len(args.labels):
-        raise ValueError("Number of labels must match number of filter files")
-    if len(args.filters) < 1:
-        raise ValueError("Missing filter CSV files")
-    if len(args.diodes) < 1:
-        raise ValueError("Missing calibration diode CSV files")
-
-
 def get_info_from(args):
     accum = list()
     labels = list()
@@ -158,8 +141,8 @@ def corrected_spectrum(args):
     return
 
     wavelength, signal, labels, diode, model = get_info_from(args)
-    log.info
-    responsivity, qe = photodiode_load(args.model, args.resolution)
+
+    responsivity, qe = lica.photodiode.load(args.model, args.resolution, 350, 1050)
     log.info(
         "Read %s reference responsivity values at %d nm resolution from %s",
         len(responsivity),
@@ -199,17 +182,7 @@ def corrected_spectrum(args):
     )
 
 
-COMMAND_TABLE = {
-    "raw": raw_spectrum,
-    "corrected": corrected_spectrum,
-}
-
-
-def filters(args):
-    command = args.command
-    func = COMMAND_TABLE[command]
-    func(args)
-
+   
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -254,8 +227,8 @@ def common_options():
     parser.add_argument(
         "-m",
         "--model",
-        default=Photodiode.OSI.value,
-        choices=[p.value for p in Photodiode],
+        default=PhotodiodeModel.OSI,
+        choices=[p for p in PhotodiodeModel],
         help="Photodiode model. (default: %(default)s)",
     )
     return parser
@@ -264,10 +237,35 @@ def common_options():
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_raw = subparser.add_parser("raw", help="Raw spectrum", parents=[common_options()])
+    parser_raw.set_defaults(func=raw_spectrum)
     parser_corr = subparser.add_parser("corrected", help="Correced spectrum", parents=[common_options()])
-   
-    # ---------------------------------------------------------------------------------------------------------------
+    parser_raw.set_defaults(func=corrected_spectrum)
 
+    # ---------------------------------------------------------------------------------------------------------------
+    parser.add_argument(
+        "-wl",
+        "--wave-low",
+        type=float,
+        metavar="\u03bb",
+        default=None,
+        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wh",
+        "--wave-high",
+        type=float,
+        metavar="\u03bb",
+        default=None,
+        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wu",
+        "--wave-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
+    )
     parser_corr.add_argument(
         "-r",
         "--resolution",
@@ -283,20 +281,7 @@ def add_args(parser):
         choices=("combined", "individual"),
         help="Export to CSV file(s)",
     )
-    parser_corr.add_argument(
-        "-u",
-        "--units",
-        type=str,
-        choices=("nm", "angs"),
-        default="nm",
-        help="Exported wavelength units. (default: %(default)s)",
-    )
-    parser_corr.add_argument(
-        "-wl",
-        "--wavelength-last",
-        action="store_true",
-        help="Wavelength is last column in exported file",
-    )
+    
 
     # ---------------------------------------------------------------------------------------------------------------
 
@@ -305,6 +290,9 @@ def add_args(parser):
 # MAIN ENTRY POINT
 # ================
 
+
+def filters(args):
+    args.func(args)
 
 def main():
     execute(
