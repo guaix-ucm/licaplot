@@ -12,7 +12,6 @@
 
 import os
 import logging
-from enum import IntEnum
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
@@ -245,11 +244,13 @@ def add_args(parser: ArgumentParser) -> None:
         parents=[combi_parser(), plot_parser()],
         help="By cross-calibration with Hamamatsu S2281",
     )
+    parser_m1.set_defaults(func=method1)
     parser_m2 = subparser.add_parser(
         "method2",
         parents=[interp_parser(), plot_parser()],
         help="By digitizing the datasheet",
     )
+    parser_m2.set_defaults(func=method2)
     # ------------------------------------------------------------------------
     parser_m1.add_argument(
         "-s",
@@ -279,16 +280,9 @@ def add_args(parser: ArgumentParser) -> None:
 # MAIN ENTRY POINT
 # ================
 
-COMMAND_TABLE = {
-    "method1": method1,
-    "method2": method2,
-}
-
-
-def osi(args: Namespace):
-    COMMAND_TABLE[args.command](args)
-
-
+def osi(args: Namespace) -> None:
+    args.func(args)
+  
 def main():
     execute(
         main_func=osi,

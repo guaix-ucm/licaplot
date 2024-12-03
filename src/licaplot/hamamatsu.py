@@ -372,21 +372,25 @@ def add_args(parser: ArgumentParser) -> None:
         ],
         help="Load NPL calibration CSV and convert to ECSV",
     )
+    parser_stage1.set_defaults(func=stage1)
     parser_stage2 = subparser.add_parser(
         "stage2",
         parents=[combi_parser(), plot_parser()],
         help="Merges datasheet data to NPL calibration data and convert to ECSV",
     )
+    parser_stage2.set_defaults(func=stage2)
     parser_stage3 = subparser.add_parser(
         "stage3",
         parents=[plot_parser(), interp_parser()],
         help="Resamples calibration data to uniform 1nm wavelength step and convert to ECSV",
     )
-    subparser.add_parser(
+    parser_stage3.set_defaults(func=stage3)
+    parser_pipe = subparser.add_parser(
         "pipeline",
         parents=[plot_parser(), combi_parser(), interp_parser()],
         help="Pipleines all 3 stages",
     )
+    parser_pipe.set_defaults(func=pipeline)
     # ------------------------------------------------------------------------
     parser_stage1.add_argument(
         "-i",
@@ -419,16 +423,9 @@ def add_args(parser: ArgumentParser) -> None:
 # MAIN ENTRY POINT
 # ================
 
-COMMAND_TABLE = {
-    "stage1": stage1,
-    "stage2": stage2,
-    "stage3": stage3,
-    "pipeline": pipeline,
-}
-
 
 def hama(args: Namespace):
-    COMMAND_TABLE[args.command](args)
+    args.func(args)
 
 
 def main():

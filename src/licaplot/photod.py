@@ -78,7 +78,6 @@ def plot_single_photodiode(axes: Axes, table: Table, marker: str):
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
-
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
     lica.photodiode.export(args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end)
@@ -95,15 +94,8 @@ def plot(args):
     )
 
 
-COMMAND_TABLE = {
-    "plot": plot,
-    "export": export,
-}
-
-
-def photod(args):
-    COMMAND_TABLE[args.command](args)
-
+def photod(args) -> None:
+    args.func(args)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -160,11 +152,15 @@ def add_args(parser):
     parser_plot = subparser.add_parser(
         "plot", parents=[common_parser()], help="Plot Responsivity & Quantum Efficiency"
     )
+    parser_plot.set_defaults(func=plot)
     parser_expo = subparser.add_parser(
         "export",
         parents=[common_parser()],
         help="Export Responsivity & Quantum Efficiency to CSV file",
     )
+    parser_expo.set_defaults(func=export)
+
+    # ------------------------------------------------------------------------------------
     parser_plot.add_argument(
         "--marker",
         type=str,
@@ -172,6 +168,7 @@ def add_args(parser):
         default=Markers.Circle,
         help="Plot Marker",
     )
+    # ------------------------------------------------------------------------------------
     parser_expo.add_argument(
         "-f", "--ecsv-file", type=vecsv, required=True, help="ECSV file name to export"
     )
