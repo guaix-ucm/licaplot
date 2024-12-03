@@ -27,11 +27,11 @@ import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
 from astropy.table import Table
-
 import scipy.interpolate
+
 from lica.cli import execute
 from lica.validators import vfile
-
+from lica.photodiode import COL, BENCH, OSI as PHD
 
 # ------------------------
 # Own modules and packages
@@ -39,7 +39,7 @@ from lica.validators import vfile
 
 from ._version import __version__
 from .utils.mpl import plot_overlapped
-from . import StrEnum
+
 
 # -----------------------
 # Module global variables
@@ -53,54 +53,6 @@ log = logging.getLogger(__name__)
 
 # Load global style sheets
 plt.style.use("licaplot.resources.global")
-
-
-# Photodiode record
-class PHD:
-    MANUF = "OSI"
-    MODEL = "PIN-10D"
-    SERIAL = "OSI-11-01-004-10D"
-    WINDOW = "Quartz Glass"
-    PHS_SIZE = 11.28 * u.mm  # Photosensitive size (diameter)
-    PHS_AREA = 100 * (u.mm**2)  # Photosensitive area
-    DARK = {
-        "typ": {
-            "Value": 2 * (u.nA),
-            "Temp": 23 * u.deg_C,
-        },
-        "max": {  # Dark current at given room Temp
-            "Value": 25 * (u.nA),
-            "Temp": 23 * u.deg_C,
-        },
-    }
-    # responsivity peak
-    PEAK = {
-        "typ": {
-            "Wave": 970 * (u.nm),
-            "Resp": 0.6 * (u.A / u.W),
-            "Temp": 25 * u.deg_C,
-        },
-        "max": {
-            "Wave": 970 * (u.nm),
-            "Resp": 0.65 * (u.A / u.W),
-            "Temp": 25 * u.deg_C,
-        },
-    }
-
-
-class COL(StrEnum):
-    """Calibration Table Columns"""
-
-    WAVE = "Wavelength"
-    RESP = "Responsivity"
-    QE = "QE"
-
-
-class BENCH(IntEnum):
-    """LICA Optical bench Wavelength range"""
-
-    WAVE_START = 350
-    WAVE_END = 1050
 
 
 # -------------------

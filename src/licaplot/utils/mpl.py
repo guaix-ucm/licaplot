@@ -17,9 +17,8 @@ from typing import Iterable, Sequence, Optional, Tuple
 
 from astropy.table import Table
 import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
 
-from .. import StrEnum
+from lica import StrEnum
 
 class Markers(StrEnum):
     Circle = "o"

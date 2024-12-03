@@ -21,19 +21,16 @@ from typing import Optional, Iterable
 # ---------------------
 
 import matplotlib.pyplot as plt
-
-from lica.cli import execute
-from lica.validators import vfile
 import numpy as np
-
 import astropy.io.ascii
 import astropy.units as u
 from astropy.table import Table
 from astropy import visualization
-
-
 import scipy.interpolate
 
+from lica.cli import execute
+from lica.validators import vfile
+from lica.photodiode import BENCH
 
 # ------------------------
 # Own modules and packages
@@ -42,7 +39,6 @@ import scipy.interpolate
 from ._version import __version__
 from .utils.mpl import plot_overlapped, plot_single, plot_rows, plot_grid
 from .utils.validators import vsequences, vecsv, vecsvfile
-from .photodiode import BENCH
 
 # -----------------------
 # Module global variables

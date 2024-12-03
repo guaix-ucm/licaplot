@@ -30,11 +30,7 @@ from lica.validators import vfile
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Markers
 from .utils.validators import vsequences
-
-
-from .photodiode import PhotodiodeModel
 
 # ----------------
 # Module constants

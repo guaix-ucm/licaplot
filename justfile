@@ -66,7 +66,7 @@ lica-rel version="":
     echo "Removing previous LICA dependency"
     uv remove lica || echo "Ignoring non existing LICA library";
     echo "Adding LICA library {{ version }}";
-    uv add --refresh-package lica lica[raw] {{ version }};
+    uv add --refresh-package lica lica[lica] {{ version }};
 
 
 # Backup .env to storage unit

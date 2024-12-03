@@ -27,11 +27,11 @@ import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
 from astropy.table import Table
-
 import scipy.interpolate
+
 from lica.cli import execute
 from lica.validators import vfile
-
+from lica.photodiode import COL, BENCH, Hamamatsu as PHD
 
 # ------------------------
 # Own modules and packages
@@ -39,7 +39,6 @@ from lica.validators import vfile
 
 from ._version import __version__
 from .utils.mpl import plot_overlapped
-from .photodiode import COL, BENCH, Hamamatsu as PHD
 
 # -----------------------
 # Module global variables
