@@ -67,6 +67,8 @@ lica-rel version="":
     uv remove lica || echo "Ignoring non existing LICA library";
     echo "Adding LICA library {{ version }}";
     uv add --refresh-package lica lica[lica] {{ version }};
+    uv remove rawpy
+    uv remove exifread
 
 
 # Backup .env to storage unit

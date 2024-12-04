@@ -28,7 +28,7 @@ dependencies = [
     "PyQt5",
     "astropy",
     "scipy",
-    "lica[lica]>=1.0.8",
+    "lica[lica]>=1.0.9",
 ]
 
 
