@@ -16,6 +16,7 @@ from typing import Iterable, Sequence, Optional, Tuple
 # ---------------------
 
 from astropy.table import Table
+import astropy.units as u
 import matplotlib.pyplot as plt
 
 from lica import StrEnum
@@ -46,6 +47,16 @@ def markers() -> str:
         yield values[i]
         i = (i + 1) % N
 
+def get_labels(table: Table, x: int, y: int) -> Tuple[str, str]:
+    """Get the labels for a table, using units if necessary"""
+    xlabel = table.columns[x].name
+    xunit = table.columns[x].unit
+    ylabel = table.columns[y].name
+    yunit = table.columns[y].unit
+    xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
+    ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
+    return xlabel, ylabel
+
 
 def plot_overlapped(
     title: Optional[str],
@@ -61,8 +72,9 @@ def plot_overlapped(
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
-    axes.set_xlabel(tables[0].columns[x].name)
-    axes.set_ylabel(tables[0].columns[y].name)
+    xlabel, ylabel = get_labels(tables[0], x, y)
+    axes.set_xlabel(xlabel)
+    axes.set_ylabel(ylabel)
     for table, label, marker in zip(tables, labels, markers()):
         axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth, label=label)
     if filters:
@@ -103,8 +115,9 @@ def plot_grid(
         fig.suptitle(title)
     for i, ax, table, label in zip(indexes, axes, tables, labels):
         ax.set_title(label)
-        ax.set_xlabel(table.columns[x].name)
-        ax.set_ylabel(table.columns[y].name)
+        xlabel, ylabel = get_labels(table, x, y)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth)
         if filters:
             for filt in MONOCROMATOR_FILTERS_LABELS:

@@ -15,7 +15,7 @@ import logging
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Tuple
 
 # ---------------------
 # Thrid-party libraries
@@ -29,15 +29,17 @@ from astropy.constants import astropyconst20 as const
 from astropy.table import Table, Column
 import scipy.interpolate
 
-from lica import StrEnum
+
 from lica.cli import execute
 from lica.validators import vfile
-from lica.photodiode import PhotodiodeModel, COL, BENCH, OSI as PHD
+from lica.photodiode import PhotodiodeModel, COL, BENCH, Hamamatsu, OSI
 import lica.photodiode
+
 # ------------------------
 # Own modules and packages
 # ------------------------
 
+from . import TBCOL
 from ._version import __version__
 from .utils.mpl import plot_overlapped
 from .utils.validators import vecsvfile
@@ -48,11 +50,6 @@ from .utils.validators import vecsvfile
 
 log = logging.getLogger(__name__)
 
-class TBCOL(StrEnum):
-    """Additiona columns names for data produced by Scan.exe or TestBench"""
-    INDEX = "Index"   # Index number 1, 2, etc produced in the CSV file
-    CURENT = "Electrical Current" #
-    READ_NOISE = "Read Noise"
 
 # -----------------
 # Matplotlib styles
@@ -65,6 +62,7 @@ plt.style.use("licaplot.resources.global")
 # -------------------
 # Auxiliary functions
 # -------------------
+
 
 def plot_cross(
     title: Optional[str],
@@ -90,6 +88,7 @@ def plot_cross(
     axes.minorticks_on()
     axes.legend()
     plt.show()
+
 
 def scan_csv_to_table(path):
     table = astropy.io.ascii.read(
@@ -125,14 +124,14 @@ def create_osi_table(path: str) -> Table:
     table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
-        "Manufacturer": PHD.MANUF,
-        "Model": PHD.MODEL,
-        "Serial": PHD.SERIAL,
-        "Window": PHD.WINDOW,
-        "Photosensitive size diameter": PHD.PHS_SIZE,
-        "Photosensitive area": PHD.PHS_AREA,
-        "Dark current": PHD.DARK,
-        "Peak responsivity": PHD.PEAK,
+        "Manufacturer": OSI.MANUF,
+        "Model": OSI.MODEL,
+        "Serial": OSI.SERIAL,
+        "Window": OSI.WINDOW,
+        "Photosensitive size diameter": OSI.PHS_SIZE,
+        "Photosensitive area": OSI.PHS_AREA,
+        "Dark current": OSI.DARK,
+        "Peak responsivity": OSI.PEAK,
         "History": [],
     }
     history = {
@@ -177,23 +176,24 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
     return qtable
 
 
-def cross_calibrate(osi_readings: Table, hama_readings: Table, hama_reference: Table, resolution: int) -> Table:
-    
+def cross_calibrate(
+    osi_readings: Table, hama_readings: Table, hama_reference: Table, resolution: int
+) -> Table:
     osi_responsivity = hama_reference[COL.RESP] * (
         osi_readings[TBCOL.CURRENT] / hama_readings[TBCOL.CURRENT]
     )
     osi_qe = Column(quantum_efficiency(osi_readings[COL.WAVE], osi_responsivity), name=COL.QE)
-    osi_responsivity = Column(np.round(osi_responsivity, decimals=5) * (u.A/u.W), name=COL.RESP)
+    osi_responsivity = Column(np.round(osi_responsivity, decimals=5) * (u.A / u.W), name=COL.RESP)
     table = Table([hama_reference[COL.WAVE], osi_responsivity, osi_qe])
     table.meta = {
-        "Manufacturer": PHD.MANUF,
-        "Model": PHD.MODEL,
-        "Serial": PHD.SERIAL,
-        "Window": PHD.WINDOW,
-        "Photosensitive size diameter": PHD.PHS_SIZE,
-        "Photosensitive area": PHD.PHS_AREA,
-        "Dark current": PHD.DARK,
-        "Peak responsivity": PHD.PEAK,
+        "Manufacturer": OSI.MANUF,
+        "Model": OSI.MODEL,
+        "Serial": OSI.SERIAL,
+        "Window": OSI.WINDOW,
+        "Photosensitive size diameter": OSI.PHS_SIZE,
+        "Photosensitive area": OSI.PHS_AREA,
+        "Dark current": OSI.DARK,
+        "Peak responsivity": OSI.PEAK,
         "History": [],
     }
     history = {
@@ -229,9 +229,7 @@ def method1(args: Namespace) -> None:
     if args.plot:
         plot_overlapped(
             title=f"{args.title} #{osi_reference.meta['Serial']} interpolated curves @ {args.resolution} nm",
-            tables=[
-                osi_reference, hama_reference
-            ],
+            tables=[osi_reference, hama_reference],
             labels=[
                 "OSI",
                 "Hamamatsu.",
@@ -271,13 +269,30 @@ def method2(args: Namespace) -> None:
 
 
 def compare(args: Namespace) -> None:
-    table1 = astropy.io.ascii.read(args.method1_file, format="ecsv")
-    table2 = astropy.io.ascii.read(args.method2_file, format="ecsv")
-    plot_cross(
-        title = "Comparison of methods",
-        cross_resp = table1[COL.RESP],
-        datasheet_resp = table2[COL.RESP][0:700],
+    table1 = astropy.io.ascii.read(args.cross_file, format="ecsv")
+    table2 = astropy.io.ascii.read(args.datasheet_file, format="ecsv")[0:-1]
+    hama_reference = lica.photodiode.load(
+        PhotodiodeModel.HAMAMATSU,
+        1,
+        BENCH.WAVE_START,
+        BENCH.WAVE_END - 1,  # ScanExe alwais skips the end wavelength :-(
     )
+    osi = f"{OSI.MANUF} {OSI.MODEL}"
+    hama = f"{Hamamatsu.MANUF} {Hamamatsu.MODEL}"
+    log.info(table1.colnames.index(COL.WAVE))
+    x = table1.colnames.index(COL.WAVE)
+    y = table1.colnames.index(COL.QE) if args.qe else table1.colnames.index(COL.RESP)
+    if args.plot:
+        plot_overlapped(
+            title=args.title,
+            tables=[table1, table2, hama_reference],
+            labels=[f"{osi} Cross Calibrated", f"{osi} From Datasheet", f"{hama} (Ref.)"],
+            filters=True,
+            x=x,
+            y=y,
+            linewidth=0,
+        )
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -297,7 +312,7 @@ def plot_parser() -> ArgumentParser:
         "-t",
         "--title",
         type=str,
-        default=f"{PHD.MANUF} {PHD.MODEL}",
+        default=f"{OSI.MANUF} {OSI.MODEL}",
         help="Plot title",
     )
     return parser
@@ -352,7 +367,7 @@ def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     # ---------------------------------------------------------------
     parser_m1 = subparser.add_parser(
-        "method1",
+        "cross",
         parents=[combi_parser(), plot_parser()],
         help="By cross-calibration with Hamamatsu S2281",
     )
@@ -365,7 +380,7 @@ def add_args(parser: ArgumentParser) -> None:
     )
     # ---------------------------------------------------------------
     parser_m2 = subparser.add_parser(
-        "method2",
+        "datasheet",
         parents=[interp_parser(), plot_parser()],
         help="By digitizing the datasheet",
     )
@@ -389,25 +404,32 @@ def add_args(parser: ArgumentParser) -> None:
     parser_comp = subparser.add_parser(
         "compare",
         parents=[plot_parser()],
-        help="Comparing methods 1 & 2",
+        help="Comparing between cross calibration and datasheet methods",
     )
     parser_comp.set_defaults(func=compare)
     parser_comp.add_argument(
-        "-m1",
-        "--method1-file",
+        "-q",
+        "--qe",
+        action="store_true",
+        help="Plot Quantum Eficiency instead of Responsivity",
+    )
+    parser_comp.add_argument(
+        "-c",
+        "--cross-file",
         type=vecsvfile,
         required=True,
         metavar="<ECSV FILE>",
         help="OSI ECSV file obtained by cross-calibration",
     )
     parser_comp.add_argument(
-        "-m2",
-        "--method2-file",
+        "-d",
+        "--datasheet-file",
         type=vecsvfile,
         required=True,
         metavar="<ECSV FILE>",
         help="OSI ECSV file obtained by digitizing datasheet",
     )
+
 
 # ================
 # MAIN ENTRY POINT
@@ -416,7 +438,6 @@ def add_args(parser: ArgumentParser) -> None:
 
 def osi(args: Namespace):
     args.func(args)
-
 
 
 def main():
