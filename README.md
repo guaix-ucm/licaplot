@@ -34,14 +34,20 @@ licaplot-hama --console pipeline -p -n csv/calibration/hamamatsu/Hama-S2281-01-R
 ```
 OSI PIN-10D photodiode
 
-Note: *This data is provisional based on the typical response provided in the manufacturer datasheet*
-
+By using the scanned datasheet
 ```bash
-licaplot-osi --console method2 -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
-
-licaplot-osi --console method1 --osi csv/calibration/osi/OSI\ PIN-10D-Readings.csv --hama csv/calibration/osi/S2281-01\ Readings.csv --plot --save
+licaplot-osi --console datasheet -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
 ```
 
+By using a cross calinration with the Hamamatsu photodiode
+```bash
+licaplot-osi --console cross --osi csv/calibration/osi/OSI\ PIN-10D-Readings.csv --hama csv/calibration/osi/S2281-01\ Readings.csv --plot --save
+```
+
+Compare both methods
+```bash
+licaplot-osi --console compare -c csv/calibration/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
+```
 ## Plot the packaged ECSV file
 
 ```bash
