@@ -37,7 +37,9 @@ OSI PIN-10D photodiode
 Note: *This data is provisional based on the typical response provided in the manufacturer datasheet*
 
 ```bash
-licaplot-osi --console method2 --plot  -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --save
+licaplot-osi --console method2 -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
+
+licaplot-osi --console method1 --osi csv/calibration/osi/OSI\ PIN-10D-Readings.csv --hama csv/calibration/osi/S2281-01\ Readings.csv --plot --save
 ```
 
 ## Plot the packaged ECSV file

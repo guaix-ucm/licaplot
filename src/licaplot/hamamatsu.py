@@ -31,7 +31,7 @@ import scipy.interpolate
 
 from lica.cli import execute
 from lica.validators import vfile
-from lica.photodiode import COL, BENCH, Hamamatsu as PHD
+from lica.photodiode import COL, BENCH, Hamamatsu
 
 # ------------------------
 # Own modules and packages
@@ -81,14 +81,14 @@ def create_npl_table(npl_path: str) -> Table:
     table[COL.RESP] = table[COL.RESP] * (u.A / u.W)
     table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
     table.meta = {
-        "Manufacturer": PHD.MANUF,
-        "Model": PHD.MODEL,
-        "Serial": PHD.SERIAL,
-        "Window": PHD.WINDOW,
-        "Photosensitive size diameter": PHD.PHS_SIZE,
-        "Photosensitive area": PHD.PHS_AREA,
-        "Dark current": PHD.DARK,
-        "Peak responsivity": PHD.PEAK,
+        "Manufacturer": Hamamatsu.MANUF,
+        "Model": Hamamatsu.MODEL,
+        "Serial": Hamamatsu.SERIAL,
+        "Window": Hamamatsu.WINDOW,
+        "Photosensitive size diameter": Hamamatsu.PHS_SIZE,
+        "Photosensitive area": Hamamatsu.PHS_AREA,
+        "Dark current": Hamamatsu.DARK,
+        "Peak responsivity": Hamamatsu.PEAK,
         "History": [],
     }
     history = {
@@ -177,13 +177,15 @@ def stage1(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
+        x = table.colnames.index(COL.WAVE)
+        y = table.colnames.index(COL.RES)
         plot_overlapped(
             title=f"{args.title} #{table.meta['Serial']}",
             tables=[table],
             labels=["NPL Calib."],
             filters=False,
-            x=0,
-            y=1,
+            x=x,
+            y=y,
             linewidth=0,
         )
 
@@ -204,8 +206,8 @@ def stage2(args: Namespace) -> None:
         tables=[npl_table, datasheet_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
-        x=0,
-        y=1,
+        x=args.x,
+        y=args.y,
         linewidth=0,
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
@@ -214,8 +216,8 @@ def stage2(args: Namespace) -> None:
         tables=[npl_table, sliced_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
-        x=0,
-        y=1,
+        x=args.x,
+        y=args.y,
         linewidth=0,
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
@@ -238,13 +240,15 @@ def stage3(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
+        x = interpolated_table.colnames.index(COL.WAVE)
+        y = interpolated_table.colnames.index(COL.RES)
         plot_overlapped(
             title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, table],
             labels=["Interp.", "NPL+Datasheet"],
             filters=False,
-            x=0,
-            y=1,
+            x=x,
+            y=y,
             linewidth=0,
         )
 
@@ -266,13 +270,15 @@ def pipeline(args: Namespace) -> None:
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     log.info(interpolated_table.info)
     if args.plot:
+        x = interpolated_table.colnames.index(COL.WAVE)
+        y = interpolated_table.colnames.index(COL.RES)
         plot_overlapped(
             title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, npl_table, sliced_table],
             labels=["Interp.", "NPL Calib.", "Datasheet"],
             filters=False,
-            x=0,
-            y=1,
+            x=x,
+            y=y,
             linewidth=0,
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
@@ -296,7 +302,7 @@ def plot_parser() -> ArgumentParser:
         "-t",
         "--title",
         type=str,
-        default=f"{PHD.MANUF} {PHD.MODEL}",
+        default=f"{Hamamatsu.MANUF} {Hamamatsu.MODEL}",
         help="Plot title",
     )
     return parser
