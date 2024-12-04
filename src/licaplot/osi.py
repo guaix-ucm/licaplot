@@ -12,10 +12,10 @@
 
 import os
 import logging
-from enum import IntEnum
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
+from typing import Optional, Sequence, Tuple
 
 # ---------------------
 # Thrid-party libraries
@@ -29,6 +29,7 @@ from astropy.constants import astropyconst20 as const
 from astropy.table import Table, Column
 import scipy.interpolate
 
+from lica import StrEnum
 from lica.cli import execute
 from lica.validators import vfile
 from lica.photodiode import PhotodiodeModel, COL, BENCH, OSI as PHD
@@ -39,13 +40,19 @@ import lica.photodiode
 
 from ._version import __version__
 from .utils.mpl import plot_overlapped
-
+from .utils.validators import vecsvfile
 
 # -----------------------
 # Module global variables
 # -----------------------
 
 log = logging.getLogger(__name__)
+
+class TBCOL(StrEnum):
+    """Additiona columns names for data produced by Scan.exe or TestBench"""
+    INDEX = "Index"   # Index number 1, 2, etc produced in the CSV file
+    CURENT = "Electrical Current" #
+    READ_NOISE = "Read Noise"
 
 # -----------------
 # Matplotlib styles
@@ -59,6 +66,30 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary functions
 # -------------------
 
+def plot_cross(
+    title: Optional[str],
+    cross_resp: np.ndarray,
+    datasheet_resp: np.ndarray,
+    linewidth: Optional[int] = 0,
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    """Plot all datasets in the same Axes using different markers"""
+
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if title is not None:
+        fig.suptitle(title)
+    axes.set_xlabel(f"{COL.RESP} Datasheet method")
+    axes.set_ylabel(f"{COL.RESP} Cross calibration method")
+    axes.plot(cross_resp, datasheet_resp, linewidth=linewidth, marker="o", label="Data points")
+    axes.axline((0, 0), slope=1)
+    if box:
+        props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+        axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+    axes.grid(True, which="major", color="silver", linestyle="solid")
+    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+    axes.minorticks_on()
+    axes.legend()
+    plt.show()
 
 def scan_csv_to_table(path):
     table = astropy.io.ascii.read(
@@ -68,9 +99,9 @@ def scan_csv_to_table(path):
         names=("Index", COL.WAVE, "Current"),
         converters={"Index": np.float64, COL.WAVE: np.float64, COL.RESP: np.float64},
     )
-    table["Index"] = table["Index"].astype(np.int32)
+    table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
-    table["Current"] = table["Current"] * u.A
+    table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
     return table
 
 
@@ -149,7 +180,7 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
 def cross_calibrate(osi_readings: Table, hama_readings: Table, hama_reference: Table, resolution: int) -> Table:
     
     osi_responsivity = hama_reference[COL.RESP] * (
-        osi_readings["Current"] / hama_readings["Current"]
+        osi_readings[TBCOL.CURRENT] / hama_readings[TBCOL.CURRENT]
     )
     osi_qe = Column(quantum_efficiency(osi_readings[COL.WAVE], osi_responsivity), name=COL.QE)
     osi_responsivity = Column(np.round(osi_responsivity, decimals=5) * (u.A/u.W), name=COL.RESP)
@@ -239,6 +270,15 @@ def method2(args: Namespace) -> None:
         )
 
 
+def compare(args: Namespace) -> None:
+    table1 = astropy.io.ascii.read(args.method1_file, format="ecsv")
+    table2 = astropy.io.ascii.read(args.method2_file, format="ecsv")
+    plot_cross(
+        title = "Comparison of methods",
+        cross_resp = table1[COL.RESP],
+        datasheet_resp = table2[COL.RESP][0:700],
+    )
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -310,7 +350,7 @@ def combi_parser() -> ArgumentParser:
 
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
-
+    # ---------------------------------------------------------------
     parser_m1 = subparser.add_parser(
         "method1",
         parents=[combi_parser(), plot_parser()],
@@ -323,7 +363,7 @@ def add_args(parser: ArgumentParser) -> None:
         action="store_true",
         help="Save resulting file to ECSV",
     )
-
+    # ---------------------------------------------------------------
     parser_m2 = subparser.add_parser(
         "method2",
         parents=[interp_parser(), plot_parser()],
@@ -346,7 +386,28 @@ def add_args(parser: ArgumentParser) -> None:
         help="Save resulting file to ECSV",
     )
     # ------------------------------------------------------------------------
-
+    parser_comp = subparser.add_parser(
+        "compare",
+        parents=[plot_parser()],
+        help="Comparing methods 1 & 2",
+    )
+    parser_comp.set_defaults(func=compare)
+    parser_comp.add_argument(
+        "-m1",
+        "--method1-file",
+        type=vecsvfile,
+        required=True,
+        metavar="<ECSV FILE>",
+        help="OSI ECSV file obtained by cross-calibration",
+    )
+    parser_comp.add_argument(
+        "-m2",
+        "--method2-file",
+        type=vecsvfile,
+        required=True,
+        metavar="<ECSV FILE>",
+        help="OSI ECSV file obtained by digitizing datasheet",
+    )
 
 # ================
 # MAIN ENTRY POINT
@@ -355,6 +416,7 @@ def add_args(parser: ArgumentParser) -> None:
 
 def osi(args: Namespace):
     args.func(args)
+
 
 
 def main():
