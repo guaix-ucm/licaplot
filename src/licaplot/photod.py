@@ -91,7 +91,7 @@ def plot(args):
     table = lica.photodiode.load(args.model, args.resolution, args.wave_start, args.wave_end)
     log.info("Table info is\n%s", table.info)
     plot_photodiode(
-        title=f"{args.model} characteristics",
+        title=f"{args.model} characteristics @ {args.resolution} nm",
         table=table,
         marker=args.marker,
     )
