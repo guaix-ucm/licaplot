@@ -78,9 +78,9 @@ By using the scanned datasheet
 licaplot-osi --console datasheet -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
 ```
 
-By using a cross calinration with the Hamamatsu photodiode
+By using a cross calibration with the Hamamatsu photodiode. The Hamamatsu
 ```bash
-licaplot-osi --console cross --osi csv/calibration/osi/OSI\ PIN-10D-Readings.csv --hama csv/calibration/osi/S2281-01\ Readings.csv --plot --save
+licaplot-osi --console cross --osi data/osi/QEdata_PIN-10D.txt --hama data/osi/QEdata_S2201-01.txt --plot --save
 ```
 
 Compare both methods

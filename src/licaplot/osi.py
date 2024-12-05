@@ -91,12 +91,13 @@ def plot_cross(
 
 
 def scan_csv_to_table(path):
+    """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
     table = astropy.io.ascii.read(
         path,
         delimiter="\t",
         data_start=0,
-        names=("Index", COL.WAVE, "Current"),
-        converters={"Index": np.float64, COL.WAVE: np.float64, COL.RESP: np.float64},
+        names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
+        converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
     )
     table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
@@ -212,7 +213,7 @@ def cross_calibrate(
 # -----------------------
 
 
-def method1(args: Namespace) -> None:
+def cross_calibration(args: Namespace) -> None:
     log.info("reads the reference calibration photodiode data %s", PhotodiodeModel.HAMAMATSU)
     hama_reference = lica.photodiode.load(
         PhotodiodeModel.HAMAMATSU,
@@ -223,8 +224,10 @@ def method1(args: Namespace) -> None:
     osi_readings = scan_csv_to_table(args.osi_readings)
     hama_readings = scan_csv_to_table(args.hama_readings)
     osi_reference = cross_calibrate(osi_readings, hama_readings, hama_reference, args.resolution)
-    output_path = f"{PhotodiodeModel.OSI}+Cross-Calibrated@{args.resolution}nm.ecsv"
+    name = f"{PhotodiodeModel.OSI}+Cross-Calibrated@{args.resolution}nm.ecsv"
+    output_path = os.path.join(os.path.dirname(args.osi_readings), name)
     if args.save:
+        log.info("Saving Cross Calibrated ECSV to %s",output_path)
         osi_reference.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         plot_overlapped(
@@ -241,13 +244,13 @@ def method1(args: Namespace) -> None:
         )
 
 
-def method2(args: Namespace) -> None:
+def digitized_datasheet(args: Namespace) -> None:
     datasheet_table = create_osi_table(path=args.input_file)
     interpolated_table = interpolate_table(datasheet_table, args.method, args.resolution)
     output_path, _ = os.path.splitext(args.input_file)
     output_path += f"+Interpolated@{args.resolution}nm.ecsv"
-    log.info("Generating %s", output_path)
     if args.save:
+        log.info("Saving Digitized Datsheet ECSV to %s", output_path)
         interpolated_table.write(output_path, delimiter=",", overwrite=True)
     log.info(interpolated_table.info)
     if args.plot:
@@ -366,26 +369,34 @@ def combi_parser() -> ArgumentParser:
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     # ---------------------------------------------------------------
-    parser_m1 = subparser.add_parser(
+    parser_cross = subparser.add_parser(
         "cross",
         parents=[combi_parser(), plot_parser()],
         help="By cross-calibration with Hamamatsu S2281",
     )
-    parser_m1.set_defaults(func=method1)
+    parser_cross.set_defaults(func=cross_calibration)
     # ------------------------------------------------------------------------
-    parser_m1.add_argument(
+    parser_cross.add_argument(
         "-s",
         "--save",
         action="store_true",
         help="Save resulting file to ECSV",
     )
     # ---------------------------------------------------------------
-    parser_m2 = subparser.add_parser(
+    parser_datasheet = subparser.add_parser(
         "datasheet",
         parents=[interp_parser(), plot_parser()],
         help="By digitizing the datasheet",
     )
-    parser_m2.set_defaults(func=method2)
+    parser_datasheet.set_defaults(func=digitized_datasheet)
+    parser_datasheet.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<CSV>",
+        help="CSV file with digitized datasheet points",
+    )
     parser.add_argument(
         "-r",
         "--resolution",
@@ -395,7 +406,7 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<N nm>",
         help="Interpolate at equal resolution (defaults to %(default)d nm)",
     )
-    parser_m2.add_argument(
+    parser_datasheet.add_argument(
         "-s",
         "--save",
         action="store_true",
