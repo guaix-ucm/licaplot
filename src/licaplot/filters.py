@@ -9,11 +9,10 @@
 # --------------------
 # System wide imports
 # -------------------
-
+import os
 import re
-import csv
 import logging
-import argparse
+from argparse import Namespace, ArgumentParser
 
 # ---------------------
 # Thrid-party libraries
@@ -23,16 +22,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from lica.cli import execute
-from lica.validators import vfile
+from lica.validators import vfile, vdir
 from lica.photodiode import PhotodiodeModel
 import lica.photodiode
+from .utils.table import scan_csv_to_table
 
 # ------------------------
 # Own modules and packages
 # ------------------------
 
 from ._version import __version__
-from .utils.validators import vsequences
+
 
 # ----------------
 # Module constants
@@ -55,248 +55,117 @@ plt.style.use("licaplot.resources.global")
 # Auxiliary fnctions
 # ------------------
 
-
-def mpl_filters_plot_loop(title, x, y, xtitle, ytitle, plot_func, ylabels, **kwargs):
-    fig, axes = plt.subplots(nrows=1, ncols=1)
-    fig.suptitle(title)
-    axes.set_xlabel(xtitle)
-    axes.set_ylabel(ytitle)
-    filters = kwargs.get("filters")
-    diode = kwargs.get("diode")
-    model = kwargs.get("model")
-    # labels = kwargs.get('labels')
-    Z, _ = y.shape
-    for i in range(Z):
-        plot_func(axes, i, x, y, ylabels, **kwargs)
-    if filters is not None:
-        for filt in filters:
-            axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
-    if diode is not None:
-        axes.plot(x, diode, marker="o", linewidth=0, label=model)
-    axes.grid(True, which="major", color="silver", linestyle="solid")
-    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-    axes.minorticks_on()
-    axes.legend()
-    plt.show()
-
-
-# This is incomplete for 5 filter banks
-def guess_color(label):
-    label = label.lower()
-    red = re.compile(r"red")
-    green = re.compile(r"green")
-    blue = re.compile(r"blue")
-    if red.search(label):
-        return "red"
-    if green.search(label):
-        return "green"
-    if blue.search(label):
-        return "blue"
-    return "magenta"
-
-
-def plot_filter_spectrum(axes, i, x, y, ylabels, **kwargs):
-    wavelength = x
-    signal = y[i]
-    marker = "o"
-    color = guess_color(ylabels[i])
-    axes.plot(wavelength, signal, marker=marker, color=color, linewidth=1, label=ylabels[i])
-
-
-def get_info_from(args):
-    accum = list()
-    labels = list()
-    diodes = list()
-    for filt, label in zip(args.filters, args.labels):
-        wavelength, signal = csv_readings_to_array(filt)
-        accum.append(signal)
-        labels.append(label)
-    signal = np.vstack(accum)
-    for diode in args.diodes:
-        _, diode = csv_readings_to_array(diode)
-        diodes.append(diode)
-    # diode = np.vstack(diodes)
-    # log.info("Before: Diode shapes is %s", diode.shape)
-    diode = np.mean(np.vstack(diodes), axis=0)
-    log.info("Diode shapes is %s", diode.shape)
-    return wavelength, signal, labels, diode, args.model
-
+def only_change_extension(path: str) -> str:
+    """Keeps the same name and directory but changes extesion to ECSV"""
+    output_path, _ = os.path.splitext(path)
+    return output_path + ".ecsv"
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
+def process(args: Namespace):
+    log.info(args)
 
-def raw_spectrum(args):
-    log.info(" === DRAFT SPECTRAL RESPONSE PLOT === ")
-    vsequences(4, args.filters, args.labels, args.diodes)
-    tables = [astropy.io.ascii.read(f) for f in args.filters]
-    for table in tables:
-        table[""]
-
-
-def corrected_spectrum(args):
-    log.info(" === COMPLETE SPECTRAL RESPONSE PLOT === ")
-    vsequences(4, args.filters, args.labels, args.diodes)
-    return
-
-    wavelength, signal, labels, diode, model = get_info_from(args)
-
-    responsivity, qe = lica.photodiode.load(args.model, args.resolution, 350, 1050)
-    log.info(
-        "Read %s reference responsivity values at %d nm resolution from %s",
-        len(responsivity),
-        args.resolution,
-        args.model,
-    )
-    qe = np.array(
-        [qe[w] for w in wavelength]
-    )  # Only use those wavelenghts actually used in the CSV sequence
-    diode = diode / np.max(diode)  # Normalize photodiode current
-    signal = qe * signal / diode
-    signal = signal / np.max(signal)  # Normalize signal to its absolute maxímun for all channels
-
-    if args.export:
-        log.info("exporting to CSV file(s)")
-        export_spectra_to_csv(
-            labels=labels,
-            wavelength=wavelength,
-            signal=signal,
-            mode=args.export,
-            units=args.units,
-            wave_last=args.wavelength_last,
-        )
-
-    mpl_filters_plot_loop(
-        title=f"Corrected response for {args.title}",
-        plot_func=plot_filter_spectrum,
-        xtitle="Wavelength [nm]",
-        ytitle="Normalized signal level",
-        ylabels=labels,
-        x=wavelength,
-        y=signal,
-        filters=[
-            {"label": r"$BG38 \Rightarrow OG570$", "wave": 570, "style": "--"},
-            {"label": r"$OG570\Rightarrow RG830$", "wave": 860, "style": "-."},
-        ],  # where filters were changesd
-    )
+def photodiode(args: Namespace):
+    log.info("Converting to an Astropy Table: %s", args.input_file)
+    table = scan_csv_to_table(args.input_file)
+    table.meta = {
+        "Processing": {"type": "diode", "model": args.model, "tag": args.tag}
+    }
+    log.info("Processing metadata is added: %s",table.meta)
+    output_path = only_change_extension(args.input_file)
+    log.info("Saving Astropy table to ECSV file: %s", output_path)
+    table.write(output_path, delimiter=",", overwrite=True)
 
 
+def filters(args: Namespace):
+    log.info("Converting to an Astropy Table: %s", args.input_file)
+    table = scan_csv_to_table(args.input_file)
+    table.meta = {
+        "Processing": {"type": "filter", "tag": args.tag}
+    }
+    log.info("Processing metadata is added: %s",table.meta)
+    output_path = only_change_extension(args.input_file)
+    log.info("Saving Astropy table to ECSV file: %s", output_path)
+    table.write(output_path, delimiter=",", overwrite=True)
    
+
+def review(args: Namespace):
+    log.info(args)
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
 
-def common_options():
-    """Common command line arguments for raw and corrected plots"""
-    parser = argparse.ArgumentParser(add_help=False)
+
+def input_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-t",
-        "--title",
+        "--tag",
         type=str,
-        help='Filters set model (ie. "Astronomik L-RGB Type 2c"',
+        metavar="<tag>",
+        default="A",
+        help="Photodiode file tag, defaults to %(default)s",
     )
     parser.add_argument(
-        "-f",
-        "--filters",
-        required=True,
-        metavar="<CSV>",
-        nargs="+",
+        "-i",
+        "--input-file",
         type=vfile,
-        help="Filter CSV files",
-    )
-    parser.add_argument(
-        "-l",
-        "--labels",
         required=True,
-        metavar="<LABEL>",
-        nargs="+",
-        type=str,
-        help="CSV file labels",
-    )
-    parser.add_argument(
-        "-d",
-        "--diodes",
-        required=True,
-        metavar="<CSV>",
-        nargs="+",
-        type=vfile,
-        help="photodiode readings CSV files",
-    )
-    parser.add_argument(
-        "-m",
-        "--model",
-        default=PhotodiodeModel.OSI,
-        choices=[p for p in PhotodiodeModel],
-        help="Photodiode model. (default: %(default)s)",
+        metavar="<File>",
+        help="CSV input file",
     )
     return parser
 
-
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
-    parser_raw = subparser.add_parser("raw", help="Raw spectrum", parents=[common_options()])
-    parser_raw.set_defaults(func=raw_spectrum)
-    parser_corr = subparser.add_parser("corrected", help="Correced spectrum", parents=[common_options()])
-    parser_raw.set_defaults(func=corrected_spectrum)
+    parser_classif = subparser.add_parser("classif", help="Classification commands")
+    parser_process = subparser.add_parser("process", help="Process command")
+    parser_process.set_defaults(func=process)
+
+    subsubparser = parser_classif.add_subparsers(dest="subcommand")
+    parser_photod = subsubparser.add_parser("photod", parents=[input_parser()], help="photodiode subcommand")
+    parser_photod.set_defaults(func=photodiode)
+    parser_filter = subsubparser.add_parser("filter",  parents=[input_parser()], help="filter subcommand")
+    parser_filter.set_defaults(func=filters)
+    parser_review = subsubparser.add_parser("review", help="review classification subcommand")
+    parser_review.set_defaults(func=review)
 
     # ---------------------------------------------------------------------------------------------------------------
-    parser.add_argument(
-        "-wl",
-        "--wave-low",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wh",
-        "--wave-high",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wu",
-        "--wave-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
-    )
-    parser_corr.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        default=5,
-        choices=(1, 5),
-        help="Wavelength resolution (nm). (default: %(default)s nm)",
-    )
-    parser_corr.add_argument(
-        "-x",
-        "--export",
+    parser_photod.add_argument(
+        "-m",
+        "--model",
         type=str,
-        choices=("combined", "individual"),
-        help="Export to CSV file(s)",
+        choices=[model for model in PhotodiodeModel],
+        default=PhotodiodeModel.OSI,
+        help="Photodiode model, defaults to %(default)s",
     )
-    
+  
 
     # ---------------------------------------------------------------------------------------------------------------
-
+    parser_review.add_argument(
+        "-d",
+        "--directory",
+        type=vdir,
+        required=True,
+        metavar="<Dir>",
+        help="CSV input file",
+    )
 
 # ================
 # MAIN ENTRY POINT
 # ================
 
 
-def filters(args):
+def main_filters(args: Namespace) -> None:
     args.func(args)
 
 def main():
     execute(
-        main_func=filters,
+        main_func=main_filters,
         add_args_func=add_args,
         name=__name__,
         version=__version__,

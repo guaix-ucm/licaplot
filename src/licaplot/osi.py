@@ -43,6 +43,7 @@ from . import TBCOL
 from ._version import __version__
 from .utils.mpl import plot_overlapped
 from .utils.validators import vecsvfile
+from .utils.table import scan_csv_to_table
 
 # -----------------------
 # Module global variables
@@ -90,19 +91,6 @@ def plot_cross(
     plt.show()
 
 
-def scan_csv_to_table(path):
-    """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
-    table = astropy.io.ascii.read(
-        path,
-        delimiter="\t",
-        data_start=0,
-        names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
-        converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
-    )
-    table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
-    table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
-    table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
-    return table
 
 
 def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:

@@ -21,9 +21,14 @@ pip install licaplot
 
 Plots and exports to ESCV the original manufacturer's TSL237 spectral response from the datasheet. The input example CSV has been previosly digitized from the original PDF by a digitizer tool. The input file is resampled (cubic interpolation) to a 5nm step resolution and triimmed to the LICA testbench optical range of [350nm - 1050nm]. The title and label is used both in the plot graphics and also stored as ECSV metadata. The label can be used as a graphics label when overlapping plots.
 
-```bash 
-licaplot-csv --console single -i examples/TSL237_responsivity_manufacturer.csv --title TSL237 Responsivity from manufacturer --label TSL237 -r 5  --lica --export TSL237_manuf.ecsv
-```
+## reducing Filters data
+
+licaplot-filters --console classif photod -t X -i csv/uvir_filters/OSI\ Photodiode\ QEdata.txt 
+
+# Both filters use the same diode readings => same tag
+licaplot-filters --console classif filter -t X -i csv/uvir_filters/SP740\ QEdata.txt 
+
+licaplot-filters --console classif filter -t X -i csv/uvir_filters/SP750\ QEdata.txt 
 
 ## Generating LICA photodiodes reference data
 
