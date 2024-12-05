@@ -30,7 +30,7 @@ import lica
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Markers
+from .utils.mpl import Markers, get_labels
 from .utils.validators import vecsv
 
 
@@ -64,8 +64,11 @@ def plot_photodiode(title: str, table: Table, marker: str):
 
 
 def plot_single_photodiode(axes: Axes, table: Table, marker: str):
-    axes.set_xlabel(COL.WAVE)
-    axes.set_ylabel(COL.RESP + " & " + COL.QE)
+    x = table.colnames.index(COL.WAVE)
+    y = table.colnames.index(COL.RESP)
+    xlabel, ylabel = get_labels(table, x, y)
+    axes.set_xlabel(xlabel)
+    axes.set_ylabel(ylabel + " & " + COL.QE)
     axes.grid(True, which="major", color="silver", linestyle="solid")
     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
     axes.plot(table[COL.WAVE], table[COL.RESP], marker=marker, linewidth=0, label=COL.RESP)
