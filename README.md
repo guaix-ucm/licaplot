@@ -92,4 +92,5 @@ licaplot-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecs
 
 ```bash
 licaplot-photod --console plot -m S2281-01
+licaplot-photod --console plot -m PIN-10D
 ```
