@@ -178,7 +178,7 @@ def stage1(args: Namespace) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         x = table.colnames.index(COL.WAVE)
-        y = table.colnames.index(COL.RES)
+        y = table.colnames.index(COL.RESP)
         plot_overlapped(
             title=f"{args.title} #{table.meta['Serial']}",
             tables=[table],
@@ -192,11 +192,13 @@ def stage1(args: Namespace) -> None:
 
 def stage2(args: Namespace) -> None:
     """Iterative merge curves and saves the combined results"""
-    log.info("Loading NPL ECSV calibration File: %s", args.npl_file)
-    npl_table = astropy.io.ascii.read(args.npl_file, format="ecsv")
+    log.info("Loading NPL ECSV calibration File: %s", args.input_file)
+    npl_table = astropy.io.ascii.read(args.input_file, format="ecsv")
     threshold = np.max(npl_table[COL.WAVE]) + 1
+    x = npl_table.colnames.index(COL.WAVE)
+    y = npl_table.colnames.index(COL.RESP)
     datasheet_table, sliced_table = create_datasheet_table(
-        path=args.input_file,
+        path=args.datasheet_file,
         x=args.x,
         y=args.y,
         threshold=threshold,
@@ -206,8 +208,8 @@ def stage2(args: Namespace) -> None:
         tables=[npl_table, datasheet_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
-        x=args.x,
-        y=args.y,
+        x=x,
+        y=y,
         linewidth=0,
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
@@ -216,14 +218,14 @@ def stage2(args: Namespace) -> None:
         tables=[npl_table, sliced_table],
         labels=["NPL Calib", "Datasheet"],
         filters=False,
-        x=args.x,
-        y=args.y,
+        x=x,
+        y=y,
         linewidth=0,
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     if args.save:
         merged_table = combine_tables(npl_table, sliced_table, args.x, args.y)
-        output_path, _ = os.path.splitext(args.npl_file)
+        output_path, _ = os.path.splitext(args.input_file)
         output_path += "+Datasheet.ecsv"
         log.info("Generating %s", output_path)
         merged_table.write(output_path, delimiter=",", overwrite=True)
@@ -241,7 +243,7 @@ def stage3(args: Namespace) -> None:
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         x = interpolated_table.colnames.index(COL.WAVE)
-        y = interpolated_table.colnames.index(COL.RES)
+        y = interpolated_table.colnames.index(COL.RESP)
         plot_overlapped(
             title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, table],
@@ -254,24 +256,24 @@ def stage3(args: Namespace) -> None:
 
 
 def pipeline(args: Namespace) -> None:
-    npl_table = create_npl_table(npl_path=args.npl_file)
+    npl_table = create_npl_table(npl_path=args.input_file)
     threshold = np.max(npl_table[COL.WAVE]) + 1
     datasheet_table, sliced_table = create_datasheet_table(
-        path=args.input_file,
+        path=args.datasheet_file,
         x=args.x,
         y=args.y,
         threshold=threshold,
     )
     combined_table = combine_tables(npl_table, sliced_table, args.x, args.y)
     interpolated_table = interpolate_table(combined_table, args.method, args.resolution)
-    output_path, _ = os.path.splitext(args.npl_file)
+    output_path, _ = os.path.splitext(args.input_file)
     output_path += f"+Datasheet+Interpolated@{args.resolution}nm.ecsv"
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     log.info(interpolated_table.info)
     if args.plot:
         x = interpolated_table.colnames.index(COL.WAVE)
-        y = interpolated_table.colnames.index(COL.RES)
+        y = interpolated_table.colnames.index(COL.RESP)
         plot_overlapped(
             title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             tables=[interpolated_table, npl_table, sliced_table],
@@ -335,16 +337,16 @@ def combi_parser() -> ArgumentParser:
     """Common options to combine tables"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-n",
-        "--npl-file",
+        "-i",
+        "--input-file",
         type=vfile,
         required=True,
         metavar="<NPL ECSV>",
         help="ECSV with NPL calibration",
     )
     parser.add_argument(
-        "-i",
-        "--input-file",
+        "-d",
+        "--datasheet-file",
         type=vfile,
         required=True,
         metavar="<CSV>",

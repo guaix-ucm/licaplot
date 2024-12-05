@@ -27,12 +27,51 @@ licaplot-csv --console single -i examples/TSL237_responsivity_manufacturer.csv -
 
 ## Generating LICA photodiodes reference data
 
-Hamamatsu S2281-01 diode
+### Hamamatsu S2281-01 diode
+
+#### Stage 1
+
+Convert NPL CSV data into a ECSV file with added metadata and plot it.
 
 ```bash
-licaplot-hama --console pipeline -p -n csv/calibration/hamamatsu/Hama-S2281-01-Responsivity-NPL.csv -i csv/calibration/hamamatsu/Hama-S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009 -m cubic -r 1
+licaplot-hama --console stage1 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL.csv
 ```
-OSI PIN-10D photodiode
+It produces a file with the same name as the input file with `.ecsv` extension
+
+#### Stage 2
+
+Plot and merge NPL data with S2281-04 (yes, -04!) datasheet points.
+
+With no alignment
+
+```bash
+licaplot-hama --console stage2 --plot --save -i data/hamamatsu/S2281-01-Responsivity-NPL.ecsv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv
+```
+
+With good alignment (x = 16, y = 0.009)
+
+```bash
+licaplot-hama --console stage2 --plot --save -i data/hamamatsu/S2281-01-Responsivity-NPL.ecsv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
+```
+It produces a file whose name is the same as the input file plus "+Datasheet.ecsv" appended, in the same folder.
+(i.e `S2281-01-Responsivity-NPL+Datasheet.ecsv`)
+
+#### Stage 3
+
+Interpolates input ECSV file to a 1 nm resolution with cubic interplolator.
+
+```bash
+licaplot-hama --console stage3 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1
+```
+
+#### Pipeline
+
+The complete pipeline in one command
+
+```bash
+licaplot-hama --console pipeline --plot -i data/hamamatsu/S2281-01-Responsivity-NPL.csv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009 -m cubic -r 1
+```
+### OSI PIN-10D photodiode
 
 By using the scanned datasheet
 ```bash
