@@ -75,17 +75,18 @@ licaplot-hama --console pipeline --plot -i data/hamamatsu/S2281-01-Responsivity-
 
 By using the scanned datasheet
 ```bash
-licaplot-osi --console datasheet -i csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
+licaplot-osi --console datasheet -i csv/calibration/osi/PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save
 ```
 
-By using a cross calibration with the Hamamatsu photodiode. The Hamamatsu
+By using a cross calibration with the Hamamatsu photodiode. The Hamamtsu ECSV file is the one obtained in the section above. It does nota appear in the command line as it is embedded in a Python package that automatically retrieves it.
+
 ```bash
 licaplot-osi --console cross --osi data/osi/QEdata_PIN-10D.txt --hama data/osi/QEdata_S2201-01.txt --plot --save
 ```
 
 Compare both methods
 ```bash
-licaplot-osi --console compare -c csv/calibration/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d csv/calibration/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
+licaplot-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 ```
 ## Plot the packaged ECSV file
 
