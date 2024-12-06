@@ -67,10 +67,10 @@ licaplot-filters --console process -d csv/uvir_filters --save
 
 After this step both filter ECSV files contains additional columns with the clear photodiode readings, the photodiode model QE and the final transmission curve as the last column.
 
-We can plot our results using `licaplot-csv`. The column to be plotted is the fifth column (transmission) against the wavelenght column which happens to be the first.
+We can plot our results using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first.
 
 ```bash
-licaplot-csv --console multi -i csv/uvir_filters/SP740_QEdata.ecsv csv/uvir_filters/SP750_QEdata.ecsv --overlap -wc 1 -yc 5  --filters
+licaplot-csv --console multi -i csv/uvir_filters/SP740_QEdata.ecsv csv/uvir_filters/SP750_QEdata.ecsv --overlap -wc 1 -yc 4  --filters
 ```
 
 ## Generating LICA photodiodes reference data

@@ -12,6 +12,7 @@ class TBCOL(StrEnum):
 class PROCOL(StrEnum):
     """Additional columns added by processing"""
     TRANS = "Transmission"
+    SPECTRAL = "Spectral Response"
     PHOTOD_QE = "Photodiode " + COL.QE
     PHOTOD_CURRENT = "Photodiode " + TBCOL.CURRENT
 
