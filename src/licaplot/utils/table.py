@@ -157,7 +157,7 @@ def active_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devic
             transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.PHOTOD_QE] = qe
-            filter_table[PROCOL.TRANS] = (
+            filter_table[PROCOL.SPECTRAL] = (
                 np.round(transmission, decimals=5) * u.dimensionless_unscaled
             )
             filter_table.meta["Processing"]["using photodiode"] = model
