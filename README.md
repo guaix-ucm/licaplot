@@ -1,4 +1,4 @@
-# rawplot
+# licaplot
  
  Collection of plotting commands to analyze sensors and filters using the LICA Optical Test Bench.
 
@@ -34,11 +34,11 @@ Setting the photodiode model is optional unless you are using the Hamamatsu S228
 licaplot-filters --console one -t Z -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
 ```
 
-* Several filters being processes by different photometer readings
+### More complex case
 
-In this case two UV/IR cut filters were measured with the clear photodiode readings between the two, thus sharing the same clear photodiode file. The photodiode model used was the OSI PIN-10D.
+In this case, an RGB filter set was measured with a single clear photodiode reading, thus sharing the same photodiode file. The photodiode model used was the OSI PIN-10D.
 
-First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodidoe reading.
+1. First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodidoe reading.
 
 If we need to trim the bandwith of the whole set (photodiode + associated filter readings) *this is the time to do it*. The bandwith trimming will be carried over from the photodiode to the associated filters.
 
@@ -48,7 +48,7 @@ licaplot-filters --console classif photod --tag X -p data/filters/photodiode.txt
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
 
-Then we tag both filter files with the same tag (`X` in this case), as they share the same photodiode file.
+2. Tag all filter files with the same tag (`X` in this case), as they share the same photodiode file.
 
 ```bash
 licaplot-filters --console classif filter --tag X -i data/filters/green.txt -l Green
@@ -57,19 +57,26 @@ licaplot-filters --console classif filter --tag X -i data/filters/blue.txt -l Bl
 ```
 
 The output of these commands are the ECSV files with the same data but additional metadata for further processing
-We review the process:
+
+3. Review the process 
+
+Just to make sure everything is ok.
 
 ```bash
 licaplot-filters --console classif review -d data/filters/
 ```
 
-The we do the processing. The optional flag allows to control the overriting of the input ECSV files with more columns and metadata.
+4. Perform the data reduction. 
+
+The optional flag allows to control the overriting of the input ECSV files with more columns and metadata.
 
 ```bash
 licaplot-filters --console process -d data/filters --save
 ```
 
 After this step both filter ECSV files contains additional columns with the clear photodiode readings, the photodiode model QE and the final transmission curve as the last column.
+
+5. Plot data
 
 We can plot our results using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first.
 
