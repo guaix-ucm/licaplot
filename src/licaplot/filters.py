@@ -117,7 +117,8 @@ def _save(filter_dict: defaultdict, path: str) -> None:
             log.info("Updating ECSV file %s", out_path)
             filter_table.write(out_path, delimiter=",", overwrite=True)
 
-def _photodiode(path: str, tag: str) -> None:
+
+def _photodiode(path: str, tag: str, model) -> None:
     """Converts CSV file from photodiode into ECSV file"""
     table = scan_csv_to_table(path)
     output_path = only_change_extension(path)
@@ -126,7 +127,7 @@ def _photodiode(path: str, tag: str) -> None:
     table.meta = {
         "Processing": {
             "type": PROMETA.PHOTOD.value,
-            "model": args.model,
+            "model": model,
             "tag": tag,
             "name": os.path.basename(output_path),
             "resolution": resolution[0]
@@ -185,7 +186,8 @@ def process(args: Namespace) -> defaultdict:
 
 def photodiode(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
-    _photodiode(args.input_file, args.tag)
+    _photodiode(args.input_file, args.tag, args.model)
+
 
 
 def filters(args: Namespace):
