@@ -25,10 +25,12 @@ Plots and exports to ESCV the original manufacturer's TSL237 spectral response f
 
 Two Use Cases:
 
-* Simple case: one filter CSV and one clear photodiode CSV
+### Simple case
+
+In the simple case, we hace one filter CSV and one clear photodiode CSV
 
 ```bash
-licaplot-filters --console one -t Z f csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -i csv/uvir_filters/SP750_QEdata.txt
+licaplot-filters --console one -t Z -l UV/IR 750 -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -i csv/uvir_filters/SP750_QEdata.txt
 ```
 
 * Several filters being processes by different photometer readings

@@ -71,11 +71,11 @@ def only_change_extension(path: str) -> str:
     return output_path + ".ecsv"
 
 
-def _assign(dir_path: str) -> Tuple[dict, defaultdict]:
+def _assign(dir_path: str, file_path: str = "*.ecsv") -> Tuple[dict, defaultdict]:
     photodiode_dict = dict()
     filter_dict = defaultdict(list)
-    log.info("Classifying files in directory %s", dir_path)
-    for path in glob.iglob(os.path.join(dir_path, "*.ecsv")):
+    log.info("Classifying %s files in directory %s", file_path, dir_path)
+    for path in glob.iglob(os.path.join(dir_path, file_path)):
         table = astropy.io.ascii.read(path, format="ecsv")
         key = table.meta["Processing"]["tag"]
         if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
@@ -132,14 +132,14 @@ def _photodiode(path: str, tag: str, model) -> None:
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
     table.meta = {
-        "label": model, # label used for display purposes
+        "label": model,  # label used for display purposes
         "Processing": {
             "type": PROMETA.PHOTOD.value,
             "model": model,
             "tag": tag,
             "name": os.path.basename(output_path),
             "resolution": resolution[0],
-        }
+        },
     }
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
@@ -152,13 +152,13 @@ def _filters(path: str, tag: str, label: str) -> None:
     resolution = np.ediff1d(table[COL.WAVE])
     output_path = only_change_extension(path)
     table.meta = {
-        "label": label, # label used for display purposes
+        "label": label,  # label used for display purposes
         "Processing": {
             "type": PROMETA.FILTER.value,
             "tag": tag,
             "name": os.path.basename(output_path),
             "resolution": resolution[0],
-        }
+        },
     }
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
@@ -223,9 +223,11 @@ def review(args: Namespace):
 
 def one_filter(args: Namespace):
     _photodiode(args.photod_file, args.tag, args.model)
-    _filters(args.input_file, args.tag)
+    label = " ".join(args.label) if args.label else ""
+    _filters(args.input_file, args.tag, label)
     dir_path = os.path.dirname(args.input_file)
-    photodiode_dict, filter_dict = _assign(dir_path)
+    file_name = only_change_extension(os.path.basename(args.input_file))
+    photodiode_dict, filter_dict = _assign(dir_path, file_name)
     _review(dir_path, photodiode_dict, filter_dict)
     filter_dict = _process(dir_path, photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
