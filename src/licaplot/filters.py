@@ -88,7 +88,7 @@ def _assign(dir_path: str, file_name: str = None) -> Tuple[dict, defaultdict]:
                 raise RuntimeError(msg)
             else:
                 photodiode_dict[key] = table
-        elif name == file_name:
+        elif file_name is None or (file_name is not None and name == file_name):
             filter_dict[key].append(table)
         else:
             log.info("Ignoring %s file in the same directory", name)
