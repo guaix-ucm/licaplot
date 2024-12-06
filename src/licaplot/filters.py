@@ -71,10 +71,11 @@ def only_change_extension(path: str) -> str:
     return output_path + ".ecsv"
 
 
-def _classify(path: str) -> Tuple[dict, defaultdict]:
+def _classify(dir_path: str) -> Tuple[dict, defaultdict]:
     photodiode_dict = dict()
     filter_dict = defaultdict(list)
-    for path in glob.iglob(os.path.join(path, "*.ecsv")):
+    log.info("Classifying files in directory %s", dir_path)
+    for path in glob.iglob(os.path.join(dir_path, "*.ecsv")):
         table = astropy.io.ascii.read(path, format="ecsv")
         key = table.meta["Processing"]["tag"]
         if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
@@ -91,10 +92,9 @@ def _classify(path: str) -> Tuple[dict, defaultdict]:
     return photodiode_dict, filter_dict
 
 
-def _process(dir_path: str) -> defaultdict:
+def _process(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> defaultdict:
     """Process Filter ECSV files in a given directory"""
-    photodidode_dict, filter_dict = _classify(dir_path)
-    for key, photod_table in photodidode_dict.items():
+    for key, photod_table in photodiode_dict.items():
         model = photod_table.meta["Processing"]["model"]
         resolution = photod_table.meta["Processing"]["resolution"]
         qe = lica.photodiode.load(model=model, resolution=int(resolution))[COL.QE]
@@ -164,9 +164,8 @@ def _filters(path: str, tag: str) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
 
 
-def _review(dir_path: str) -> None:
-    photodidode_dict, filter_dict = _classify(dir_path)
-    for key, table in photodidode_dict.items():
+def _review(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> None:
+    for key, table in photodiode_dict.items():
         name = table.meta["Processing"]["name"]
         model = table.meta["Processing"]["model"]
         diode_resol = table.meta["Processing"]["resolution"]
@@ -179,7 +178,7 @@ def _review(dir_path: str) -> None:
                 msg = f"Filter resoultion {filter_resol} does not match photodiode readings resolution {diode_resol}"
                 log.critical(msg)
                 raise RuntimeError(msg)
-    photod_tags = set(photodidode_dict.keys())
+    photod_tags = set(photodiode_dict.keys())
     filter_tags = set(filter_dict.keys())
     excluded_filters = filter_tags - photod_tags
     excluded_photod = photod_tags - filter_tags
@@ -187,7 +186,7 @@ def _review(dir_path: str) -> None:
         names = [t.meta["Processing"]["name"] for t in filter_dict[key]]
         log.warn("%s do not match a photodiode tag", names)
     for key in excluded_photod:
-        name = photodidode_dict[key].meta["Processing"]["name"]
+        name = photodiode_dict[key].meta["Processing"]["name"]
         log.warn("%s do not match an input file tag", names)
     log.info("Review step ok.")
 
@@ -198,8 +197,8 @@ def _review(dir_path: str) -> None:
 
 
 def process(args: Namespace) -> defaultdict:
-    log.info("Procesing Tables in: %s", args.directory)
-    filter_dict = _process(args.directory)
+    photodiode_dict, filter_dict = _classify(args.directory)
+    filter_dict = _process(args.directory, photodiode_dict, filter_dict)
     if args.save:
         _save(filter_dict, args.directory)
 
@@ -215,15 +214,17 @@ def filters(args: Namespace):
 
 
 def review(args: Namespace):
-    _review(args.directory)
+    photodiode_dict, filter_dict = _classify(args.directory)
+    _review(args.directory, photodiode_dict, filter_dict)
 
 
 def one_filter(args: Namespace):
     _photodiode(args.photod_file, args.tag, args.model)
     _filters(args.input_file, args.tag)
-    dir_path = os.path.basename(args.input_file)
-    _review(dir_path)
-    filter_dict = _process(dir_path)
+    dir_path = os.path.dirname(args.input_file)
+    photodiode_dict, filter_dict = _classify(dir_path)
+    _review(dir_path, photodiode_dict, filter_dict)
+    filter_dict = _process(dir_path, photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
 
 
