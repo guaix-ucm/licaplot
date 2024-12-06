@@ -117,10 +117,65 @@ def _save(filter_dict: defaultdict, path: str) -> None:
             log.info("Updating ECSV file %s", out_path)
             filter_table.write(out_path, delimiter=",", overwrite=True)
 
+def _photodiode(path: str, tag: str) -> None:
+    """Converts CSV file from photodiode into ECSV file"""
+    table = scan_csv_to_table(path)
+    output_path = only_change_extension(path)
+    resolution = np.ediff1d(table[COL.WAVE])
+    assert all([r == resolution[0] for r in resolution])
+    table.meta = {
+        "Processing": {
+            "type": PROMETA.PHOTOD.value,
+            "model": args.model,
+            "tag": tag,
+            "name": os.path.basename(output_path),
+            "resolution": resolution[0]
+        }
+    }
+    table.remove_column(TBCOL.INDEX)
+    log.info("Processing metadata is added: %s", table.meta)
+    log.info("Saving Astropy table to ECSV file: %s", output_path)
+    table.write(output_path, delimiter=",", overwrite=True)
+
+
+def _filters(path: str, tag: str) -> None:
+    table = scan_csv_to_table(path)
+    resolution = np.ediff1d(table[COL.WAVE])
+    output_path = only_change_extension(path)
+    table.meta = {
+        "Processing": {
+            "type": PROMETA.FILTER.value,
+            "tag": tag,
+            "name": os.path.basename(output_path),
+            "resolution": resolution[0]
+        }
+    }
+    table.remove_column(TBCOL.INDEX)
+    log.info("Processing metadata is added: %s", table.meta)
+    log.info("Saving Astropy table to ECSV file: %s", output_path)
+    table.write(output_path, delimiter=",", overwrite=True)  
+
+
+def _review(dir_path: str) -> None:
+    photodidode_dict, filter_dict = _classify(dir_path)
+    for key, table in photodidode_dict.items():
+        name = table.meta["Processing"]["name"]
+        model = table.meta["Processing"]["model"]
+        diode_resol = table.meta["Processing"]["resolution"]
+        filters = filter_dict[key]
+        names = [t.meta["Processing"]["name"] for t in filters]
+        log.info("[tag=%s] (%s) %s, used by %s", key, model, name, names)
+        for t in filters:
+            filter_resol = t.meta["Processing"]["resolution"]
+            if filter_resol != diode_resol:
+                msg = f"Filter resoultion {filter_resol} does not match photodiode readings resolution {diode_resol}"
+                log.critical(msg)
+                raise RuntimeError(msg)
+    log.info("Review step ok.")
+
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
-
 
 def process(args: Namespace) -> defaultdict:
     log.info("Procesing Tables in: %s", args.directory)
@@ -130,60 +185,17 @@ def process(args: Namespace) -> defaultdict:
 
 def photodiode(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
-    table = scan_csv_to_table(args.input_file)
-    output_path = only_change_extension(args.input_file)
-    resolution = np.ediff1d(table[COL.WAVE])
-    assert all([r == resolution[0] for r in resolution])
-    table.meta = {
-        "Processing": {
-            "type": PROMETA.PHOTOD.value,
-            "model": args.model,
-            "tag": args.tag,
-            "name": os.path.basename(output_path),
-            "resolution": resolution[0]
-        }
-    }
-    table.remove_column(TBCOL.INDEX)
-    log.info("Processing metadata is added: %s", table.meta)
-    log.info("Saving Astropy table to ECSV file: %s", output_path)
-    table.write(output_path, delimiter=",", overwrite=True)
+    _photodiode(args.input_file, args.tag)
 
 
 def filters(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
-    table = scan_csv_to_table(args.input_file)
-    resolution = np.ediff1d(table[COL.WAVE])
-    output_path = only_change_extension(args.input_file)
-    table.meta = {
-        "Processing": {
-            "type": PROMETA.FILTER.value,
-            "tag": args.tag,
-            "name": os.path.basename(output_path),
-            "resolution": resolution[0]
-        }
-    }
-    table.remove_column(TBCOL.INDEX)
-    log.info("Processing metadata is added: %s", table.meta)
-    log.info("Saving Astropy table to ECSV file: %s", output_path)
-    table.write(output_path, delimiter=",", overwrite=True)
+    _filters(args.input_file, args.tag)
 
 
 def review(args: Namespace):
-    log.info("Reviewing Tables in: %s", args.directory)
-    photodidode_dict, filter_dict = _classify(args.directory)
-    for key, table in photodidode_dict.items():
-        name = table.meta["Processing"]["name"]
-        model = table.meta["Processing"]["model"]
-        diode_resol = table.meta["Processing"]["resolution"]
-        filters = filter_dict[key]
-        names = [t.meta["Processing"]["name"] for t in filters]
-        log.info("%s (%s), tag = %s, used by %s", name, model, key, names)
-        for t in filters:
-            filter_resol = t.meta["Processing"]["resolution"]
-            if filter_resol != diode_resol:
-                msg = f"Filter resoultion {filter_resol} does not match photodiode readings resolution {diode_resol}"
-                log.critical(msg)
-                raise RuntimeError(msg)
+    _review(args.directory)
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
