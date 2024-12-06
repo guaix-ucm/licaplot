@@ -9,9 +9,11 @@
 # --------------------
 # System wide imports
 # -------------------
+
 import os
 import glob
 import logging
+
 from argparse import Namespace, ArgumentParser
 
 from collections import defaultdict
@@ -77,7 +79,9 @@ def _classify(path: str) -> Tuple[dict, defaultdict]:
         key = table.meta["Processing"]["tag"]
         if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
             if photodiode_dict.get(key):
-                msg = f'Another photodiode table has the same tag: {table.meta["Processing"]["name"]}',
+                msg = (
+                    f'Another photodiode table has the same tag: {table.meta["Processing"]["name"]}',
+                )
                 log.critical(msg)
                 raise RuntimeError(msg)
             else:
@@ -86,13 +90,14 @@ def _classify(path: str) -> Tuple[dict, defaultdict]:
             filter_dict[key].append(table)
     return photodiode_dict, filter_dict
 
-def _process(path: str) -> defaultdict:
+
+def _process(dir_path: str) -> defaultdict:
     """Process Filter ECSV files in a given directory"""
-    photodidode_dict, filter_dict = _classify(path)
+    photodidode_dict, filter_dict = _classify(dir_path)
     for key, photod_table in photodidode_dict.items():
         model = photod_table.meta["Processing"]["model"]
         resolution = photod_table.meta["Processing"]["resolution"]
-        qe = lica.photodiode.load(model = model, resolution = int(resolution))[COL.QE]
+        qe = lica.photodiode.load(model=model, resolution=int(resolution))[COL.QE]
         for filter_table in filter_dict[key]:
             name = filter_table.meta["Processing"]["name"]
             processed = filter_table.meta["Processing"].get("processed")
@@ -103,17 +108,19 @@ def _process(path: str) -> defaultdict:
             transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.PHOTOD_QE] = qe
-            filter_table[PROCOL.TRANS] = np.round(transmission, decimals=5) * u.dimensionless_unscaled
+            filter_table[PROCOL.TRANS] = (
+                np.round(transmission, decimals=5) * u.dimensionless_unscaled
+            )
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
     return filter_dict
 
 
-def _save(filter_dict: defaultdict, path: str) -> None:
+def _save(filter_dict: defaultdict, dir_path: str) -> None:
     for tag, filters in filter_dict.items():
         for filter_table in filters:
             name = filter_table.meta["Processing"]["name"]
-            out_path = os.path.join(path, name)
+            out_path = os.path.join(dir_path, name)
             log.info("Updating ECSV file %s", out_path)
             filter_table.write(out_path, delimiter=",", overwrite=True)
 
@@ -130,7 +137,7 @@ def _photodiode(path: str, tag: str, model) -> None:
             "model": model,
             "tag": tag,
             "name": os.path.basename(output_path),
-            "resolution": resolution[0]
+            "resolution": resolution[0],
         }
     }
     table.remove_column(TBCOL.INDEX)
@@ -148,13 +155,13 @@ def _filters(path: str, tag: str) -> None:
             "type": PROMETA.FILTER.value,
             "tag": tag,
             "name": os.path.basename(output_path),
-            "resolution": resolution[0]
+            "resolution": resolution[0],
         }
     }
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
     log.info("Saving Astropy table to ECSV file: %s", output_path)
-    table.write(output_path, delimiter=",", overwrite=True)  
+    table.write(output_path, delimiter=",", overwrite=True)
 
 
 def _review(dir_path: str) -> None:
@@ -172,11 +179,23 @@ def _review(dir_path: str) -> None:
                 msg = f"Filter resoultion {filter_resol} does not match photodiode readings resolution {diode_resol}"
                 log.critical(msg)
                 raise RuntimeError(msg)
+    photod_tags = set(photodidode_dict.keys())
+    filter_tags = set(filter_dict.keys())
+    excluded_filters = filter_tags - photod_tags
+    excluded_photod = photod_tags - filter_tags
+    for key in excluded_filters:
+        names = [t.meta["Processing"]["name"] for t in filter_dict[key]]
+        log.warn("%s do not match a photodiode tag", names)
+    for key in excluded_photod:
+        name = photodidode_dict[key].meta["Processing"]["name"]
+        log.warn("%s do not match an input file tag", names)
     log.info("Review step ok.")
+
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
+
 
 def process(args: Namespace) -> defaultdict:
     log.info("Procesing Tables in: %s", args.directory)
@@ -184,10 +203,10 @@ def process(args: Namespace) -> defaultdict:
     if args.save:
         _save(filter_dict, args.directory)
 
-def photodiode(args: Namespace):
-    log.info("Converting to an Astropy Table: %s", args.input_file)
-    _photodiode(args.input_file, args.tag, args.model)
 
+def photodiode(args: Namespace):
+    log.info("Converting to an Astropy Table: %s", args.photod_file)
+    _photodiode(args.photod_file, args.tag, args.model)
 
 
 def filters(args: Namespace):
@@ -199,6 +218,15 @@ def review(args: Namespace):
     _review(args.directory)
 
 
+def one_filter(args: Namespace):
+    _photodiode(args.photod_file, args.tag, args.model)
+    _filters(args.input_file, args.tag)
+    dir_path = os.path.basename(args.input_file)
+    _review(dir_path)
+    filter_dict = _process(dir_path)
+    _save(filter_dict, dir_path)
+
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -207,44 +235,32 @@ def review(args: Namespace):
 def input_parser() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-t",
-        "--tag",
-        type=str,
-        metavar="<tag>",
-        default="A",
-        help="Photodiode file tag, defaults to %(default)s",
-    )
-    parser.add_argument(
         "-i",
         "--input-file",
         type=vfile,
         required=True,
         metavar="<File>",
-        help="CSV input file",
+        help="CSV filter input file",
     )
     return parser
 
 
-def add_args(parser):
-    subparser = parser.add_subparsers(dest="command")
-    parser_classif = subparser.add_parser("classif", help="Classification commands")
-    parser_process = subparser.add_parser("process", help="Process command")
-    parser_process.set_defaults(func=process)
-
-    subsubparser = parser_classif.add_subparsers(dest="subcommand")
-    parser_photod = subsubparser.add_parser(
-        "photod", parents=[input_parser()], help="photodiode subcommand"
+def tag_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-t",
+        "--tag",
+        type=str,
+        metavar="<tag>",
+        default="A",
+        help="File tag, A Filter tag should match a Photodiode tag, defaults value = %(default)s",
     )
-    parser_photod.set_defaults(func=photodiode)
-    parser_filter = subsubparser.add_parser(
-        "filter", parents=[input_parser()], help="filter subcommand"
-    )
-    parser_filter.set_defaults(func=filters)
-    parser_review = subsubparser.add_parser("review", help="review classification subcommand")
-    parser_review.set_defaults(func=review)
+    return parser
 
-    # ---------------------------------------------------------------------------------------------------------------
-    parser_photod.add_argument(
+
+def photod_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
         "-m",
         "--model",
         type=str,
@@ -252,7 +268,41 @@ def add_args(parser):
         default=PhotodiodeModel.OSI,
         help="Photodiode model, defaults to %(default)s",
     )
+    parser.add_argument(
+        "-p",
+        "--photod-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV photodiode input file",
+    )
+    return parser
 
+
+def add_args(parser):
+    subparser = parser.add_subparsers(dest="command")
+    parser_one = subparser.add_parser(
+        "one",
+        parents=[photod_parser(), input_parser(), tag_parser()],
+        help="Process one CSV filter file with one CSV photodiode file",
+    )
+    parser_one.set_defaults(func=one_filter)
+
+    parser_classif = subparser.add_parser("classif", help="Classification commands")
+    parser_process = subparser.add_parser("process", help="Process command")
+    parser_process.set_defaults(func=process)
+
+    subsubparser = parser_classif.add_subparsers(dest="subcommand")
+    parser_photod = subsubparser.add_parser(
+        "photod", parents=[photod_parser(), tag_parser()], help="photodiode subcommand"
+    )
+    parser_photod.set_defaults(func=photodiode)
+    parser_filter = subsubparser.add_parser(
+        "filter", parents=[input_parser(), tag_parser()], help="filter subcommand"
+    )
+    parser_filter.set_defaults(func=filters)
+    parser_review = subsubparser.add_parser("review", help="review classification subcommand")
+    parser_review.set_defaults(func=review)
     # ---------------------------------------------------------------------------------------------------------------
     parser_review.add_argument(
         "-d",
@@ -277,7 +327,6 @@ def add_args(parser):
         action="store_true",
         help="Save processing file to ECSV",
     )
-    
 
 
 # ================
