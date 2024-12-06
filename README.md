@@ -29,9 +29,12 @@ licaplot-filters classif photod -h
 
 # Usage examples
 
+## Reducing TESS-W light sensor spectral data (licaplot-tessw)
+
+TBD 
 Plots and exports to ESCV the original manufacturer's TSL237 spectral response from the datasheet. The input example CSV has been previosly digitized from the original PDF by a digitizer tool. The input file is resampled (cubic interpolation) to a 5nm step resolution and triimmed to the LICA testbench optical range of [350nm - 1050nm]. The title and label is used both in the plot graphics and also stored as ECSV metadata. The label can be used as a graphics label when overlapping plots.
 
-## Reducing Filters data
+## Reducing Filters data (licaplot-filters)
 
 Two Use Cases:
 
@@ -41,7 +44,7 @@ In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting
 Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01.
 
 ```bash
-licaplot-filters --console one -t Z -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
+licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
 ```
 
 ### More complex case
@@ -98,9 +101,9 @@ licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv dat
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
 
-## Generating LICA photodiodes reference data
+## Generating LICA photodiodes reference
 
-### Hamamatsu S2281-01 diode
+### Hamamatsu S2281-01 diode (licaplot-hama)
 
 #### Stage 1
 
@@ -144,7 +147,7 @@ The complete pipeline in one command
 ```bash
 licaplot-hama --console pipeline --plot -i data/hamamatsu/S2281-01-Responsivity-NPL.csv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009 -m cubic -r 1
 ```
-### OSI PIN-10D photodiode
+### OSI PIN-10D photodiode (licaplot-osi)
 
 By using the scanned datasheet
 ```bash
@@ -161,7 +164,7 @@ Compare both methods
 ```bash
 licaplot-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 ```
-## Plot the packaged ECSV file
+## Plot the packaged ECSV file (licaplot-photod)
 
 ```bash
 licaplot-photod --console plot -m S2281-01
