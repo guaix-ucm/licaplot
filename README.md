@@ -48,7 +48,9 @@ licaplot-filters --console classif photod --tag X -p data/filters/photodiode.txt
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
 
-2. Tag all filter files with the same tag (`X` in this case), as they share the same photodiode file.
+2. Tag all filter files.
+
+Tag them with the same tag as chosen by the photodiode file (`X`), as they share the same photodiode file.
 
 ```bash
 licaplot-filters --console classif filter --tag X -i data/filters/green.txt -l Green
@@ -68,7 +70,7 @@ licaplot-filters --console classif review -d data/filters/
 
 4. Perform the data reduction. 
 
-The optional flag allows to control the overriting of the input ECSV files with more columns and metadata.
+The optional `--save` flag allows to control the overriting of the input ECSV files with more columns and metadata.
 
 ```bash
 licaplot-filters --console process -d data/filters --save
@@ -78,7 +80,7 @@ After this step both filter ECSV files contains additional columns with the clea
 
 5. Plot data
 
-We can plot our results using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first.
+Plot generated ECSV files using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
 
 ```bash
 licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv data/filters/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
