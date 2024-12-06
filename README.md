@@ -11,11 +11,21 @@ pip install licaplot
 ```
 
 # Available utilities
+* `licaplot-filters`. Process filter data from LICA optical test bench.
 * `licaplot-csv`. Plot CSV files and optionally converts CSV into ECSV files
 * `licaplot-photod`. Plot and export LICA photodiodes spectral response curves.
 * `licaplot-hama`. Build LICA's Hamamtsu S2281-04 photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
 * `licaplot-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve un ECSV format to be used for other calibration purposes elsewhere.
-* `licaplot-filters`. Process filter data from LICA optical bench
+
+Every command listed (and subcommands) con be described with `-h | --help`
+
+Examples:
+
+```bash
+licaplot-filters -h
+licaplot-filters classif -h
+licaplot-filters classif photod -h
+```
 
 # Usage examples
 
