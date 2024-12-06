@@ -17,31 +17,29 @@ import logging
 from argparse import Namespace, ArgumentParser
 
 from collections import defaultdict
-from typing import Tuple
 
 # ---------------------
 # Thrid-party libraries
 # ---------------------
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import astropy.io.ascii
-import astropy.units as u
-
 from lica.cli import execute
 from lica.validators import vfile, vdir
-from lica.photodiode import PhotodiodeModel, COL
-import lica.photodiode
+from lica.photodiode import PhotodiodeModel
 
 # ------------------------
 # Own modules and packages
 # ------------------------
 
 from ._version import __version__
+from .utils.table import (
+    equivalent_ecsv,
+    name_from_file,
+    classify,
+    passive_process,
+    photodiode_ecsv,
+    device_ecsv,
+)
 
-from .utils.table import scan_csv_to_table
-from . import TBCOL, PROCOL, PROMETA
 
 # ----------------
 # Module constants
@@ -57,119 +55,18 @@ log = logging.getLogger(__name__)
 # Matplotlib styles
 # -----------------
 
-# Load global style sheets
-plt.style.use("licaplot.resources.global")
-
 # ------------------
 # Auxiliary fnctions
 # ------------------
 
 
-def only_change_extension(path: str) -> str:
-    """Keeps the same name and directory but changes extesion to ECSV"""
-    output_path, _ = os.path.splitext(path)
-    return output_path + ".ecsv"
-
-
-def _assign(dir_path: str, file_name: str = None) -> Tuple[dict, defaultdict]:
-    photodiode_dict = dict()
-    filter_dict = defaultdict(list)
-    log.info("Classifying files in directory %s", dir_path)
-    for path in glob.iglob(os.path.join(dir_path, "*.ecsv")):
-        table = astropy.io.ascii.read(path, format="ecsv")
-        key = table.meta["Processing"]["tag"]
-        name = table.meta["Processing"]["name"]
-        if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
-            if photodiode_dict.get(key):
-                msg = (
-                    f'Another photodiode table has the same tag: {table.meta["Processing"]["name"]}',
-                )
-                log.critical(msg)
-                raise RuntimeError(msg)
-            else:
-                photodiode_dict[key] = table
-        elif file_name is None or (file_name is not None and name == file_name):
-            filter_dict[key].append(table)
-        else:
-            log.info("Ignoring %s file in the same directory", name)
-    for k, tables in filter_dict.items():
-        for t in tables:
-            log.info("Returning %s", t.meta["Processing"]["name"])
-    return photodiode_dict, filter_dict
-
-
-def _process(photodiode_dict: dict, filter_dict: defaultdict) -> defaultdict:
-    """Process Filter ECSV files in a given directory"""
-    for key, photod_table in photodiode_dict.items():
-        model = photod_table.meta["Processing"]["model"]
-        resolution = photod_table.meta["Processing"]["resolution"]
-        qe = lica.photodiode.load(model=model, resolution=int(resolution))[COL.QE]
-        for filter_table in filter_dict[key]:
-            name = filter_table.meta["Processing"]["name"]
-            processed = filter_table.meta["Processing"].get("processed")
-            if processed:
-                log.warn("%s: Already being processed with %s", name, model)
-                continue
-            log.info("Processing %s with photodidode %s", name, model)
-            transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
-            filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
-            filter_table[PROCOL.PHOTOD_QE] = qe
-            filter_table[PROCOL.TRANS] = (
-                np.round(transmission, decimals=5) * u.dimensionless_unscaled
-            )
-            filter_table.meta["Processing"]["using photodiode"] = model
-            filter_table.meta["Processing"]["processed"] = True
-    return filter_dict
-
-
 def _save(filter_dict: defaultdict, dir_path: str) -> None:
     for tag, filters in filter_dict.items():
         for filter_table in filters:
-            name = filter_table.meta["Processing"]["name"]
+            name = filter_table.meta["Processing"]["name"] + ".ecsv"
             out_path = os.path.join(dir_path, name)
             log.info("Updating ECSV file %s", out_path)
             filter_table.write(out_path, delimiter=",", overwrite=True)
-
-
-def _photodiode(path: str, tag: str, model) -> None:
-    """Converts CSV file from photodiode into ECSV file"""
-    table = scan_csv_to_table(path)
-    output_path = only_change_extension(path)
-    resolution = np.ediff1d(table[COL.WAVE])
-    assert all([r == resolution[0] for r in resolution])
-    table.meta = {
-        "label": model,  # label used for display purposes
-        "Processing": {
-            "type": PROMETA.PHOTOD.value,
-            "model": model,
-            "tag": tag,
-            "name": os.path.basename(output_path),
-            "resolution": resolution[0],
-        },
-    }
-    table.remove_column(TBCOL.INDEX)
-    log.info("Processing metadata is added: %s", table.meta)
-    log.info("Saving Astropy table to ECSV file: %s", output_path)
-    table.write(output_path, delimiter=",", overwrite=True)
-
-
-def _filters(path: str, tag: str, label: str) -> None:
-    table = scan_csv_to_table(path)
-    resolution = np.ediff1d(table[COL.WAVE])
-    output_path = only_change_extension(path)
-    table.meta = {
-        "label": label,  # label used for display purposes
-        "Processing": {
-            "type": PROMETA.FILTER.value,
-            "tag": tag,
-            "name": os.path.basename(output_path),
-            "resolution": resolution[0],
-        },
-    }
-    table.remove_column(TBCOL.INDEX)
-    log.info("Processing metadata is added: %s", table.meta)
-    log.info("Saving Astropy table to ECSV file: %s", output_path)
-    table.write(output_path, delimiter=",", overwrite=True)
 
 
 def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
@@ -188,9 +85,9 @@ def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
                 raise RuntimeError(msg)
     photod_tags = set(photodiode_dict.keys())
     filter_tags = set(filter_dict.keys())
-    excluded_filters = filter_tags - photod_tags
+    excludeddevice_ecsv = filter_tags - photod_tags
     excluded_photod = photod_tags - filter_tags
-    for key in excluded_filters:
+    for key in excludeddevice_ecsv:
         names = [t.meta["Processing"]["name"] for t in filter_dict[key]]
         log.warn("%s do not match a photodiode tag", names)
     for key in excluded_photod:
@@ -205,37 +102,43 @@ def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
 
 
 def process(args: Namespace) -> defaultdict:
-    photodiode_dict, filter_dict = _assign(args.directory)
-    filter_dict = _process(photodiode_dict, filter_dict)
+    log.info("Classifying files in directory %s", args.directory)
+    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
+    photodiode_dict, filter_dict = classify(dir_iterable)
+    filter_dict = passive_process(photodiode_dict, filter_dict)
     if args.save:
         _save(filter_dict, args.directory)
 
 
 def photodiode(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.photod_file)
-    _photodiode(args.photod_file, args.tag, args.model)
+    photodiode_ecsv(args.photod_file, args.tag, args.model)
 
 
 def filters(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
     label = " ".join(args.label) if args.label else ""
-    _filters(args.input_file, args.tag, label)
+    device_ecsv(args.input_file, args.tag, label)
 
 
 def review(args: Namespace):
-    photodiode_dict, filter_dict = _assign(args.directory)
+    log.info("Reviewing files in directory %s", args.directory)
+    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
+    photodiode_dict, filter_dict = classify(dir_iterable)
     _review(photodiode_dict, filter_dict)
 
 
 def one_filter(args: Namespace):
-    _photodiode(args.photod_file, args.tag, args.model)
+    photodiode_ecsv(args.photod_file, args.tag, args.model)
     label = " ".join(args.label) if args.label else ""
-    _filters(args.input_file, args.tag, label)
+    device_ecsv(args.input_file, args.tag, label)
     dir_path = os.path.dirname(args.input_file)
-    file_name = only_change_extension(os.path.basename(args.input_file))
-    photodiode_dict, filter_dict = _assign(dir_path, file_name)
+    just_name = name_from_file(args.input_file)
+    log.info("Classifying files in directory %s", dir_path)
+    dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
+    photodiode_dict, filter_dict = classify(dir_iterable, just_name)
     _review(photodiode_dict, filter_dict)
-    filter_dict = _process(photodiode_dict, filter_dict)
+    filter_dict = passive_process(photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
 
 
@@ -308,8 +211,8 @@ def add_args(parser):
     parser_one.set_defaults(func=one_filter)
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
-    parser_process = subparser.add_parser("process", help="Process command")
-    parser_process.set_defaults(func=process)
+    parserpassive_process = subparser.add_parser("process", help="Process command")
+    parserpassive_process.set_defaults(func=process)
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
@@ -332,7 +235,7 @@ def add_args(parser):
         help="ECSV input directory",
     )
     # ---------------------------------------------------------------------------------------------------------------
-    parser_process.add_argument(
+    parserpassive_process.add_argument(
         "-d",
         "--directory",
         type=vdir,
@@ -340,7 +243,7 @@ def add_args(parser):
         metavar="<Dir>",
         help="ECSV input directory",
     )
-    parser_process.add_argument(
+    parserpassive_process.add_argument(
         "-s",
         "--save",
         action="store_true",
@@ -353,13 +256,13 @@ def add_args(parser):
 # ================
 
 
-def main_filters(args: Namespace) -> None:
+def maindevice_ecsv(args: Namespace) -> None:
     args.func(args)
 
 
 def main():
     execute(
-        main_func=main_filters,
+        main_func=maindevice_ecsv,
         add_args_func=add_args,
         name=__name__,
         version=__version__,
