@@ -164,7 +164,7 @@ Compare both methods
 ```bash
 licaplot-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 ```
-## Plot the packaged ECSV file (licaplot-photod)
+### Plot the packaged ECSV file (licaplot-photod)
 
 ```bash
 licaplot-photod --console plot -m S2281-01
