@@ -15,7 +15,7 @@ pip install licaplot
 * `licaplot-photod`. Plot and export LICA photodiodes spectral response curves.
 * `licaplot-hama`. Build LICA's Hamamtsu S2281-04 photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
 * `licaplot-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve un ECSV format to be used for other calibration purposes elsewhere.
-* `licaplot-filters`. Porcess filter data from LICA optical bench
+* `licaplot-filters`. Process filter data from LICA optical bench
 
 # Usage examples
 
@@ -38,7 +38,7 @@ In this case two UV/IR cut filters were measured with the clear photodiode readi
 First we tag all the clear photodiode readings.
 
 ```bash
-licaplot-filters --console classif photod --tag X -i csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D
+licaplot-filters --console classif photod --tag X -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D
 ```
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
