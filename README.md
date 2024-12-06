@@ -21,7 +21,7 @@ pip install licaplot
 
 Plots and exports to ESCV the original manufacturer's TSL237 spectral response from the datasheet. The input example CSV has been previosly digitized from the original PDF by a digitizer tool. The input file is resampled (cubic interpolation) to a 5nm step resolution and triimmed to the LICA testbench optical range of [350nm - 1050nm]. The title and label is used both in the plot graphics and also stored as ECSV metadata. The label can be used as a graphics label when overlapping plots.
 
-## reducing Filters data
+## Reducing Filters data
 
 Two Use Cases:
 
@@ -35,7 +35,7 @@ licaplot-filters --console one -t Z f csv/uvir_filters/OSI_Photodiode_QEdata.txt
 
 In this case two UV/IR cut filters were measured with the clear photodiode readings between the two, thus sharing the same clear photodiode file. The photodiode model used was the OSI PIN-10D.
 
-First we tag all the clear photodiode readings.
+First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodidoe reading.
 
 ```bash
 licaplot-filters --console classif photod --tag X -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D
@@ -50,7 +50,7 @@ licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP740_QEda
 licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP750_QEdata.txt -l UV/IR 750
 ```
 
-The output of thhese commands are the ECSV files with the same data but additional metadata for further processing
+The output of these commands are the ECSV files with the same data but additional metadata for further processing
 We review the process:
 
 ```bash
@@ -61,6 +61,12 @@ The we do the processing. The optional flag allows to control the overriting of 
 
 ```bash
 licaplot-filters --console process -d csv/uvir_filters --save
+```
+
+We can plot our results using licaplot-csv. The column to be plotted is the fifth column (transmission) against the wavelenght column which happens to be the first.
+
+```bash
+licaplot-csv --console multi -i csv/uvir_filters/SP740_QEdata.ecsv csv/uvir_filters/SP750_QEdata.ecsv --overlap -wc 1 -yc 5  --filters
 ```
 
 After this step both filter ECSV files contains additional columns with the clear photodiode readings, the photodiode model QE and the final transmission curve as the last column
