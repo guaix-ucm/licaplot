@@ -24,7 +24,7 @@ from collections import defaultdict
 
 from lica.cli import execute
 from lica.validators import vfile, vdir
-from lica.photodiode import PhotodiodeModel
+from lica.photodiode import PhotodiodeModel, BENCH
 
 # ------------------------
 # Own modules and packages
@@ -32,7 +32,6 @@ from lica.photodiode import PhotodiodeModel
 
 from ._version import __version__
 from .utils.table import (
-    equivalent_ecsv,
     name_from_file,
     classify,
     passive_process,
@@ -112,7 +111,11 @@ def process(args: Namespace) -> defaultdict:
 
 def photodiode(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.photod_file)
-    photodiode_ecsv(args.photod_file, args.tag, args.model)
+    args.wave_low, args.wave_high = (
+        min(args.wave_low, args.wave_high),
+        max(args.wave_low, args.wave_high),
+    )
+    photodiode_ecsv(args.photod_file, args.tag, args.model, args.wave_low, args.wave_high)
 
 
 def filters(args: Namespace):
@@ -129,7 +132,11 @@ def review(args: Namespace):
 
 
 def one_filter(args: Namespace):
-    photodiode_ecsv(args.photod_file, args.tag, args.model)
+    args.wave_low, args.wave_high = (
+        min(args.wave_low, args.wave_high),
+        max(args.wave_low, args.wave_high),
+    )
+    photodiode_ecsv(args.photod_file, args.tag, args.model, args.wave_low, args.wave_high)
     label = " ".join(args.label) if args.label else ""
     device_ecsv(args.input_file, args.tag, label)
     dir_path = os.path.dirname(args.input_file)
@@ -175,7 +182,28 @@ def tag_parser() -> ArgumentParser:
         type=str,
         metavar="<tag>",
         default="A",
-        help="File tag, A Filter tag should match a Photodiode tag, defaults value = %(default)s",
+        help="File tag, A Filter tag should match a Photodiode tag, defaults value = '%(default)s'",
+    )
+    return parser
+
+
+def limits_parser() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-wl",
+        "--wave-low",
+        type=int,
+        metavar="\u03bb",
+        default=BENCH.WAVE_START.value,
+        help="Wavelength lower limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wh",
+        "--wave-high",
+        type=int,
+        metavar="\u03bb",
+        default=BENCH.WAVE_END.value,
+        help="Wavelength upper limit, defaults to %(default)s",
     )
     return parser
 
@@ -205,7 +233,7 @@ def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[photod_parser(), input_parser(), tag_parser()],
+        parents=[photod_parser(), input_parser(), tag_parser(), limits_parser()],
         help="Process one CSV filter file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=one_filter)
@@ -216,7 +244,9 @@ def add_args(parser):
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
-        "photod", parents=[photod_parser(), tag_parser()], help="photodiode subcommand"
+        "photod",
+        parents=[photod_parser(), tag_parser(), limits_parser()],
+        help="photodiode subcommand",
     )
     parser_photod.set_defaults(func=photodiode)
     parser_filter = subsubparser.add_parser(

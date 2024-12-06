@@ -5,6 +5,7 @@ import functools
 from typing import Iterable, Sequence, Any
 
 from lica.validators import vfile
+from lica.photodiode import BENCH
 
 def vextension(path: str, extension: str) -> str:
     _, ext = os.path.splitext(path)
@@ -26,3 +27,10 @@ def vsequences(limit: int, *args: Iterable[Sequence[Any]]):
     same_length = tuple(len(arg) == len(args[0]) for arg in args)
     if not all(same_length):
         raise ValueError(f"Not all input argument lists have the same length ({same_length}")
+
+def vbench(value: str) -> int:
+    value = int(value)
+    if not (BENCH.WAVE_START <= value <= BENCH.WAVE_END):
+        raise ValueError(f"Wavelength {value} outside Optical Bench limits [{BENCH.WAVE_START}-{BENCH.WAVE_END}]")
+
+

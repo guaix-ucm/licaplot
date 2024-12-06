@@ -17,7 +17,7 @@ import astropy.units as u
 from astropy.table import Table
 
 import lica.photodiode
-from lica.photodiode import COL
+from lica.photodiode import COL, BENCH
 
 # ------------------------
 # Own modules and packages
@@ -41,11 +41,13 @@ def equivalent_ecsv(path: str) -> str:
     output_path, _ = os.path.splitext(path)
     return output_path + ".ecsv"
 
+
 def name_from_file(path: str) -> str:
     """Keeps the same name and directory but changes extesion to ECSV"""
     path = os.path.basename(path)
     path, _ = os.path.splitext(path)
     return path
+
 
 def scan_csv_to_table(path: str) -> Table:
     """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
@@ -62,11 +64,16 @@ def scan_csv_to_table(path: str) -> Table:
     return table
 
 
-def photodiode_table(path: str, tag: str, model: str) -> Table:
+def photodiode_table(path: str, tag: str, model: str, wave_low: int, wave_high: int) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
     table = scan_csv_to_table(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
+    if not (wave_low == BENCH.WAVE_START and wave_high == BENCH.WAVE_END):
+        history = f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+    else:
+        history = None
+
     table.meta = {
         "label": model,  # label used for display purposes
         "Processing": {
@@ -76,17 +83,24 @@ def photodiode_table(path: str, tag: str, model: str) -> Table:
             "name": name_from_file(path),
             "resolution": resolution[0],
         },
+        "History": [],
     }
+    if history:
+        table.meta["History"].append(history)
+        table.meta["Processing"]["wave_low"] = wave_low
+        table.meta["Processing"]["wave_high"] = wave_high
     table.remove_column(TBCOL.INDEX)
+    table = table[(table[COL.WAVE] >= wave_low) & (table[COL.WAVE] <= wave_high)]
     log.info("Processing metadata is added: %s", table.meta)
     return table
 
 
-def photodiode_ecsv(path: str, tag: str, model: str) -> None:
-    table = photodiode_table(path, tag, model)
+def photodiode_ecsv(path: str, tag: str, model: str, wave_low: int, wave_high: int) -> None:
+    table = photodiode_table(path, tag, model, wave_low, wave_high)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
+
 
 def device_table(path: str, tag: str, label: str) -> Table:
     table = scan_csv_to_table(path)
@@ -96,13 +110,15 @@ def device_table(path: str, tag: str, label: str) -> Table:
         "Processing": {
             "type": PROMETA.FILTER.value,
             "tag": tag,
-            "name":  name_from_file(path),
+            "name": name_from_file(path),
             "resolution": resolution[0],
         },
+        "History": [],
     }
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
     return table
+
 
 def device_ecsv(path: str, tag: str, label: str) -> None:
     table = device_table(path, tag, label)
@@ -147,13 +163,24 @@ def active_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devic
         model = photod_table.meta["Processing"]["model"]
         resolution = photod_table.meta["Processing"]["resolution"]
         qe = lica.photodiode.load(model=model, resolution=int(resolution))[COL.QE]
-        for filter_table in filter_dict[key]:
+        for i, filter_table in enumerate(filter_dict[key]):
             name = filter_table.meta["Processing"]["name"]
             processed = filter_table.meta["Processing"].get("processed")
             if processed:
                 log.warn("Skipping %s. Already been processed with %s", name, model)
                 continue
             log.info("Processing %s with photodidode %s", name, model)
+            wave_low = photod_table.meta["Processing"].get("wave_low")
+            wave_high = photod_table.meta["Processing"].get("wave_high")
+            if wave_low:
+                log.info("Trinming to [%d-%d] nm", wave_low, wave_high)
+                filter_table = filter_table[
+                    (filter_table[COL.WAVE] >= wave_low) & (filter_table[COL.WAVE] <= wave_high)
+                ]
+                filter_table.meta["History"].append(
+                    f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+                )
+                filter_dict[key][i] = filter_table # Necessary to capture the new table in the dict
             transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.PHOTOD_QE] = qe
@@ -172,14 +199,25 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
     """
     for key, photod_table in photodiode_dict.items():
         model = photod_table.meta["Processing"]["model"]
-        for filter_table in filter_dict[key]:
+        for i, filter_table in enumerate(filter_dict[key]):
             name = filter_table.meta["Processing"]["name"]
             processed = filter_table.meta["Processing"].get("processed")
             if processed:
                 log.warn("Skipping %s. Already been processed with %s", name, model)
                 continue
             log.info("Processing %s with photodidode %s", name, model)
-            transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT])
+            wave_low = photod_table.meta["Processing"].get("wave_low")
+            wave_high = photod_table.meta["Processing"].get("wave_high")
+            if wave_low:
+                log.info("Trinming to [%d-%d] nm", wave_low, wave_high)
+                filter_table = filter_table[
+                    (filter_table[COL.WAVE] >= wave_low) & (filter_table[COL.WAVE] <= wave_high)
+                ]
+                filter_table.meta["History"].append(
+                    f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+                )
+                filter_dict[key][i] = filter_table # Necessary to capture the new table in the dict
+            transmission = filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.TRANS] = (
                 np.round(transmission, decimals=5) * u.dimensionless_unscaled

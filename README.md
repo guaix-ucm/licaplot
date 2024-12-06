@@ -27,10 +27,10 @@ Two Use Cases:
 
 ### Simple case
 
-In the simple case, we hace one filter CSV and one clear photodiode CSV
+In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional
 
 ```bash
-licaplot-filters --console one -t Z -l UV/IR 750 -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -i csv/uvir_filters/SP750_QEdata.txt
+licaplot-filters --console one -t Z -l UV/IR 750 -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -i csv/uvir_filters/SP750_QEdata.txt -wl 350 -wh 800
 ```
 
 * Several filters being processes by different photometer readings
@@ -39,8 +39,10 @@ In this case two UV/IR cut filters were measured with the clear photodiode readi
 
 First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodidoe reading.
 
+If we need to trim the bandwith of the whole set (photodiode + associated filter readings) *this is the time to do it*. The bandwith trimming will be carried over from the photodiode to the associated filters.
+
 ```bash
-licaplot-filters --console classif photod --tag X -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D
+licaplot-filters --console classif photod --tag X -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -wh 800
 ```
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
