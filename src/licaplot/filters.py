@@ -71,13 +71,14 @@ def only_change_extension(path: str) -> str:
     return output_path + ".ecsv"
 
 
-def _assign(dir_path: str, file_path: str = "*.ecsv") -> Tuple[dict, defaultdict]:
+def _assign(dir_path: str, file_name: str = None) -> Tuple[dict, defaultdict]:
     photodiode_dict = dict()
     filter_dict = defaultdict(list)
-    log.info("Classifying %s files in directory %s", file_path, dir_path)
-    for path in glob.iglob(os.path.join(dir_path, file_path)):
+    log.info("Classifying files in directory %s", dir_path)
+    for path in glob.iglob(os.path.join(dir_path, "*.ecsv")):
         table = astropy.io.ascii.read(path, format="ecsv")
         key = table.meta["Processing"]["tag"]
+        name = table.meta["Processing"]["name"]
         if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
             if photodiode_dict.get(key):
                 msg = (
@@ -87,12 +88,17 @@ def _assign(dir_path: str, file_path: str = "*.ecsv") -> Tuple[dict, defaultdict
                 raise RuntimeError(msg)
             else:
                 photodiode_dict[key] = table
-        else:
+        elif name == file_name:
             filter_dict[key].append(table)
+        else:
+            log.info("Ignoring %s file in the same directory", name)
+    for k, tables in filter_dict.items():
+        for t in tables:
+            log.info("Returning %s", t.meta["Processing"]["name"])
     return photodiode_dict, filter_dict
 
 
-def _process(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> defaultdict:
+def _process(photodiode_dict: dict, filter_dict: defaultdict) -> defaultdict:
     """Process Filter ECSV files in a given directory"""
     for key, photod_table in photodiode_dict.items():
         model = photod_table.meta["Processing"]["model"]
@@ -166,7 +172,7 @@ def _filters(path: str, tag: str, label: str) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
 
 
-def _review(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> None:
+def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
     for key, table in photodiode_dict.items():
         name = table.meta["Processing"]["name"]
         model = table.meta["Processing"]["model"]
@@ -200,7 +206,7 @@ def _review(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> N
 
 def process(args: Namespace) -> defaultdict:
     photodiode_dict, filter_dict = _assign(args.directory)
-    filter_dict = _process(args.directory, photodiode_dict, filter_dict)
+    filter_dict = _process(photodiode_dict, filter_dict)
     if args.save:
         _save(filter_dict, args.directory)
 
@@ -218,7 +224,7 @@ def filters(args: Namespace):
 
 def review(args: Namespace):
     photodiode_dict, filter_dict = _assign(args.directory)
-    _review(args.directory, photodiode_dict, filter_dict)
+    _review(photodiode_dict, filter_dict)
 
 
 def one_filter(args: Namespace):
@@ -228,8 +234,8 @@ def one_filter(args: Namespace):
     dir_path = os.path.dirname(args.input_file)
     file_name = only_change_extension(os.path.basename(args.input_file))
     photodiode_dict, filter_dict = _assign(dir_path, file_name)
-    _review(dir_path, photodiode_dict, filter_dict)
-    filter_dict = _process(dir_path, photodiode_dict, filter_dict)
+    _review(photodiode_dict, filter_dict)
+    filter_dict = _process(photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
 
 
