@@ -12,6 +12,7 @@ import numpy as np
 import astropy.io.ascii
 import astropy.units as u
 from astropy.table import Table
+
 from lica.photodiode import COL
 
 # ------------------------
@@ -19,6 +20,7 @@ from lica.photodiode import COL
 # ------------------------
 
 from .. import TBCOL
+
 
 # -----------------------
 # Module global variables
