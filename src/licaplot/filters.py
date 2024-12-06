@@ -71,7 +71,7 @@ def only_change_extension(path: str) -> str:
     return output_path + ".ecsv"
 
 
-def _classify(dir_path: str) -> Tuple[dict, defaultdict]:
+def _assign(dir_path: str) -> Tuple[dict, defaultdict]:
     photodiode_dict = dict()
     filter_dict = defaultdict(list)
     log.info("Classifying files in directory %s", dir_path)
@@ -132,6 +132,7 @@ def _photodiode(path: str, tag: str, model) -> None:
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
     table.meta = {
+        "label": model, # label used for display purposes
         "Processing": {
             "type": PROMETA.PHOTOD.value,
             "model": model,
@@ -146,11 +147,12 @@ def _photodiode(path: str, tag: str, model) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
 
 
-def _filters(path: str, tag: str) -> None:
+def _filters(path: str, tag: str, label: str) -> None:
     table = scan_csv_to_table(path)
     resolution = np.ediff1d(table[COL.WAVE])
     output_path = only_change_extension(path)
     table.meta = {
+        "label": label, # label used for display purposes
         "Processing": {
             "type": PROMETA.FILTER.value,
             "tag": tag,
@@ -197,7 +199,7 @@ def _review(dir_path: str, photodiode_dict: dict, filter_dict: defaultdict) -> N
 
 
 def process(args: Namespace) -> defaultdict:
-    photodiode_dict, filter_dict = _classify(args.directory)
+    photodiode_dict, filter_dict = _assign(args.directory)
     filter_dict = _process(args.directory, photodiode_dict, filter_dict)
     if args.save:
         _save(filter_dict, args.directory)
@@ -210,11 +212,12 @@ def photodiode(args: Namespace):
 
 def filters(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
-    _filters(args.input_file, args.tag)
+    label = " ".join(args.label) if args.label else ""
+    _filters(args.input_file, args.tag, label)
 
 
 def review(args: Namespace):
-    photodiode_dict, filter_dict = _classify(args.directory)
+    photodiode_dict, filter_dict = _assign(args.directory)
     _review(args.directory, photodiode_dict, filter_dict)
 
 
@@ -222,7 +225,7 @@ def one_filter(args: Namespace):
     _photodiode(args.photod_file, args.tag, args.model)
     _filters(args.input_file, args.tag)
     dir_path = os.path.dirname(args.input_file)
-    photodiode_dict, filter_dict = _classify(dir_path)
+    photodiode_dict, filter_dict = _assign(dir_path)
     _review(dir_path, photodiode_dict, filter_dict)
     filter_dict = _process(dir_path, photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
@@ -242,6 +245,13 @@ def input_parser() -> ArgumentParser:
         required=True,
         metavar="<File>",
         help="CSV filter input file",
+    )
+    parser.add_argument(
+        "-l",
+        "--label",
+        type=str,
+        nargs="+",
+        help="label for plotting purposes",
     )
     return parser
 

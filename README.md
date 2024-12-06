@@ -46,8 +46,8 @@ The output of this command is an ECSV file with the same information plus metada
 Then we tag both filter files with the same tag (`X` in this case), as they share the same photodiode file.
 
 ```bash
-licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP740_QEdata.txt
-licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP750_QEdata.txt
+licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP740_QEdata.txt -l UV/IR 740
+licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP750_QEdata.txt -l UV/IR 750
 ```
 
 The output of thhese commands are the ECSV files with the same data but additional metadata for further processing

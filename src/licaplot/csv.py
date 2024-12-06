@@ -269,7 +269,7 @@ def columns_parser() -> ArgumentParser:
         default=None,
         nargs="+",
         metavar="<NAME>",
-        help="Ordered list of CSV Column names. If not specified, uses the columm names inside the CSV (default %(default)s)",
+        help="Ordered list of CSV Column names. Use CSV column names by default (default %(default)s)",
     )
     parser.add_argument(
         "-d",
@@ -282,7 +282,7 @@ def columns_parser() -> ArgumentParser:
 
 
 def column_plot_parser() -> ArgumentParser:
-    """Generic parse options dealing with Y versus wavelenght tables and its units"""
+    """Generic parse options dealing with Y versus wavelength tables and its units"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "--title",
@@ -383,10 +383,12 @@ def add_args(parser: ArgumentParser) -> None:
         parents=[columns_parser(), column_plot_parser(), wave_parser()],
         help="Plot single CSV file",
     )
+    parser_single.set_defaults(func=single)
     parser_multi = subparser.add_parser(
         "multi",
         help="Plot multiple CSV files",
     )
+    parser_multi.set_defaults(func=multi)
     # --------------------------------------------------------------------------------------------------
     parser_single.add_argument(
         "--export",
@@ -413,7 +415,7 @@ def add_args(parser: ArgumentParser) -> None:
     parser_multi.add_argument(
         "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
     )
-    parser.add_argument(
+    parser_multi.add_argument(
         "-wc",
         "--wave-col-order",
         type=int,
@@ -436,14 +438,8 @@ def add_args(parser: ArgumentParser) -> None:
 # ================
 
 
-COMMAND_TABLE = {
-    "single": single,
-    "multi": multi,
-}
-
-
 def csvs(args):
-    COMMAND_TABLE[args.command](args)
+    args.func(args)
 
 
 def main():
