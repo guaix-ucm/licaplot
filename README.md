@@ -77,6 +77,7 @@ We can plot our results using `licaplot-csv`. The column to be plotted is the fo
 licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv data/filters/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 ```
 
+![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
 
 ## Generating LICA photodiodes reference data
 
