@@ -76,7 +76,8 @@ def multi(args: Namespace) -> None:
             labels=labels,
             filters=args.filters,
             x=args.wave_col_order-1,
-            y=args.y_col_order-1
+            y=args.y_col_order-1,
+            linewidth=args.lines or 0
         )
     elif N == 1:
         plot_single(
@@ -87,6 +88,7 @@ def multi(args: Namespace) -> None:
             x=args.wave_col_order-1,
             y=args.y_col_order-1,
             marker=args.marker,
+            linewidth=args.lines or 0
         )
     elif N == 2:
         plot_rows(
@@ -97,6 +99,7 @@ def multi(args: Namespace) -> None:
             x=args.wave_col_order-1,
             y=args.y_col_order-1,
             marker=args.marker,
+            linewidth=args.lines or 0
         )
     else:
         plot_grid(
@@ -109,6 +112,7 @@ def multi(args: Namespace) -> None:
             x=args.wave_col_order-1,
             y=args.y_col_order-1,
             marker=args.marker,
+            linewidth=args.lines or 0
         )
 
 
@@ -329,6 +333,7 @@ def column_plot_parser() -> ArgumentParser:
         default=u.dimensionless_unscaled,
         help="Astropy Unit string (ie. nm, A/W, etc.) %(default)s",
     )
+   
     return parser
 
 
@@ -430,6 +435,11 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<N>",
         default=2,
         help="Column order for Y magnitude in CSV, defaults tp %(default)d",
+    )
+    parser_multi.add_argument(
+        "--lines",
+        action="store_true",
+        help="Connect dots with lines %(default)s",
     )
    
 

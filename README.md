@@ -27,10 +27,11 @@ Two Use Cases:
 
 ### Simple case
 
-In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional
+In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional.
+Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01.
 
 ```bash
-licaplot-filters --console one -t Z -l UV/IR 750 -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -i csv/uvir_filters/SP750_QEdata.txt -wl 350 -wh 800
+licaplot-filters --console one -t Z -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
 ```
 
 * Several filters being processes by different photometer readings
@@ -42,7 +43,7 @@ First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) w
 If we need to trim the bandwith of the whole set (photodiode + associated filter readings) *this is the time to do it*. The bandwith trimming will be carried over from the photodiode to the associated filters.
 
 ```bash
-licaplot-filters --console classif photod --tag X -p csv/uvir_filters/OSI_Photodiode_QEdata.txt -m PIN-10D -wh 800
+licaplot-filters --console classif photod --tag X -p data/filters/photodiode.txt
 ```
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
@@ -50,21 +51,22 @@ The output of this command is an ECSV file with the same information plus metada
 Then we tag both filter files with the same tag (`X` in this case), as they share the same photodiode file.
 
 ```bash
-licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP740_QEdata.txt -l UV/IR 740
-licaplot-filters --console classif filter --tag X -i csv/uvir_filters/SP750_QEdata.txt -l UV/IR 750
+licaplot-filters --console classif filter --tag X -i data/filters/green.txt -l Green
+licaplot-filters --console classif filter --tag X -i data/filters/red.txt -l Red
+licaplot-filters --console classif filter --tag X -i data/filters/blue.txt -l Blue
 ```
 
 The output of these commands are the ECSV files with the same data but additional metadata for further processing
 We review the process:
 
 ```bash
-licaplot-filters --console classif review -d csv/uvir_filters
+licaplot-filters --console classif review -d data/filters/
 ```
 
 The we do the processing. The optional flag allows to control the overriting of the input ECSV files with more columns and metadata.
 
 ```bash
-licaplot-filters --console process -d csv/uvir_filters --save
+licaplot-filters --console process -d data/filters --save
 ```
 
 After this step both filter ECSV files contains additional columns with the clear photodiode readings, the photodiode model QE and the final transmission curve as the last column.
@@ -72,8 +74,9 @@ After this step both filter ECSV files contains additional columns with the clea
 We can plot our results using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first.
 
 ```bash
-licaplot-csv --console multi -i csv/uvir_filters/SP740_QEdata.ecsv csv/uvir_filters/SP750_QEdata.ecsv --overlap -wc 1 -yc 4  --filters
+licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv data/filters/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 ```
+
 
 ## Generating LICA photodiodes reference data
 
