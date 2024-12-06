@@ -70,22 +70,23 @@ def photodiode_table(path: str, tag: str, model: str, wave_low: int, wave_high: 
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
     if not (wave_low == BENCH.WAVE_START and wave_high == BENCH.WAVE_END):
-        history = f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+        history = f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
     else:
         history = None
-
+    name = name_from_file(path)
     table.meta = {
         "label": model,  # label used for display purposes
         "Processing": {
             "type": PROMETA.PHOTOD.value,
             "model": model,
             "tag": tag,
-            "name": name_from_file(path),
+            "name": name,
             "resolution": resolution[0],
         },
         "History": [],
     }
     if history:
+        log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
         table.meta["History"].append(history)
         table.meta["Processing"]["wave_low"] = wave_low
         table.meta["Processing"]["wave_high"] = wave_high
@@ -173,12 +174,12 @@ def active_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devic
             wave_low = photod_table.meta["Processing"].get("wave_low")
             wave_high = photod_table.meta["Processing"].get("wave_high")
             if wave_low:
-                log.info("Trinming to [%d-%d] nm", wave_low, wave_high)
+                log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
                 filter_table = filter_table[
                     (filter_table[COL.WAVE] >= wave_low) & (filter_table[COL.WAVE] <= wave_high)
                 ]
                 filter_table.meta["History"].append(
-                    f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+                    f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 filter_dict[key][i] = filter_table # Necessary to capture the new table in the dict
             transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
@@ -189,6 +190,7 @@ def active_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devic
             )
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
+            filter_table.meta["History"].append("Scaled and QE-weighted readings wrt photodiode readings")
     return filter_dict
 
 
@@ -209,12 +211,12 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
             wave_low = photod_table.meta["Processing"].get("wave_low")
             wave_high = photod_table.meta["Processing"].get("wave_high")
             if wave_low:
-                log.info("Trinming to [%d-%d] nm", wave_low, wave_high)
+                log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
                 filter_table = filter_table[
                     (filter_table[COL.WAVE] >= wave_low) & (filter_table[COL.WAVE] <= wave_high)
                 ]
                 filter_table.meta["History"].append(
-                    f"Trimmed to [{wave_low}-{wave_high}] nm wavelength range"
+                    f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 filter_dict[key][i] = filter_table # Necessary to capture the new table in the dict
             transmission = filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]
@@ -224,4 +226,5 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
             )
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
+            filter_table.meta["History"].append("Scaled readings wrt photodiode readings")
     return filter_dict
