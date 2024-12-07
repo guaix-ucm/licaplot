@@ -117,7 +117,7 @@ def photodiode_ecsv(path: str, tag: str, model: str, wave_low: int, wave_high: i
     table.write(output_path, delimiter=",", overwrite=True)
 
 
-def device_table(path: str, tag: str, label: str) -> Table:
+def filter_table(path: str, tag: str, label: str) -> Table:
     table = scan_csv_to_table(path)
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
@@ -135,8 +135,8 @@ def device_table(path: str, tag: str, label: str) -> Table:
     return table
 
 
-def device_ecsv(path: str, tag: str, label: str) -> None:
-    table = device_table(path, tag, label)
+def filter_ecsv(path: str, tag: str, label: str) -> None:
+    table = filter_table(path, tag, label)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)

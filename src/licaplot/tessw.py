@@ -22,6 +22,12 @@ from collections import defaultdict
 # Thrid-party libraries
 # ---------------------
 
+import numpy as np
+import astropy.io.ascii
+import astropy.units as u
+from astropy.table import Table
+
+from lica import StrEnum
 from lica.cli import execute
 
 # ------------------------
@@ -32,7 +38,7 @@ from ._version import __version__
 from .utils.processing import (
     name_from_file,
     classify,
-    passive_process,
+    active_process,
     photodiode_ecsv,
     filter_ecsv,
 )
@@ -56,6 +62,36 @@ log = logging.getLogger(__name__)
 # ------------------
 # Auxiliary fnctions
 # ------------------
+
+
+class TWCOL(StrEnum):
+    """TESS-W columns as expoerted by textual-spectess"""
+
+    TIME = "timestamp"
+    SEQ = "udp_message"
+    WAVE = "wavelength (nm)"
+    FREQ = "frequency (Hz)"
+    FILT = "filter"
+
+
+def tess_csv_to_table(path: str, delimiter=";", data_start=1) -> Table:
+    """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
+    table = astropy.io.ascii.read(
+        path,
+        delimiter=delimiter,
+        data_start=data_start,
+        names=(TWCOL.TIME, TWCOL.SEQ, TWCOL.WAVE, TWCOL.FREQ, TWCOL.FILT),
+        converters={
+            TWCOL.TIME: str,
+            TWCOL.SEQ: np.int32,
+            TWCOL.WAVE: np.float64,
+            TWCOL.FREQ: np.float64,
+            TWCOL.FILT: str,
+        },
+    )
+    table[TWCOL.WAVE] = table[TWCOL.WAVE] * u.nm
+    table[TWCOL.FREQ] = table[TWCOL.FREQ] * u.Hz
+    return table
 
 
 def _save(filter_dict: defaultdict, dir_path: str) -> None:
@@ -103,7 +139,7 @@ def process(args: Namespace) -> defaultdict:
     log.info("Classifying files in directory %s", args.directory)
     dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
     photodiode_dict, filter_dict = classify(dir_iterable)
-    filter_dict = passive_process(photodiode_dict, filter_dict)
+    filter_dict = active_process(photodiode_dict, filter_dict)
     if args.save:
         _save(filter_dict, args.directory)
 
@@ -117,7 +153,7 @@ def photodiode(args: Namespace):
     photodiode_ecsv(args.photod_file, args.tag, args.model, args.wave_low, args.wave_high)
 
 
-def filters(args: Namespace):
+def sensor(args: Namespace):
     log.info("Converting to an Astropy Table: %s", args.input_file)
     label = " ".join(args.label) if args.label else ""
     filter_ecsv(args.input_file, args.tag, label)
@@ -130,7 +166,7 @@ def review(args: Namespace):
     _review(photodiode_dict, filter_dict)
 
 
-def one_filter(args: Namespace):
+def one_tessw(args: Namespace):
     args.wave_low, args.wave_high = (
         min(args.wave_low, args.wave_high),
         max(args.wave_low, args.wave_high),
@@ -144,7 +180,7 @@ def one_filter(args: Namespace):
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, filter_dict = classify(dir_iterable, just_name)
     _review(photodiode_dict, filter_dict)
-    filter_dict = passive_process(photodiode_dict, filter_dict)
+    filter_dict = active_process(photodiode_dict, filter_dict)
     _save(filter_dict, dir_path)
 
 
@@ -158,12 +194,14 @@ def add_args(parser):
     parser_one = subparser.add_parser(
         "one",
         parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
-        help="Process one CSV filter file with one CSV photodiode file",
+        help="Process one CSV TESS-W file with one CSV photodiode file",
     )
-    parser_one.set_defaults(func=one_filter)
+    parser_one.set_defaults(func=one_tessw)
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
-    parser_passive = subparser.add_parser("process", parents=[prs.folder(), prs.save()], help="Process command")
+    parser_passive = subparser.add_parser(
+        "process", parents=[prs.folder(), prs.save()], help="Process command"
+    )
     parser_passive.set_defaults(func=process)
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
@@ -173,27 +211,30 @@ def add_args(parser):
         help="photodiode subcommand",
     )
     parser_photod.set_defaults(func=photodiode)
-    parser_filter = subsubparser.add_parser(
-        "filter", parents=[prs.inputf(), prs.tag()], help="filter subcommand"
+    parser_sensor = subsubparser.add_parser(
+        "sensor", parents=[prs.input(), prs.tag()], help="sensor subcommand"
     )
-    parser_filter.set_defaults(func=filters)
-    parser_review = subsubparser.add_parser("review", parents=[prs.folder()], help="review classification subcommand")
+    parser_sensor.set_defaults(func=sensor)
+    parser_review = subsubparser.add_parser(
+        "review", parents=[prs.folder()], help="review classification subcommand"
+    )
     parser_review.set_defaults(func=review)
-    
+
+
 # ================
 # MAIN ENTRY POINT
 # ================
 
 
-def maindevice_ecsv(args: Namespace) -> None:
+def tessw(args: Namespace) -> None:
     args.func(args)
 
 
 def main():
     execute(
-        main_func=maindevice_ecsv,
+        main_func=tessw,
         add_args_func=add_args,
         name=__name__,
         version=__version__,
-        description="Filters spectral response",
+        description="TESS-W spectral response",
     )
