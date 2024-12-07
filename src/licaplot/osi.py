@@ -43,7 +43,7 @@ from . import TBCOL
 from ._version import __version__
 from .utils.mpl import plot_overlapped
 from .utils.validators import vecsvfile
-from .utils.table import scan_csv_to_table
+from .utils.table import read_scan_csv
 
 # -----------------------
 # Module global variables
@@ -209,8 +209,8 @@ def cross_calibration(args: Namespace) -> None:
         BENCH.WAVE_START,
         BENCH.WAVE_END - 1,  # ScanExe alwais skips the end wavelength :-(
     )
-    osi_readings = scan_csv_to_table(args.osi_readings)
-    hama_readings = scan_csv_to_table(args.hama_readings)
+    osi_readings = read_scan_csv(args.osi_readings)
+    hama_readings = read_scan_csv(args.hama_readings)
     osi_reference = cross_calibrate(osi_readings, hama_readings, hama_reference, args.resolution)
     name = f"{PhotodiodeModel.OSI}+Cross-Calibrated@{args.resolution}nm.ecsv"
     output_path = os.path.join(os.path.dirname(args.osi_readings), name)
