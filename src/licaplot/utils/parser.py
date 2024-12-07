@@ -11,15 +11,24 @@
 # -------------------
 
 from argparse import ArgumentParser
-from lica.validators import vfile
-import astropy.units as u
+
+# ---------------------
+# Thrid-party libraries
+# ---------------------
+
+from lica.validators import vfile, vdir
+from lica.photodiode import PhotodiodeModel, BENCH
+
+# ------------------------
+# Own modules and packages
+# ------------------------
 
 # -----------------
 # Auxiliary parsers
 # -----------------
 
-def csv_parser() -> ArgumentParser:
-    """Generic parse option for CSV input files"""
+
+def inputf() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-i",
@@ -27,92 +36,90 @@ def csv_parser() -> ArgumentParser:
         type=vfile,
         required=True,
         metavar="<File>",
-        help="CSV input file",
+        help="CSV sensor/filter input file",
     )
     parser.add_argument(
-        "--title",
-        type=str,
-        required=True,
-        nargs="+",
-        help="Dataset title/description",
-    )
-    parser.add_argument(
+        "-l",
         "--label",
         type=str,
-        required=True,
-        help="Dataset short tag",
-    )
-    parser.add_argument(
-        "-c",
-        "--columns",
-        type=str,
-        default=None,
         nargs="+",
-        metavar="<NAME>",
-        help="Ordered list of CSV Column names. If not specified, uses the columm names inside the CSV (default %(default)s)",
-    )
-    parser.add_argument(
-        "-d",
-        "--delimiter",
-        type=str,
-        default=",",
-        help="CSV column delimiter. (defaults to %(default)s)",
+        help="Label for plotting purposes",
     )
     return parser
 
-def wave_parser() -> ArgumentParser:
-    """Parser options dealing with Wavelengths"""
+
+def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-wc",
-        "--wave-col-order",
-        type=int,
-        metavar="<N>",
-        default=1,
-        help="Wavelength column order in CSV, defaults to %(default)d",
+        "-t",
+        "--tag",
+        type=str,
+        metavar="<tag>",
+        default="A",
+        help="File tag. Sensor/filter tags should match a photodiode tag, defaults value = '%(default)s'",
     )
-    parser.add_argument(
-        "-wu",
-        "--wave-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Wavelength units string (ie. nm, AA) %(default)s",
-    )
+    return parser
+
+
+def limits() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-wl",
         "--wave-low",
-        type=float,
+        type=int,
         metavar="\u03bb",
-        default=None,
-        help="Wavelength lower limit, defaults to %(default)s",
+        default=BENCH.WAVE_START.value,
+        help="Wavelength lower limit (nm), defaults to %(default)s",
     )
     parser.add_argument(
         "-wh",
         "--wave-high",
-        type=float,
+        type=int,
         metavar="\u03bb",
-        default=None,
-        help="Wavelength upper limit, defaults to %(default)s",
+        default=BENCH.WAVE_END.value,
+        help="Wavelength upper limit (nm), defaults to %(default)s",
     )
     return parser
 
-def y_parser()-> ArgumentParser:
+
+def photod() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-yc",
-        "--y-col-order",
-        type=int,
-        metavar="<N>",
-        default=2,
-        help="Column order for Y magnitude in CSV, defaults to %(default)d",
+        "-m",
+        "--model",
+        type=str,
+        choices=[model for model in PhotodiodeModel],
+        default=PhotodiodeModel.OSI,
+        help="Photodiode model, defaults to %(default)s",
     )
     parser.add_argument(
-        "-yu",
-        "--y-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.dimensionless_unscaled,
-        help="Astropy Unit string (ie. nm, A/W, etc.), defaults to %(default)s",
+        "-p",
+        "--photod-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV photodiode input file",
+    )
+    return parser
+
+def folder() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-d",
+        "--directory",
+        type=vdir,
+        required=True,
+        metavar="<Dir>",
+        help="ECSV input directory",
+    )
+    return parser
+
+def save() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-s",
+        "--save",
+        action="store_true",
+        help="Save processing file to ECSV",
     )
     return parser

@@ -14,7 +14,7 @@ import os
 import glob
 import logging
 
-from argparse import Namespace, ArgumentParser
+from argparse import Namespace
 
 from collections import defaultdict
 
@@ -23,8 +23,6 @@ from collections import defaultdict
 # ---------------------
 
 from lica.cli import execute
-from lica.validators import vfile, vdir
-from lica.photodiode import PhotodiodeModel, BENCH
 
 # ------------------------
 # Own modules and packages
@@ -39,6 +37,7 @@ from .utils.table import (
     device_ecsv,
 )
 
+from .utils import parser as prs
 
 # ----------------
 # Module constants
@@ -154,133 +153,33 @@ def one_filter(args: Namespace):
 # ===================================
 
 
-def input_parser() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-i",
-        "--input-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV filter input file",
-    )
-    parser.add_argument(
-        "-l",
-        "--label",
-        type=str,
-        nargs="+",
-        help="label for plotting purposes",
-    )
-    return parser
-
-
-def tag_parser() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-t",
-        "--tag",
-        type=str,
-        metavar="<tag>",
-        default="A",
-        help="File tag, A Filter tag should match a Photodiode tag, defaults value = '%(default)s'",
-    )
-    return parser
-
-
-def limits_parser() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-wl",
-        "--wave-low",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_START.value,
-        help="Wavelength lower limit, defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wh",
-        "--wave-high",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_END.value,
-        help="Wavelength upper limit, defaults to %(default)s",
-    )
-    return parser
-
-
-def photod_parser() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        choices=[model for model in PhotodiodeModel],
-        default=PhotodiodeModel.OSI,
-        help="Photodiode model, defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-p",
-        "--photod-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV photodiode input file",
-    )
-    return parser
-
-
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[photod_parser(), input_parser(), tag_parser(), limits_parser()],
+        parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
         help="Process one CSV filter file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=one_filter)
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
-    parserpassive_process = subparser.add_parser("process", help="Process command")
-    parserpassive_process.set_defaults(func=process)
+    parser_passive = subparser.add_parser("process", parents=[prs.folder(), prs.save()], help="Process command")
+    parser_passive.set_defaults(func=process)
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
         "photod",
-        parents=[photod_parser(), tag_parser(), limits_parser()],
+        parents=[prs.photod(), prs.tag(), prs.limits()],
         help="photodiode subcommand",
     )
     parser_photod.set_defaults(func=photodiode)
     parser_filter = subsubparser.add_parser(
-        "filter", parents=[input_parser(), tag_parser()], help="filter subcommand"
+        "filter", parents=[prs.inputf(), prs.tag()], help="filter subcommand"
     )
     parser_filter.set_defaults(func=filters)
-    parser_review = subsubparser.add_parser("review", help="review classification subcommand")
+    parser_review = subsubparser.add_parser("review", parents=[prs.folder()], help="review classification subcommand")
     parser_review.set_defaults(func=review)
-    # ---------------------------------------------------------------------------------------------------------------
-    parser_review.add_argument(
-        "-d",
-        "--directory",
-        type=vdir,
-        required=True,
-        metavar="<Dir>",
-        help="ECSV input directory",
-    )
-    # ---------------------------------------------------------------------------------------------------------------
-    parserpassive_process.add_argument(
-        "-d",
-        "--directory",
-        type=vdir,
-        required=True,
-        metavar="<Dir>",
-        help="ECSV input directory",
-    )
-    parserpassive_process.add_argument(
-        "-s",
-        "--save",
-        action="store_true",
-        help="Save processing file to ECSV",
-    )
-
-
+    
 # ================
 # MAIN ENTRY POINT
 # ================
