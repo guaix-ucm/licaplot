@@ -49,18 +49,32 @@ def name_from_file(path: str) -> str:
     return path
 
 
-def scan_csv_to_table(path: str) -> Table:
+def scan_csv_to_table(path: str, delimiter = "\t", data_start=0) -> Table:
     """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
     table = astropy.io.ascii.read(
         path,
-        delimiter="\t",
-        data_start=0,
+        delimiter=delimiter,
+        data_start=data_start,
         names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
         converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
     )
     table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
     table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+    return table
+
+def manual_csv_to_table(path: str, delimiter = ";", data_start=1) -> Table:
+    """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
+    table = astropy.io.ascii.read(
+        path,
+        delimiter=delimiter,
+        data_start=data_start,
+        names=(COL.WAVE, TBCOL.CURRENT, TBCOL.READ_NOISE),
+        converters={COL.WAVE: np.float64, TBCOL.CURRENT: np.float64, TBCOL.READ_NOISE: np.float64},
+    )
+    table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
+    table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+    table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
     return table
 
 
