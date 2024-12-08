@@ -170,7 +170,7 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
 # -----------------------
 
 
-def stage1(args: Namespace) -> None:
+def cli_stage1(args: Namespace) -> None:
     table = create_npl_table(npl_path=args.input_file)
     output_path, _ = os.path.splitext(args.input_file)
     output_path += ".ecsv"
@@ -190,7 +190,7 @@ def stage1(args: Namespace) -> None:
         )
 
 
-def stage2(args: Namespace) -> None:
+def cli_stage2(args: Namespace) -> None:
     """Iterative merge curves and saves the combined results"""
     log.info("Loading NPL ECSV calibration File: %s", args.input_file)
     npl_table = astropy.io.ascii.read(args.input_file, format="ecsv")
@@ -231,7 +231,7 @@ def stage2(args: Namespace) -> None:
         merged_table.write(output_path, delimiter=",", overwrite=True)
 
 
-def stage3(args: Namespace) -> None:
+def cli_stage3(args: Namespace) -> None:
     log.info("Loading NPL + Datasheet ECSV calibration File: %s", args.input_file)
     table = astropy.io.ascii.read(args.input_file, format="ecsv")
     log.info(table.info)
@@ -255,7 +255,7 @@ def stage3(args: Namespace) -> None:
         )
 
 
-def pipeline(args: Namespace) -> None:
+def cli_pipeline(args: Namespace) -> None:
     npl_table = create_npl_table(npl_path=args.input_file)
     threshold = np.max(npl_table[COL.WAVE]) + 1
     datasheet_table, sliced_table = create_datasheet_table(
@@ -380,25 +380,25 @@ def add_args(parser: ArgumentParser) -> None:
         ],
         help="Load NPL calibration CSV and convert to ECSV",
     )
-    parser_stage1.set_defaults(func=stage1)
+    parser_stage1.set_defaults(func=cli_stage1)
     parser_stage2 = subparser.add_parser(
         "stage2",
         parents=[combi_parser(), plot_parser()],
         help="Merges datasheet data to NPL calibration data and convert to ECSV",
     )
-    parser_stage2.set_defaults(func=stage2)
+    parser_stage2.set_defaults(func=cli_stage2)
     parser_stage3 = subparser.add_parser(
         "stage3",
         parents=[plot_parser(), interp_parser()],
         help="Resamples calibration data to uniform 1nm wavelength step and convert to ECSV",
     )
-    parser_stage3.set_defaults(func=stage3)
+    parser_stage3.set_defaults(func=cli_stage3)
     parser_pipe = subparser.add_parser(
         "pipeline",
         parents=[plot_parser(), combi_parser(), interp_parser()],
         help="Pipleines all 3 stages",
     )
-    parser_pipe.set_defaults(func=pipeline)
+    parser_pipe.set_defaults(func=cli_pipeline)
     # ------------------------------------------------------------------------
     parser_stage1.add_argument(
         "-i",
@@ -432,13 +432,13 @@ def add_args(parser: ArgumentParser) -> None:
 # ================
 
 
-def hama(args: Namespace):
+def cli_main(args: Namespace):
     args.func(args)
 
 
 def main():
     execute(
-        main_func=hama,
+        main_func=cli_main,
         add_args_func=add_args,
         name=__name__,
         version=__version__,

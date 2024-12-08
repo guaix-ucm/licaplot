@@ -16,8 +16,6 @@ import logging
 
 from argparse import Namespace
 
-from collections import defaultdict
-
 # ---------------------
 # Thrid-party libraries
 # ---------------------
@@ -29,14 +27,7 @@ from lica.cli import execute
 # ------------------------
 
 from ._version import __version__
-from .utils.processing import (
-    name_from_file,
-    classify,
-    passive_process,
-    photodiode_ecsv,
-    filter_ecsv,
-)
-
+from .utils import processing
 from .utils import parser as prs
 
 # ----------------
@@ -57,41 +48,54 @@ log = logging.getLogger(__name__)
 # Auxiliary fnctions
 # ------------------
 
-
-def _save(filter_dict: defaultdict, dir_path: str) -> None:
-    for tag, filters in filter_dict.items():
-        for filter_table in filters:
-            name = filter_table.meta["Processing"]["name"] + ".ecsv"
-            out_path = os.path.join(dir_path, name)
-            log.info("Updating ECSV file %s", out_path)
-            filter_table.write(out_path, delimiter=",", overwrite=True)
+# --------------------------------------------------
+# Python API
+#
+# The Python API can be used within Jupyter Notebook
+# --------------------------------------------------
 
 
-def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
-    for key, table in photodiode_dict.items():
-        name = table.meta["Processing"]["name"]
-        model = table.meta["Processing"]["model"]
-        diode_resol = table.meta["Processing"]["resolution"]
-        filters = filter_dict[key]
-        names = [t.meta["Processing"]["name"] for t in filters]
-        log.info("[tag=%s] (%s) %s, used by %s", key, model, name, names)
-        for t in filters:
-            filter_resol = t.meta["Processing"]["resolution"]
-            if filter_resol != diode_resol:
-                msg = f"Filter resoultion {filter_resol} does not match photodiode readings resolution {diode_resol}"
-                log.critical(msg)
-                raise RuntimeError(msg)
-    photod_tags = set(photodiode_dict.keys())
-    filter_tags = set(filter_dict.keys())
-    excludeddevice_ecsv = filter_tags - photod_tags
-    excluded_photod = photod_tags - filter_tags
-    for key in excludeddevice_ecsv:
-        names = [t.meta["Processing"]["name"] for t in filter_dict[key]]
-        log.warn("%s do not match a photodiode tag", names)
-    for key in excluded_photod:
-        name = photodiode_dict[key].meta["Processing"]["name"]
-        log.warn("%s do not match an input file tag", names)
-    log.info("Review step ok.")
+def process(dir_path: str, save_flag: bool) -> None:
+    log.info("Classifying files in directory %s", dir_path)
+    dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
+    photodiode_dict, filter_dict = processing.classify(dir_iterable)
+    filter_dict = processing.passive_process(photodiode_dict, filter_dict)
+    if save_flag:
+        processing.save(filter_dict, dir_path)
+
+
+def photodiode(photod_path: str, model: str, tag: str, wave_low: int, wave_high: int) -> None:
+    log.info("Converting to an Astropy Table: %s", photod_path)
+    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
+    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
+
+
+def filters(input_path: str, tag: str, label: str) -> None:
+    log.info("Converting to an Astropy Table: %s", input_path)
+    label = " ".join(label) if label else ""
+    processing.filter_ecsv(input_path, tag, label)
+
+def one_filter(
+    input_path: str,
+    photod_path: str,
+    model: str,
+    tag: str,
+    label: str,
+    wave_low: int,
+    wave_high: int,
+) -> None:
+    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
+    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
+    label = " ".join(label) if label else ""
+    processing.filter_ecsv(input_path, tag, label)
+    dir_path = os.path.dirname(input_path)
+    just_name = processing.name_from_file(input_path)
+    log.info("Classifying files in directory %s", dir_path)
+    dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
+    photodiode_dict, filter_dict = processing.classify(dir_iterable, just_name)
+    processing.review(photodiode_dict, filter_dict)
+    filter_dict = processing.passive_process(photodiode_dict, filter_dict)
+    processing.save(filter_dict, dir_path)
 
 
 # -----------------------
@@ -99,53 +103,35 @@ def _review(photodiode_dict: dict, filter_dict: defaultdict) -> None:
 # -----------------------
 
 
-def process(args: Namespace) -> defaultdict:
-    log.info("Classifying files in directory %s", args.directory)
-    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
-    photodiode_dict, filter_dict = classify(dir_iterable)
-    filter_dict = passive_process(photodiode_dict, filter_dict)
-    if args.save:
-        _save(filter_dict, args.directory)
+def cli_process(args: Namespace) -> None:
+    process(args.directory, args.save)
 
 
-def photodiode(args: Namespace):
-    log.info("Converting to an Astropy Table: %s", args.photod_file)
-    args.wave_low, args.wave_high = (
-        min(args.wave_low, args.wave_high),
-        max(args.wave_low, args.wave_high),
+def cli_photodiode(args: Namespace) -> None:
+    photodiode(args.photod_file, args.model, args.tag, args.wave_low, args.wave_high)
+
+
+def cli_filters(args: Namespace) -> None:
+    filters(args.input_file, args.tag, args.label)
+
+
+def cli_one_filter(args: Namespace) -> None:
+    one_filter(
+        args.input_file,
+        args.photod_file,
+        args.model,
+        args.tag,
+        args.label,
+        args.wave_low,
+        args.wave_high,
     )
-    photodiode_ecsv(args.photod_file, args.tag, args.model, args.wave_low, args.wave_high)
 
 
-def filters(args: Namespace):
-    log.info("Converting to an Astropy Table: %s", args.input_file)
-    label = " ".join(args.label) if args.label else ""
-    filter_ecsv(args.input_file, args.tag, label)
-
-
-def review(args: Namespace):
+def cli_review(args: Namespace):
     log.info("Reviewing files in directory %s", args.directory)
     dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
-    photodiode_dict, filter_dict = classify(dir_iterable)
-    _review(photodiode_dict, filter_dict)
-
-
-def one_filter(args: Namespace):
-    args.wave_low, args.wave_high = (
-        min(args.wave_low, args.wave_high),
-        max(args.wave_low, args.wave_high),
-    )
-    photodiode_ecsv(args.photod_file, args.tag, args.model, args.wave_low, args.wave_high)
-    label = " ".join(args.label) if args.label else ""
-    filter_ecsv(args.input_file, args.tag, label)
-    dir_path = os.path.dirname(args.input_file)
-    just_name = name_from_file(args.input_file)
-    log.info("Classifying files in directory %s", dir_path)
-    dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
-    photodiode_dict, filter_dict = classify(dir_iterable, just_name)
-    _review(photodiode_dict, filter_dict)
-    filter_dict = passive_process(photodiode_dict, filter_dict)
-    _save(filter_dict, dir_path)
+    photodiode_dict, filter_dict = processing.classify(dir_iterable)
+    processing.review(photodiode_dict, filter_dict)
 
 
 # ===================================
@@ -160,11 +146,13 @@ def add_args(parser):
         parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
         help="Process one CSV filter file with one CSV photodiode file",
     )
-    parser_one.set_defaults(func=one_filter)
+    parser_one.set_defaults(func=cli_one_filter)
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
-    parser_passive = subparser.add_parser("process", parents=[prs.folder(), prs.save()], help="Process command")
-    parser_passive.set_defaults(func=process)
+    parser_passive = subparser.add_parser(
+        "process", parents=[prs.folder(), prs.save()], help="Process command"
+    )
+    parser_passive.set_defaults(func=cli_process)
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
@@ -172,26 +160,29 @@ def add_args(parser):
         parents=[prs.photod(), prs.tag(), prs.limits()],
         help="photodiode subcommand",
     )
-    parser_photod.set_defaults(func=photodiode)
+    parser_photod.set_defaults(func=cli_photodiode)
     parser_filter = subsubparser.add_parser(
         "filter", parents=[prs.inputf(), prs.tag()], help="filter subcommand"
     )
-    parser_filter.set_defaults(func=filters)
-    parser_review = subsubparser.add_parser("review", parents=[prs.folder()], help="review classification subcommand")
-    parser_review.set_defaults(func=review)
-    
+    parser_filter.set_defaults(func=cli_filters)
+    parser_review = subsubparser.add_parser(
+        "review", parents=[prs.folder()], help="review classification subcommand"
+    )
+    parser_review.set_defaults(func=cli_review)
+
+
 # ================
 # MAIN ENTRY POINT
 # ================
 
 
-def maindevice_ecsv(args: Namespace) -> None:
+def cli_main(args: Namespace) -> None:
     args.func(args)
 
 
 def main():
     execute(
-        main_func=maindevice_ecsv,
+        main_func=cli_main,
         add_args_func=add_args,
         name=__name__,
         version=__version__,

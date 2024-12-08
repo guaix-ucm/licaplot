@@ -201,13 +201,11 @@ def cross_calibrate(
 # -----------------------
 
 
-def cross_calibration(args: Namespace) -> None:
+def cli_cross_calibration(args: Namespace) -> None:
     log.info("reads the reference calibration photodiode data %s", PhotodiodeModel.HAMAMATSU)
     hama_reference = lica.photodiode.load(
         PhotodiodeModel.HAMAMATSU,
         args.resolution,
-        BENCH.WAVE_START,
-        BENCH.WAVE_END - 1,  # ScanExe alwais skips the end wavelength :-(
     )
     osi_readings = read_scan_csv(args.osi_readings)
     hama_readings = read_scan_csv(args.hama_readings)
@@ -232,7 +230,7 @@ def cross_calibration(args: Namespace) -> None:
         )
 
 
-def digitized_datasheet(args: Namespace) -> None:
+def cli_digitized_datasheet(args: Namespace) -> None:
     datasheet_table = create_osi_table(path=args.input_file)
     interpolated_table = interpolate_table(datasheet_table, args.method, args.resolution)
     output_path, _ = os.path.splitext(args.input_file)
@@ -240,7 +238,6 @@ def digitized_datasheet(args: Namespace) -> None:
     if args.save:
         log.info("Saving Digitized Datsheet ECSV to %s", output_path)
         interpolated_table.write(output_path, delimiter=",", overwrite=True)
-    log.info(interpolated_table.info)
     if args.plot:
         plot_overlapped(
             title=f"{args.title} #{datasheet_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
@@ -259,7 +256,7 @@ def digitized_datasheet(args: Namespace) -> None:
         )
 
 
-def compare(args: Namespace) -> None:
+def cli_compare(args: Namespace) -> None:
     table1 = astropy.io.ascii.read(args.cross_file, format="ecsv")
     table2 = astropy.io.ascii.read(args.datasheet_file, format="ecsv")[0:-1]
     hama_reference = lica.photodiode.load(
@@ -270,7 +267,6 @@ def compare(args: Namespace) -> None:
     )
     osi = f"{OSI.MANUF} {OSI.MODEL}"
     hama = f"{Hamamatsu.MANUF} {Hamamatsu.MODEL}"
-    log.info(table1.colnames.index(COL.WAVE))
     x = table1.colnames.index(COL.WAVE)
     y = table1.colnames.index(COL.QE) if args.qe else table1.colnames.index(COL.RESP)
     if args.plot:
@@ -362,7 +358,7 @@ def add_args(parser: ArgumentParser) -> None:
         parents=[combi_parser(), plot_parser()],
         help="By cross-calibration with Hamamatsu S2281",
     )
-    parser_cross.set_defaults(func=cross_calibration)
+    parser_cross.set_defaults(func=cli_cross_calibration)
     # ------------------------------------------------------------------------
     parser_cross.add_argument(
         "-s",
@@ -376,7 +372,7 @@ def add_args(parser: ArgumentParser) -> None:
         parents=[interp_parser(), plot_parser()],
         help="By digitizing the datasheet",
     )
-    parser_datasheet.set_defaults(func=digitized_datasheet)
+    parser_datasheet.set_defaults(func=cli_digitized_datasheet)
     parser_datasheet.add_argument(
         "-i",
         "--input-file",
@@ -406,7 +402,7 @@ def add_args(parser: ArgumentParser) -> None:
         parents=[plot_parser()],
         help="Comparing between cross calibration and datasheet methods",
     )
-    parser_comp.set_defaults(func=compare)
+    parser_comp.set_defaults(func=cli_compare)
     parser_comp.add_argument(
         "-q",
         "--qe",
@@ -435,13 +431,13 @@ def add_args(parser: ArgumentParser) -> None:
 # MAIN ENTRY POINT
 # ================
 
-def osi(args: Namespace) -> None:
+def cli_main(args: Namespace) -> None:
     args.func(args)
 
 
 def main():
     execute(
-        main_func=osi,
+        main_func=cli_main,
         add_args_func=add_args,
         name=__name__,
         version=__version__,

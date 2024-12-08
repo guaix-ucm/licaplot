@@ -29,7 +29,6 @@ from lica.cli import execute
 
 from ._version import __version__
 from . import TWCOL, PROCOL
-from .utils.validators import vecsvfile
 from .utils import parser as prs
 from .utils import processing
 from .utils.processing import DeviceDict
@@ -52,63 +51,58 @@ log = logging.getLogger(__name__)
 # Auxiliary fnctions
 # ------------------
 
+
 def to_Hz_per_nA(sensor_dict: DeviceDict) -> None:
     """Better suited for display and proceeesing"""
     for tag, sensors in sensor_dict.items():
-        for i, table in enumerate(sensors):
-            table[PROCOL.SPECTRAL] = table[PROCOL.SPECTRAL].to(u.Hz/u.nA)
-
-# -----------------------
-# AUXILIARY MAIN FUNCTION
-# -----------------------
+        for table in sensors:
+            table[PROCOL.SPECTRAL] = table[PROCOL.SPECTRAL].to(u.Hz / u.nA)
 
 
-def process(args: Namespace) -> None:
-    log.info("Classifying files in directory %s", args.directory)
-    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
+# --------------------------------------------------
+# Python API
+#
+# The Python API can be used within Jupyter Notebook
+# --------------------------------------------------
+
+
+def process(dir_path: str, save_flag: bool) -> None:
+    log.info("Classifying files in directory %s", dir_path)
+    dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable)
     sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
     to_Hz_per_nA(sensor_dict)
-    if args.save:
-        processing.save(sensor_dict, args.directory)
+    if save_flag:
+        processing.save(sensor_dict, dir_path)
 
 
-def photodiode(args: Namespace) -> None:
-    log.info("Converting to an Astropy Table: %s", args.photod_file)
-    args.wave_low, args.wave_high = (
-        min(args.wave_low, args.wave_high),
-        max(args.wave_low, args.wave_high),
-    )
-    processing.photodiode_ecsv(
-        args.photod_file, args.tag, args.model, args.wave_low, args.wave_high, manual=True
-    )
+def photodiode(photod_path: str, model: str, tag: str, wave_low: int, wave_high: int) -> None:
+    log.info("Converting to an Astropy Table: %s", photod_path)
+    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
+    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
 
 
-def sensor(args: Namespace) -> None:
-    log.info("Converting to an Astropy Table: %s", args.input_file)
-    label = " ".join(args.label) if args.label else ""
-    processing.tessw_ecsv(args.input_file, args.tag, label)
+def sensor(input_path: str, tag: str, label: str) -> None:
+    log.info("Converting to an Astropy Table: %s", input_path)
+    label = " ".join(label) if label else ""
+    processing.tessw_ecsv(input_path, tag, label)
 
 
-def review(args: Namespace) -> None:
-    log.info("Reviewing files in directory %s", args.directory)
-    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
-    photodiode_dict, sensor_dict = processing.classify(dir_iterable)
-    processing.review(photodiode_dict, sensor_dict)
-
-
-def one_tessw(args: Namespace) -> None:
-    args.wave_low, args.wave_high = (
-        min(args.wave_low, args.wave_high),
-        max(args.wave_low, args.wave_high),
-    )
-    processing.photodiode_ecsv(
-        args.photod_file, args.tag, args.model, args.wave_low, args.wave_high
-    )
-    label = " ".join(args.label) if args.label else ""
-    processing.tessw_ecsv(args.input_file, args.tag, label)
-    dir_path = os.path.dirname(args.input_file)
-    just_name = processing.name_from_file(args.input_file)
+def one_tessw(
+    input_path: str,
+    photod_path: str,
+    model: str,
+    tag: str,
+    label: str,
+    wave_low: int,
+    wave_high: int,
+) -> None:
+    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
+    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
+    label = " ".join(label) if label else ""
+    processing.tessw_ecsv(input_path, tag, label)
+    dir_path = os.path.dirname(input_path)
+    just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable, just_name)
@@ -117,16 +111,53 @@ def one_tessw(args: Namespace) -> None:
     to_Hz_per_nA(sensor_dict)
     processing.save(sensor_dict, dir_path)
 
-from .utils.processing import tsl237_table, read_ecsv, equivalent_ecsv
 
+# -------
+# CLI API
+# -------
+
+
+def cli_process(args: Namespace) -> None:
+    process(args.directory, args.save)
+
+
+def cli_photodiode(args: Namespace) -> None:
+    photodiode(args.photod_file, args.model, args.tag, args.wave_low, args.wave_high)
+
+
+def cli_sensor(args: Namespace) -> None:
+    sensor(args.input_file, args.tag, args.label)
+
+
+def cli_one_tessw(args: Namespace) -> None:
+    one_tessw(
+        args.input_file,
+        args.photod_file,
+        args.model,
+        args.tag,
+        args.label,
+        args.wave_low,
+        args.wave_high,
+    )
+
+
+def cli_review(args: Namespace) -> None:
+    log.info("Reviewing files in directory %s", args.directory)
+    dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
+    photodiode_dict, sensor_dict = processing.classify(dir_iterable)
+    processing.review(photodiode_dict, sensor_dict)
+
+
+# Soon to be moved to Jupyter ...
 def theory_tessw(args: Namespace) -> None:
-    table = tsl237_table(args.input_file, tag="", label="TSL237 Dataseet",resolution=5)
-    filter_table = read_ecsv(args.uvir_file)
+    table = processing.tsl237_table(args.input_file, tag="", label="TSL237 Dataseet", resolution=5)
+    filter_table = processing.read_ecsv(args.uvir_file)
     table["Corrected by Filter"] = table[PROCOL.SPECTRAL] * filter_table[PROCOL.TRANS]
-    out_path = equivalent_ecsv(args.input_file)
+    out_path = processing.equivalent_ecsv(args.input_file)
     if args.save:
         table.write(out_path, delimiter=",", overwrite=True)
     log.info(table.info)
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -140,13 +171,13 @@ def add_args(parser) -> None:
         parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
         help="Process one CSV TESS-W file with one CSV photodiode file",
     )
-    parser_one.set_defaults(func=one_tessw)
+    parser_one.set_defaults(func=cli_one_tessw)
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
     parser_passive = subparser.add_parser(
         "process", parents=[prs.folder(), prs.save()], help="Process command"
     )
-    parser_passive.set_defaults(func=process)
+    parser_passive.set_defaults(func=cli_process)
 
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
@@ -154,29 +185,15 @@ def add_args(parser) -> None:
         parents=[prs.photod(), prs.tag(), prs.limits()],
         help="photodiode subcommand",
     )
-    parser_photod.set_defaults(func=photodiode)
+    parser_photod.set_defaults(func=cli_photodiode)
     parser_sensor = subsubparser.add_parser(
         "sensor", parents=[prs.inputf(), prs.tag()], help="sensor subcommand"
     )
-    parser_sensor.set_defaults(func=sensor)
+    parser_sensor.set_defaults(func=cli_sensor)
     parser_review = subsubparser.add_parser(
         "review", parents=[prs.folder()], help="review classification subcommand"
     )
-    parser_review.set_defaults(func=review)
-    parser_theo = subparser.add_parser(
-        "theory",
-        parents=[prs.inputf(), prs.save()],
-        help="Theroretical response from manufacturer datsheet and UV/IR cut filter",
-    )
-    parser_theo.set_defaults(func=theory_tessw)
-    parser_theo.add_argument(
-        "-u",
-        "--uvir-file",
-        type=vecsvfile,
-        required=True,
-        metavar="<File>",
-        help="Reduced UV/IR cutoff filter ECSV file with Transmission column",
-    )
+    parser_review.set_defaults(func=cli_review)
 
 
 # ================
@@ -184,13 +201,13 @@ def add_args(parser) -> None:
 # ================
 
 
-def tessw(args: Namespace) -> None:
+def cli_main(args: Namespace) -> None:
     args.func(args)
 
 
 def main() -> None:
     execute(
-        main_func=tessw,
+        main_func=cli_main,
         add_args_func=add_args,
         name=__name__,
         version=__version__,
