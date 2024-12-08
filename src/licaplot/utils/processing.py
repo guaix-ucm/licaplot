@@ -94,7 +94,7 @@ def read_manual_csv(path: str, delimiter=";", data_start=1) -> Table:
         converters={COL.WAVE: np.float64, TBCOL.CURRENT: np.float64, TBCOL.READ_NOISE: np.float64},
     )
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
-    table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+    table[TBCOL.CURRENT] = np.abs(table[TBCOL.CURRENT]) * u.A
     table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
     return table
 
@@ -298,7 +298,7 @@ def active_process(
                 )
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
             # Now do the math
-            units = sensor_table.columns[TWCOL.FREQ].unit / photod_table[TBCOL.CURRENT].unit 
+            units = (sensor_table.columns[TWCOL.FREQ].unit / photod_table[TBCOL.CURRENT].unit)
             spectral_resp = (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT]) * qe
             sensor_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             sensor_table[PROCOL.PHOTOD_QE] = qe

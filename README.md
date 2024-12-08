@@ -31,8 +31,53 @@ licaplot-filters classif photod -h
 
 ## Reducing TESS-W light sensor spectral data (licaplot-tessw)
 
-TBD 
-Plots and exports to ESCV the original manufacturer's TSL237 spectral response from the datasheet. The input example CSV has been previosly digitized from the original PDF by a digitizer tool. The input file is resampled (cubic interpolation) to a 5nm step resolution and triimmed to the LICA testbench optical range of [350nm - 1050nm]. The title and label is used both in the plot graphics and also stored as ECSV metadata. The label can be used as a graphics label when overlapping plots.
+Plots and exports to ESCV the original manufacturer's TSL237 spectral response from the datasheet. The input example CSV has been previosly digitized from the original PDF by a digitizer tool. The input file is resampled (cubic interpolation) to a 5nm step resolution and triimmed to the LICA testbench optical range of [350nm - 1049nm]. The title and label is used both in the plot graphics and also stored as ECSV metadata. The label can be used as a graphics label when overlapping plots.
+
+
+Classify the files and assign the sensor readings to photodiode readings
+
+```bash
+licaplot-tessw --console classif photod -p data/tessw/stars1277-photodiode.csv --tag A
+licaplot-tessw --console classif photod -p data/tessw/stars6502-photodiode.csv --tag B
+
+licaplot-tessw --console classif sensor -i data/tessw/stars1277-frequencies.csv -l TSL237 --tag A
+licaplot-tessw --console classif sensor -i data/tessw/stars6502-frequencies.csv -l OTHER --tag B
+```
+
+Review the configuration
+
+```
+licaplot-tessw --console classif review  -d data/tessw/
+```
+
+```bash
+2024-12-08 13:07:23,214 [INFO] [root] ============== licaplot.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
+2024-12-08 13:07:23,214 [INFO] [licaplot.tessw] Reviewing files in directory data/tessw/
+2024-12-08 13:07:23,270 [INFO] [licaplot.utils.processing] Returning stars6502-frequencies
+2024-12-08 13:07:23,270 [INFO] [licaplot.utils.processing] Returning stars1277-frequencies
+2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] [tag=B] (PIN-10D) stars6502-photodiode, used by ['stars6502-frequencies']
+2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] [tag=A] (PIN-10D) stars1277-photodiode, used by ['stars1277-frequencies']
+2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] Review step ok.
+```
+
+And reduce the files
+
+```bash
+licaplot-tessw --console process  -d data/tessw/ --save
+```
+
+```bash
+2024-12-08 13:10:08,476 [INFO] [root] ============== licaplot.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
+2024-12-08 13:10:08,476 [INFO] [licaplot.tessw] Classifying files in directory data/tessw/
+2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars6502-frequencies
+2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars1277-frequencies
+2024-12-08 13:10:08,534 [INFO] [lica.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
+2024-12-08 13:10:08,546 [INFO] [licaplot.utils.processing] Processing stars6502-frequencies with photodidode PIN-10D
+2024-12-08 13:10:08,546 [INFO] [lica.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
+2024-12-08 13:10:08,557 [INFO] [licaplot.utils.processing] Processing stars1277-frequencies with photodidode PIN-10D
+2024-12-08 13:10:08,558 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars6502-frequencies.ecsv
+2024-12-08 13:10:08,562 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars1277-frequencies.ecsv
+```
 
 ## Reducing Filters data (licaplot-filters)
 
