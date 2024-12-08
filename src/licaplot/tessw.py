@@ -20,6 +20,7 @@ from argparse import Namespace
 # Thrid-party libraries
 # ---------------------
 
+import astropy.units as u
 from lica.cli import execute
 
 # ------------------------
@@ -27,10 +28,10 @@ from lica.cli import execute
 # ------------------------
 
 from ._version import __version__
-
+from . import TWCOL, PROCOL
 from .utils import parser as prs
 from .utils import processing
-from . import TWCOL
+from .utils.processing import DeviceDict
 
 # ----------------
 # Module constants
@@ -50,6 +51,12 @@ log = logging.getLogger(__name__)
 # Auxiliary fnctions
 # ------------------
 
+def to_Hz_per_nA(sensor_dict: DeviceDict) -> None:
+    """Better suited for display and proceeesing"""
+    for tag, sensors in sensor_dict.items():
+        for i, table in enumerate(sensors):
+            table[PROCOL.SPECTRAL] = table[PROCOL.SPECTRAL].to(u.Hz/u.nA)
+
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
@@ -60,6 +67,7 @@ def process(args: Namespace) -> None:
     dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable)
     sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
+    to_Hz_per_nA(sensor_dict)
     if args.save:
         processing.save(sensor_dict, args.directory)
 
@@ -105,6 +113,7 @@ def one_tessw(args: Namespace) -> None:
     photodiode_dict, sensor_dict = processing.classify(dir_iterable, just_name)
     processing.review(photodiode_dict, sensor_dict)
     sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
+    to_Hz_per_nA(sensor_dict)
     processing.save(sensor_dict, dir_path)
 
 
