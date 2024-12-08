@@ -28,9 +28,10 @@ class PROMETA(StrEnum):
 
 
 class TWCOL(StrEnum):
-    """TESS-W columns as expoerted by textual-spectess"""
+    """TESS-W columns as exported by textual-spectess"""
 
     TIME = "Timestamp"
     SEQ = "Seq. Number"
     FREQ = "Frequency"
     FILT = "Filter"
+    NORM = "Normalized Response" # Not used in textual-spectess

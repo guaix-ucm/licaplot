@@ -15,6 +15,8 @@ import numpy as np
 import astropy.io.ascii
 import astropy.units as u
 from astropy.table import Table
+from astropy.constants import astropyconst20 as const
+import scipy.interpolate
 
 import lica.photodiode
 from lica.photodiode import COL, BENCH
@@ -36,6 +38,12 @@ DeviceDict = DefaultDict[str, Table]
 log = logging.getLogger(__name__)
 
 
+def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:
+    """Computes the Quantum Efficiency given the Responsivity in A/W"""
+    K = (const.h * const.c) / const.e
+    return np.round(K * responsivity / wavelength.to(u.m), decimals=5) * u.dimensionless_unscaled
+
+
 def equivalent_ecsv(path: str) -> str:
     """Keeps the same name and directory but changes extesion to ECSV"""
     output_path, _ = os.path.splitext(path)
@@ -48,6 +56,8 @@ def name_from_file(path: str) -> str:
     path, _ = os.path.splitext(path)
     return path
 
+def read_ecsv(path: str) -> Table:
+    return astropy.io.ascii.read(path, format="ecsv")
 
 def read_tess_csv(path: str, delimiter=";", data_start=1) -> Table:
     """Load CSV files produced by textual-spectess"""
@@ -96,6 +106,19 @@ def read_manual_csv(path: str, delimiter=";", data_start=1) -> Table:
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
     table[TBCOL.CURRENT] = np.abs(table[TBCOL.CURRENT]) * u.A
     table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
+    return table
+
+
+def read_tsl237_datasheet_csv(path: str, delimiter=",", data_start=1) -> Table:
+    table = astropy.io.ascii.read(
+        path,
+        delimiter=delimiter,
+        data_start=data_start,
+        names=(COL.WAVE, TWCOL.NORM),
+        converters={COL.WAVE: np.float64, TWCOL.NORM: np.float64},
+    )
+    table[COL.WAVE] = table[COL.WAVE] * u.nm
+    table[TWCOL.NORM] = table[TWCOL.NORM] * u.dimensionless_unscaled
     return table
 
 
@@ -200,6 +223,18 @@ def tessw_ecsv(path: str, tag: str, label: str) -> None:
     table.write(output_path, delimiter=",", overwrite=True)
 
 
+def tsl237_table(path: str, tag: str, label: str, resolution: int) -> Table:
+    """Obtained by reading a digitized CSV from the datasheet"""
+    table = read_tsl237_datasheet_csv(path)
+    wavelength = np.arange(BENCH.WAVE_START, BENCH.WAVE_END + 1, resolution) * u.nm
+    interpolator = scipy.interpolate.Akima1DInterpolator(table[COL.WAVE], table[TWCOL.NORM])
+    # The units assignment IS A HACK. There is missing factor between u.Hz and u.A
+    responsivity = interpolator(wavelength) * (u.A / u.W)
+    qe = quantum_efficiency(wavelength, responsivity)
+    responsivity =np.round(interpolator(wavelength), decimals=5) * u.dimensionless_unscaled
+    return Table([wavelength, responsivity, qe], names=(COL.WAVE, TWCOL.NORM, PROCOL.SPECTRAL))
+
+
 # ====================
 # HIGH LEVEL PROCESSES
 # ====================
@@ -298,13 +333,11 @@ def active_process(
                 )
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
             # Now do the math
-            units = (sensor_table.columns[TWCOL.FREQ].unit / photod_table[TBCOL.CURRENT].unit)
+            units = sensor_table.columns[TWCOL.FREQ].unit / photod_table[TBCOL.CURRENT].unit
             spectral_resp = (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT]) * qe
             sensor_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             sensor_table[PROCOL.PHOTOD_QE] = qe
-            sensor_table[PROCOL.SPECTRAL] = (
-                np.round(spectral_resp, decimals=5) * units
-            )
+            sensor_table[PROCOL.SPECTRAL] = np.round(spectral_resp, decimals=5) * units
             sensor_table.meta["Processing"]["using photodiode"] = model
             sensor_table.meta["Processing"]["processed"] = True
             sensor_table.meta["History"].append(

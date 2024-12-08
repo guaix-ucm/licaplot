@@ -29,6 +29,7 @@ from lica.cli import execute
 
 from ._version import __version__
 from . import TWCOL, PROCOL
+from .utils.validators import vecsvfile
 from .utils import parser as prs
 from .utils import processing
 from .utils.processing import DeviceDict
@@ -116,6 +117,16 @@ def one_tessw(args: Namespace) -> None:
     to_Hz_per_nA(sensor_dict)
     processing.save(sensor_dict, dir_path)
 
+from .utils.processing import tsl237_table, read_ecsv, equivalent_ecsv
+
+def theory_tessw(args: Namespace) -> None:
+    table = tsl237_table(args.input_file, tag="", label="TSL237 Dataseet",resolution=5)
+    filter_table = read_ecsv(args.uvir_file)
+    table["Corrected by Filter"] = table[PROCOL.SPECTRAL] * filter_table[PROCOL.TRANS]
+    out_path = equivalent_ecsv(args.input_file)
+    if args.save:
+        table.write(out_path, delimiter=",", overwrite=True)
+    log.info(table.info)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -152,6 +163,20 @@ def add_args(parser) -> None:
         "review", parents=[prs.folder()], help="review classification subcommand"
     )
     parser_review.set_defaults(func=review)
+    parser_theo = subparser.add_parser(
+        "theory",
+        parents=[prs.inputf(), prs.save()],
+        help="Theroretical response from manufacturer datsheet and UV/IR cut filter",
+    )
+    parser_theo.set_defaults(func=theory_tessw)
+    parser_theo.add_argument(
+        "-u",
+        "--uvir-file",
+        type=vecsvfile,
+        required=True,
+        metavar="<File>",
+        help="Reduced UV/IR cutoff filter ECSV file with Transmission column",
+    )
 
 
 # ================

@@ -146,6 +146,27 @@ licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv dat
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
 
+
+### Comparing measured TESS-W response with manufactured datasheet
+
+First we need to have the filter transmission for the UV/IR cut filter
+
+```bash
+licaplot-filters --console one -t W -l SP750 UV/IR -p data/filters/SP750_Photodiode_QEdata.txt -m PIN-10D -i data/filters/SP750_QEdata.txt
+```
+
+Then we invoke the command:
+
+```bash
+licaplot-tessw --console theory -i data/tessw/TSL237_normalized_responsivity.csv -u data/filters/SP750_QEdata.ecsv  --save
+```
+
+The we plot
+
+AQUI ME HE QUEDADO, A LO  MEJOR HAY QUE QUITAR COLUMNAS O ALGO ASI
+
+
+
 ## Generating LICA photodiodes reference
 
 ### Hamamatsu S2281-01 diode (licaplot-hama)
