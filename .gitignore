@@ -15,3 +15,6 @@ _version.py
 
 # Other directiries
 csv/
+
+# Other files
+*.ecsv
