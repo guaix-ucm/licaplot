@@ -24,6 +24,7 @@ class PROMETA(StrEnum):
 
     PHOTOD = "photodiode"
     FILTER = "filter"
+    SENSOR = "sensor"
 
 
 class TWCOL(StrEnum):

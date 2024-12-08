@@ -30,6 +30,7 @@ from ._version import __version__
 
 from .utils import parser as prs
 from .utils import processing
+from . import TWCOL
 
 # ----------------
 # Module constants
@@ -58,7 +59,7 @@ def process(args: Namespace) -> None:
     log.info("Classifying files in directory %s", args.directory)
     dir_iterable = glob.iglob(os.path.join(args.directory, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable)
-    sensor_dict = processing.active_process(photodiode_dict, sensor_dict)
+    sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
     if args.save:
         processing.save(sensor_dict, args.directory)
 
@@ -103,7 +104,7 @@ def one_tessw(args: Namespace) -> None:
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable, just_name)
     processing.review(photodiode_dict, sensor_dict)
-    sensor_dict = processing.active_process(photodiode_dict, sensor_dict)
+    sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
     processing.save(sensor_dict, dir_path)
 
 

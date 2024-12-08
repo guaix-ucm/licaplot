@@ -99,9 +99,11 @@ def read_manual_csv(path: str, delimiter=";", data_start=1) -> Table:
     return table
 
 
-def photodiode_table(path: str, tag: str, model: str, wave_low: int, wave_high: int, manual: bool) -> Table:
+def photodiode_table(
+    path: str, tag: str, model: str, wave_low: int, wave_high: int, manual: bool
+) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
-   
+
     table = read_manual_csv(path) if manual else read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
@@ -133,7 +135,9 @@ def photodiode_table(path: str, tag: str, model: str, wave_low: int, wave_high: 
     return table
 
 
-def photodiode_ecsv(path: str, tag: str, model: str, wave_low: int, wave_high: int, manual=False) -> None:
+def photodiode_ecsv(
+    path: str, tag: str, model: str, wave_low: int, wave_high: int, manual=False
+) -> None:
     table = photodiode_table(path, tag, model, wave_low, wave_high, manual)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
@@ -166,22 +170,28 @@ def filter_ecsv(path: str, tag: str, label: str) -> None:
 
 
 def tessw_table(path: str, tag: str, label: str) -> Table:
-    table = read_tess_csv(path)
+    raw_table = read_tess_csv(path)
+    raw_table.remove_column(TWCOL.TIME)
+    raw_table.remove_column(TWCOL.SEQ)
+    raw_table.remove_column(TWCOL.FILT)
+    table = raw_table.group_by(COL.WAVE).groups.aggregate(np.mean)
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
         "label": label,  # label used for display purposes
         "Processing": {
-            "type": PROMETA.FILTER.value,
+            "type": PROMETA.SENSOR.value,
             "tag": tag,
             "name": name_from_file(path),
             "resolution": resolution[0],
         },
-        "History": [],
+        "History": [
+            f"Dropped columns {TWCOL.TIME}, {TWCOL.SEQ} and {TWCOL.FILT}",
+            f"Averaged readings grouping by {COL.WAVE}",
+        ],
     }
-    table.remove_column(TWCOL.TIME)
-    table.remove_column(TWCOL.SEQ)
     log.info("Processing metadata is added: %s", table.meta)
     return table
+
 
 def tessw_ecsv(path: str, tag: str, label: str) -> None:
     table = tessw_table(path, tag, label)
@@ -189,9 +199,11 @@ def tessw_ecsv(path: str, tag: str, label: str) -> None:
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
 
+
 # ====================
 # HIGH LEVEL PROCESSES
 # ====================
+
 
 def classify(dir_iterable: Iterable, device_name: str = None) -> Tuple[DiodeDict, DeviceDict]:
     """Classifies ECSV files in two dictionaries, one with Photodiode readings and one with the rest"""
@@ -256,8 +268,9 @@ def save(device_dict: DeviceDict, dir_path: str) -> None:
             dev_table.write(out_path, delimiter=",", overwrite=True)
 
 
-
-def active_process(photodiode_dict: DiodeDict, sensor_dict: DeviceDict) -> DeviceDict:
+def active_process(
+    photodiode_dict: DiodeDict, sensor_dict: DeviceDict, sensor_column=TBCOL.CURRENT
+) -> DeviceDict:
     """
     Process Device ECSV files in a given directory.
     As the device is optically active (i.e. TSL237) we must correct by the photodiode QE
@@ -275,20 +288,38 @@ def active_process(photodiode_dict: DiodeDict, sensor_dict: DeviceDict) -> Devic
             log.info("Processing %s with photodidode %s", name, model)
             wave_low = photod_table.meta["Processing"].get("wave_low")
             wave_high = photod_table.meta["Processing"].get("wave_high")
+            rows_photod = len(photod_table)
+            rows_sensor = len(sensor_table)
             if wave_low:
-                log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
-                dev_table = sensor_table[
+                log.info("Trimming %s to [%d-%d] nm", name, wave_low, wave_high)
+                sensor_table = sensor_table[
                     (sensor_table[COL.WAVE] >= wave_low) & (sensor_table[COL.WAVE] <= wave_high)
                 ]
                 sensor_table.meta["History"].append(
                     f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
-            transmission = (dev_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]) * qe
+            # drop end rows due to different +-1 different length
+            rows_photod = len(photod_table)
+            rows_sensor = len(sensor_table)
+            log.info("ROWS PHOTOD = %d, ROWS SENSOR = %d", rows_photod, rows_sensor)
+            if rows_photod > rows_sensor:
+                log.warn("Dropping last row of reference photodiode QE array to match length of sensor data")
+                assert rows_photod - rows_sensor == 1
+                photod_table = photod_table[-1]
+                photodiode_dict[key] = photod_table # modifies itself
+            else:
+                log.warn("Dropping last row of sensor data to match length of reference photodiode QE array")
+                assert rows_sensor - rows_photod == 1
+                sensor_table = sensor_table[-1]
+                sensor_dict[key][i] = sensor_table # modifies itself
+
+            # Now do the math
+            spectral_resp = (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT]) * qe
             sensor_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             sensor_table[PROCOL.PHOTOD_QE] = qe
             sensor_table[PROCOL.SPECTRAL] = (
-                np.round(transmission, decimals=5) * u.dimensionless_unscaled
+                np.round(spectral_resp, decimals=5) * u.dimensionless_unscaled
             )
             sensor_table.meta["Processing"]["using photodiode"] = model
             sensor_table.meta["Processing"]["processed"] = True
