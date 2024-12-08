@@ -288,8 +288,6 @@ def active_process(
             log.info("Processing %s with photodidode %s", name, model)
             wave_low = photod_table.meta["Processing"].get("wave_low")
             wave_high = photod_table.meta["Processing"].get("wave_high")
-            rows_photod = len(photod_table)
-            rows_sensor = len(sensor_table)
             if wave_low:
                 log.info("Trimming %s to [%d-%d] nm", name, wave_low, wave_high)
                 sensor_table = sensor_table[
@@ -299,27 +297,13 @@ def active_process(
                     f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
-            # drop end rows due to different +-1 different length
-            rows_photod = len(photod_table)
-            rows_sensor = len(sensor_table)
-            log.info("ROWS PHOTOD = %d, ROWS SENSOR = %d", rows_photod, rows_sensor)
-            if rows_photod > rows_sensor:
-                log.warn("Dropping last row of reference photodiode QE array to match length of sensor data")
-                assert rows_photod - rows_sensor == 1
-                photod_table = photod_table[-1]
-                photodiode_dict[key] = photod_table # modifies itself
-            else:
-                log.warn("Dropping last row of sensor data to match length of reference photodiode QE array")
-                assert rows_sensor - rows_photod == 1
-                sensor_table = sensor_table[-1]
-                sensor_dict[key][i] = sensor_table # modifies itself
-
             # Now do the math
+            units = sensor_table.columns[TWCOL.FREQ].unit / photod_table[TBCOL.CURRENT].unit 
             spectral_resp = (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT]) * qe
             sensor_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             sensor_table[PROCOL.PHOTOD_QE] = qe
             sensor_table[PROCOL.SPECTRAL] = (
-                np.round(spectral_resp, decimals=5) * u.dimensionless_unscaled
+                np.round(spectral_resp, decimals=5) * units
             )
             sensor_table.meta["Processing"]["using photodiode"] = model
             sensor_table.meta["Processing"]["processed"] = True
