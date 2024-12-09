@@ -15,6 +15,7 @@ _version.py
 
 # Other directiries
 csv/
+.ipynb_checkpoints
 
 # Other files
 *.ecsv
