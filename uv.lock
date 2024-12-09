@@ -347,7 +347,7 @@ lica = [
 
 [[package]]
 name = "licaplot"
-version = "0.1.dev100+g51c6aa2.d20241208"
+version = "0.1.dev107+gc3174b0"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -357,7 +357,7 @@ dependencies = [
     { name = "scipy" },
 ]
 
-[package.dev-dependencies]
+[package.dependency-groups]
 dev = [
     { name = "pytest" },
 ]
@@ -365,13 +365,13 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "astropy" },
-    { name = "lica", extras = ["lica"], specifier = ">=1.0.12" },
+    { name = "lica", extras = ["lica"] },
     { name = "matplotlib" },
     { name = "pyqt5" },
     { name = "scipy" },
 ]
 
-[package.metadata.requires-dev]
+[package.metadata.dependency-groups]
 dev = [{ name = "pytest", specifier = ">=8.3.3" }]
 
 [[package]]
