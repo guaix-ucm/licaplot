@@ -83,15 +83,17 @@ def photodiode(
     tag: str,
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
-) -> None:
+) -> str:
+    """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", photod_path)
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
-    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
+    return processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
 
 
 def sensor(input_path: str, tag: str, label: str) -> None:
+    """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
-    processing.tessw_ecsv(input_path, tag, label)
+    return processing.tessw_ecsv(input_path, tag, label)
 
 
 def one_tessw(
@@ -102,10 +104,11 @@ def one_tessw(
     label: str,
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
-) -> None:
+) -> str:
+    """Returns the path of the updated, reduced ECSV"""
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
-    processing.tessw_ecsv(input_path, tag, label)
+    result = processing.tessw_ecsv(input_path, tag, label)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)
@@ -115,6 +118,7 @@ def one_tessw(
     sensor_dict = processing.active_process(photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ)
     to_Hz_per_nA(sensor_dict)
     processing.save(sensor_dict, dir_path)
+    return result
 
 
 # -------

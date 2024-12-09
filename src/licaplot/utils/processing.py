@@ -160,12 +160,12 @@ def photodiode_table(
 
 def photodiode_ecsv(
     path: str, tag: str, model: str, wave_low: int, wave_high: int, manual=False
-) -> None:
+) -> str:
     table = photodiode_table(path, tag, model, wave_low, wave_high, manual)
     output_path = str(equivalent_ecsv(path))
-    print(output_path)
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
+    return path
 
 
 def filter_table(path: str, tag: str, label: str) -> Table:
@@ -186,11 +186,12 @@ def filter_table(path: str, tag: str, label: str) -> Table:
     return table
 
 
-def filter_ecsv(path: str, tag: str, label: str) -> None:
+def filter_ecsv(path: str, tag: str, label: str) -> str:
     table = filter_table(path, tag, label)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
+    return output_path
 
 
 def tessw_table(path: str, tag: str, label: str) -> Table:
@@ -217,11 +218,12 @@ def tessw_table(path: str, tag: str, label: str) -> Table:
     return table
 
 
-def tessw_ecsv(path: str, tag: str, label: str) -> None:
+def tessw_ecsv(path: str, tag: str, label: str) -> str:
     table = tessw_table(path, tag, label)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
+    return output_path
 
 
 def tsl237_table(path: str, tag: str, label: str, resolution: int) -> Table:

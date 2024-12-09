@@ -72,14 +72,16 @@ def photodiode(
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
 ) -> None:
+    """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", photod_path)
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
-    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
+    return processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
 
 
 def filters(input_path: str, tag: str, label: str = "") -> None:
+    """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
-    processing.filter_ecsv(input_path, tag, label)
+    return processing.filter_ecsv(input_path, tag, label)
 
 
 def one_filter(
@@ -90,10 +92,10 @@ def one_filter(
     label: str = "",
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
-) -> None:
+) -> str:
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
-    processing.filter_ecsv(input_path, tag, label)
+    result = processing.filter_ecsv(input_path, tag, label)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)
@@ -102,6 +104,7 @@ def one_filter(
     processing.review(photodiode_dict, filter_dict)
     filter_dict = processing.passive_process(photodiode_dict, filter_dict)
     processing.save(filter_dict, dir_path)
+    return result
 
 
 # -----------------------
