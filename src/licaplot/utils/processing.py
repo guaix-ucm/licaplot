@@ -59,12 +59,12 @@ def name_from_file(path: str) -> str:
 def read_ecsv(path: str) -> Table:
     return astropy.io.ascii.read(path, format="ecsv")
 
-def read_tess_csv(path: str, delimiter=";", data_start=1) -> Table:
+def read_tess_csv(path: str) -> Table:
     """Load CSV files produced by textual-spectess"""
     table = astropy.io.ascii.read(
         path,
-        delimiter=delimiter,
-        data_start=data_start,
+        delimiter=";",
+        data_start=1,
         names=(TWCOL.TIME, TWCOL.SEQ, COL.WAVE, TWCOL.FREQ, TWCOL.FILT),
         converters={
             TWCOL.TIME: str,
@@ -79,12 +79,12 @@ def read_tess_csv(path: str, delimiter=";", data_start=1) -> Table:
     return table
 
 
-def read_scan_csv(path: str, delimiter="\t", data_start=0) -> Table:
+def read_scan_csv(path: str) -> Table:
     """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
     table = astropy.io.ascii.read(
         path,
-        delimiter=delimiter,
-        data_start=data_start,
+        delimiter="\t",
+        data_start=0,
         names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
         converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
     )
@@ -94,12 +94,12 @@ def read_scan_csv(path: str, delimiter="\t", data_start=0) -> Table:
     return table
 
 
-def read_manual_csv(path: str, delimiter=";", data_start=1) -> Table:
-    """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
+def read_manual_csv(path: str) -> Table:
+    """Load CSV files produced by manually copying LICA TestBench.exe into a CSV file"""
     table = astropy.io.ascii.read(
         path,
-        delimiter=delimiter,
-        data_start=data_start,
+        delimiter=";",
+        data_start=1,
         names=(COL.WAVE, TBCOL.CURRENT, TBCOL.READ_NOISE),
         converters={COL.WAVE: np.float64, TBCOL.CURRENT: np.float64, TBCOL.READ_NOISE: np.float64},
     )
@@ -112,8 +112,8 @@ def read_manual_csv(path: str, delimiter=";", data_start=1) -> Table:
 def read_tsl237_datasheet_csv(path: str, delimiter=",", data_start=1) -> Table:
     table = astropy.io.ascii.read(
         path,
-        delimiter=delimiter,
-        data_start=data_start,
+        delimiter=",",
+        data_start=1,
         names=(COL.WAVE, TWCOL.NORM),
         converters={COL.WAVE: np.float64, TWCOL.NORM: np.float64},
     )
@@ -162,7 +162,8 @@ def photodiode_ecsv(
     path: str, tag: str, model: str, wave_low: int, wave_high: int, manual=False
 ) -> None:
     table = photodiode_table(path, tag, model, wave_low, wave_high, manual)
-    output_path = equivalent_ecsv(path)
+    output_path = str(equivalent_ecsv(path))
+    print(output_path)
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
 

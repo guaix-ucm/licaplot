@@ -22,6 +22,7 @@ from argparse import Namespace
 
 import astropy.units as u
 from lica.cli import execute
+from lica.photodiode import BENCH
 
 # ------------------------
 # Own modules and packages
@@ -76,7 +77,13 @@ def process(dir_path: str, save_flag: bool) -> None:
         processing.save(sensor_dict, dir_path)
 
 
-def photodiode(photod_path: str, model: str, tag: str, wave_low: int, wave_high: int) -> None:
+def photodiode(
+    photod_path: str,
+    model: str,
+    tag: str,
+    wave_low: int = BENCH.WAVE_START,
+    wave_high: int = BENCH.WAVE_END,
+) -> None:
     log.info("Converting to an Astropy Table: %s", photod_path)
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
@@ -84,7 +91,6 @@ def photodiode(photod_path: str, model: str, tag: str, wave_low: int, wave_high:
 
 def sensor(input_path: str, tag: str, label: str) -> None:
     log.info("Converting to an Astropy Table: %s", input_path)
-    label = " ".join(label) if label else ""
     processing.tessw_ecsv(input_path, tag, label)
 
 
@@ -94,12 +100,11 @@ def one_tessw(
     model: str,
     tag: str,
     label: str,
-    wave_low: int,
-    wave_high: int,
+    wave_low: int = BENCH.WAVE_START,
+    wave_high: int = BENCH.WAVE_END,
 ) -> None:
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
-    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
-    label = " ".join(label) if label else ""
+    processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high, manual=True)
     processing.tessw_ecsv(input_path, tag, label)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
@@ -126,16 +131,18 @@ def cli_photodiode(args: Namespace) -> None:
 
 
 def cli_sensor(args: Namespace) -> None:
-    sensor(args.input_file, args.tag, args.label)
+    label = " ".join(args.label) if args.label else ""
+    sensor(args.input_file, args.tag, label)
 
 
 def cli_one_tessw(args: Namespace) -> None:
+    label = " ".join(args.label) if args.label else ""
     one_tessw(
         args.input_file,
         args.photod_file,
         args.model,
         args.tag,
-        args.label,
+        label,
         args.wave_low,
         args.wave_high,
     )

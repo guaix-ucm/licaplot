@@ -21,6 +21,7 @@ from argparse import Namespace
 # ---------------------
 
 from lica.cli import execute
+from lica.photodiode import BENCH
 
 # ------------------------
 # Own modules and packages
@@ -64,29 +65,34 @@ def process(dir_path: str, save_flag: bool) -> None:
         processing.save(filter_dict, dir_path)
 
 
-def photodiode(photod_path: str, model: str, tag: str, wave_low: int, wave_high: int) -> None:
+def photodiode(
+    photod_path: str,
+    model: str,
+    tag: str,
+    wave_low: int = BENCH.WAVE_START,
+    wave_high: int = BENCH.WAVE_END,
+) -> None:
     log.info("Converting to an Astropy Table: %s", photod_path)
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
 
 
-def filters(input_path: str, tag: str, label: str) -> None:
+def filters(input_path: str, tag: str, label: str = "") -> None:
     log.info("Converting to an Astropy Table: %s", input_path)
-    label = " ".join(label) if label else ""
     processing.filter_ecsv(input_path, tag, label)
+
 
 def one_filter(
     input_path: str,
     photod_path: str,
     model: str,
     tag: str,
-    label: str,
-    wave_low: int,
-    wave_high: int,
+    label: str = "",
+    wave_low: int = BENCH.WAVE_START,
+    wave_high: int = BENCH.WAVE_END,
 ) -> None:
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, tag, model, wave_low, wave_high)
-    label = " ".join(label) if label else ""
     processing.filter_ecsv(input_path, tag, label)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
@@ -112,16 +118,18 @@ def cli_photodiode(args: Namespace) -> None:
 
 
 def cli_filters(args: Namespace) -> None:
-    filters(args.input_file, args.tag, args.label)
+    label = " ".join(args.label) if args.label else ""
+    filters(args.input_file, args.tag, label)
 
 
 def cli_one_filter(args: Namespace) -> None:
+    label = " ".join(args.label) if args.label else ""
     one_filter(
         args.input_file,
         args.photod_file,
         args.model,
         args.tag,
-        args.label,
+        label,
         args.wave_low,
         args.wave_high,
     )
