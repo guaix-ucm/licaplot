@@ -1,0 +1,75 @@
+
+[project]
+name = "licaplot"
+dynamic = ["version"]
+description = "Plotting tools to analyze sensors and filters from LICA Optical Bench"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "GPL-3.0 license"}
+authors = [
+    {name = "Rafael González", email = "rafael08@ucm.es"},
+    {name = "Jaime Zamorano", email = "jzamoran@ucm.es"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    'Topic :: Scientific/Engineering :: Atmospheric Science',
+]
+dependencies = [
+    "matplotlib",
+    "PyQt5",
+    "astropy",
+    "scipy",
+    "lica[lica]",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/guaix-ucm/licaplot"
+Repository = "https://github.com/guaix-ucm/licaplot.git"
+
+[project.scripts]
+licaplot-csv = "licaplot.csv:main"
+licaplot-photod = "licaplot.photod:main"
+licaplot-filters = "licaplot.filters:main"
+licaplot-tessw = "licaplot.tessw:main"
+licaplot-hama = "licaplot.hamamatsu:main"
+licaplot-osi = "licaplot.osi:main"
+
+
+[build-system]
+requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+
+[tool.setuptools]
+#script-files = ["scripts/photo.sh",]
+
+# pyproject.toml
+[tool.setuptools_scm]
+write_to = "src/licaplot/_version.py"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.3",
+]
+
+[tool.setuptools.packages.find]
+# scanning for namespace packages is true by default in pyproject.toml, so
+# you do NOT need to include the following line.
+namespaces = true
+where = ["src"]
+
+[tool.setuptools.package-data]
+"licaplot.resources" = ["*.mplstyle"]
+

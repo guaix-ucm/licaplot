@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.env
+
+# Version control
+_version.py
+
+# Other directiries
+csv/
+.ipynb_checkpoints
+
+# Other files
+*.ecsv
