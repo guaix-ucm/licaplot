@@ -17,7 +17,7 @@ pip install licaplot
 * `licaplot-photod`. Plot and export LICA photodiodes spectral response curves.
 * `licaplot-hama`. Build LICA's Hamamtsu S2281-04 photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
 * `licaplot-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve un ECSV format to be used for other calibration purposes elsewhere.
- `licaplot-csv`. Very simple plot utility to plot CSV files
+ `licaplot-csv`. Very simple plot utility to plot CSV files.
 
 Every command listed (and subcommands) con be described with `-h | --help`
 
@@ -33,8 +33,6 @@ licaplot-filters classif photod -h
 
 ## Reducing Filters data (licaplot-filters)
 
-Two Use Cases:
-
 ### Simple case
 
 In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional.
@@ -48,7 +46,7 @@ licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10
 
 In this case, an RGB filter set was measured with a single clear photodiode reading, thus sharing the same photodiode file. The photodiode model used was the OSI PIN-10D.
 
-1. First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodidoe reading.
+1. First we tag all the clear photodiode readings. The tag is a string (i.e. `X`) we use to match which filters are being paired with this clear photodiode reading.
 
 If we need to trim the bandwith of the whole set (photodiode + associated filter readings) *this is the time to do it*. The bandwith trimming will be carried over from the photodiode to the associated filters.
 
