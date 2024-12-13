@@ -337,7 +337,7 @@ def active_process(
     sensor_dict: DeviceDict,
     sensor_column=TBCOL.CURRENT,
     gain=u.dimensionless_unscaled,
-    sensor_area = 1 * u.mm ** 2,
+    sensor_area=1 * u.mm**2,
 ) -> DeviceDict:
     """
     Process Device ECSV files in a given directory.
