@@ -51,12 +51,21 @@ log = logging.getLogger(__name__)
 # --------------------------------------------------
 
 
-def process(dir_path: str, save_flag: bool, gain: Quantity = 1 * u.nA / u.Hz) -> None:
+def process(
+    dir_path: str,
+    save_flag: bool,
+    sensor_area: Quantity = 1 * u.mm**2,
+    gain: Quantity = 1 * u.nA / u.Hz,
+) -> None:
     log.info("Classifying files in directory %s", dir_path)
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, sensor_dict = processing.classify(dir_iterable)
     sensor_dict = processing.active_process(
-        photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ, gain=gain
+        photodiode_dict,
+        sensor_dict,
+        sensor_column=TWCOL.FREQ,
+        gain=gain,
+        sensor_area=sensor_area,
     )
     if save_flag:
         processing.save(sensor_dict, dir_path)
@@ -89,6 +98,7 @@ def one_tessw(
     tag: str = "",
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
+    sensor_area=1 * u.mm**2,
     gain: Quantity = 1 * u.nA / u.Hz,
 ) -> str:
     """Returns the path of the updated, reduced ECSV"""
@@ -103,7 +113,11 @@ def one_tessw(
     photodiode_dict, sensor_dict = processing.classify(dir_iterable, just_name)
     processing.review(photodiode_dict, sensor_dict)
     sensor_dict = processing.active_process(
-        photodiode_dict, sensor_dict, sensor_column=TWCOL.FREQ, gain=gain
+        photodiode_dict,
+        sensor_dict,
+        sensor_column=TWCOL.FREQ,
+        gain=gain,
+        sensor_area=sensor_area,
     )
     processing.save(sensor_dict, dir_path)
     return result

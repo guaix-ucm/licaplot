@@ -27,8 +27,7 @@ from lica.photodiode import COL, BENCH
 # Own modules and packages
 # ------------------------
 
-from .. import TBCOL, PROCOL, PROMETA, TWCOL
-
+from .. import TBCOL, PROCOL, PROMETA, TWCOL, META
 
 DiodeDict = Dict[str, Table]
 DeviceDict = DefaultDict[str, Table]
@@ -89,6 +88,7 @@ def read_tess_csv(path: str) -> Table:
     )
     table[COL.WAVE] = table[COL.WAVE] * u.nm
     table[TWCOL.FREQ] = table[TWCOL.FREQ] * u.Hz
+    table.meta[META.PHAREA] = 0.92 * u.mm**2
     return table
 
 
@@ -132,6 +132,7 @@ def read_tsl237_datasheet_csv(path: str) -> Table:
     )
     table[COL.WAVE] = table[COL.WAVE] * u.nm
     table[TWCOL.NORM] = table[TWCOL.NORM] * u.dimensionless_unscaled
+    table.meta[META.PHAREA] = 0.92 * u.mm**2
     return table
 
 
@@ -249,7 +250,9 @@ def tessw_ecsv(path: str, label: str, tag: str = "") -> str:
     return output_path
 
 
-def tsl237_table(path: str, label: str, resolution: int, tag: str = "", gain=1*(u.A / u.W)) -> Table:
+def tsl237_table(
+    path: str, label: str, resolution: int, tag: str = "", gain=1 * (u.A / u.W)
+) -> Table:
     """Obtained by reading a digitized CSV from the datasheet"""
     table = read_tsl237_datasheet_csv(path)
     wavelength = np.arange(BENCH.WAVE_START, BENCH.WAVE_END + 1, resolution) * u.nm
@@ -334,6 +337,7 @@ def active_process(
     sensor_dict: DeviceDict,
     sensor_column=TBCOL.CURRENT,
     gain=u.dimensionless_unscaled,
+    sensor_area = 1 * u.mm ** 2,
 ) -> DeviceDict:
     """
     Process Device ECSV files in a given directory.
@@ -342,7 +346,9 @@ def active_process(
     for key, photod_table in photodiode_dict.items():
         model = photod_table.meta["Processing"]["model"]
         resolution = photod_table.meta["Processing"]["resolution"]
-        qe = lica.photodiode.load(model=model, resolution=int(resolution))[COL.QE]
+        ref_table = lica.photodiode.load(model=model, resolution=int(resolution))
+        photod_qe = ref_table[COL.QE]
+        photod_area = ref_table.meta[META.PHAREA]
         for i, sensor_table in enumerate(sensor_dict[key]):
             name = sensor_table.meta["Processing"]["name"]
             processed = sensor_table.meta["Processing"].get("processed")
@@ -363,16 +369,18 @@ def active_process(
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
             # Now do the math
             sensor_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
-            sensor_table[PROCOL.PHOTOD_QE] = qe
-            spectral_response = (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT]) * qe
+            sensor_table[PROCOL.PHOTOD_QE] = photod_qe
+            sensor_qe = (
+                photod_qe
+                * (sensor_area / photod_area)
+                * (sensor_table[sensor_column] / photod_table[TBCOL.CURRENT])
+            )
             unit = (
                 (sensor_table[sensor_column].unit / photod_table[TBCOL.CURRENT].unit)
-                * qe.unit
+                * photod_qe.unit
                 * gain
             )
-            sensor_table[PROCOL.SPECTRAL] = (
-                np.round(spectral_response, decimals=5) * unit.decompose()
-            )
+            sensor_table[PROCOL.SPECTRAL] = np.round(sensor_qe, decimals=5) * unit.decompose()
             sensor_table.meta["Processing"]["using photodiode"] = model
             sensor_table.meta["Processing"]["processed"] = True
             sensor_table.meta["History"].append(

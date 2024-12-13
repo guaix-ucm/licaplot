@@ -36,3 +36,6 @@ class TWCOL(StrEnum):
     FREQ = "Frequency"
     FILT = "Filter"
     NORM = "Normalized Responsivity" # Not used in textual-spectess
+
+class META(StrEnum):
+    PHAREA = "Photosensitive area"
