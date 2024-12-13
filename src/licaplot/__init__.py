@@ -39,3 +39,6 @@ class TWCOL(StrEnum):
 
 class META(StrEnum):
     PHAREA = "Photosensitive area"
+    REF_WAVE = "Reference wavelenght"
+    REF_RESP = "Reference responsivity"
+    GAIN = "Gain"

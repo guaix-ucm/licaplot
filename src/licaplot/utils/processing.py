@@ -16,6 +16,7 @@ from typing import Tuple, Iterable, Dict, DefaultDict
 import numpy as np
 import astropy.io.ascii
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.constants import astropyconst20 as const
 import scipy.interpolate
@@ -31,6 +32,16 @@ from .. import TBCOL, PROCOL, PROMETA, TWCOL, META
 
 DiodeDict = Dict[str, Table]
 DeviceDict = DefaultDict[str, Table]
+
+# ----------------
+# Module constants
+# ----------------
+
+
+TSL237_FICT_GAIN = 1 * (u.pA / u.Hz)
+TSL237_AREA = 0.92 * u.mm**2
+TSL237_REF_WAVE = 532 * u.nm
+TSL237_REF_RESP = 2.3 * u.kHz / (u.uW / u.cm**2)
 
 # -----------------------
 # Module global variables
@@ -132,7 +143,6 @@ def read_tsl237_datasheet_csv(path: str) -> Table:
     )
     table[COL.WAVE] = table[COL.WAVE] * u.nm
     table[TWCOL.NORM] = table[TWCOL.NORM] * u.dimensionless_unscaled
-    table.meta[META.PHAREA] = 0.92 * u.mm**2
     return table
 
 
@@ -251,17 +261,35 @@ def tessw_ecsv(path: str, label: str, tag: str = "") -> str:
 
 
 def tsl237_table(
-    path: str, label: str, resolution: int, tag: str = "", gain=1 * (u.A / u.W)
+    path: str,
+    label: str,
+    resolution: int,
+    tag: str = "",
+    gain: Quantity = TSL237_FICT_GAIN,
+    sensor_area: Quantity = TSL237_AREA,
+    ref_point: Tuple[Quantity, Quantity] = (TSL237_REF_WAVE, TSL237_REF_RESP),
 ) -> Table:
     """Obtained by reading a digitized CSV from the datasheet"""
     table = read_tsl237_datasheet_csv(path)
     wavelength = np.arange(BENCH.WAVE_START, BENCH.WAVE_END + 1, resolution) * u.nm
     interpolator = scipy.interpolate.Akima1DInterpolator(table[COL.WAVE], table[TWCOL.NORM])
-    # The gain multiplication factor (u.A / u.W) IS A HACK to compute QE with compatible units.
-    responsivity = interpolator(wavelength)
-    qe = quantum_efficiency(wavelength, responsivity * gain)
-    responsivity = np.round(responsivity, decimals=5) * u.dimensionless_unscaled
-    return Table([wavelength, responsivity, qe], names=(COL.WAVE, TWCOL.NORM, PROCOL.SPECTRAL))
+    norm_responsivity = interpolator(wavelength)
+    ref_norm_resp = norm_responsivity[wavelength == ref_point[0]]
+    denormal_factor = (gain * ref_point[1] / (sensor_area * ref_norm_resp)).to(u.A / u.W)
+    responsivity = norm_responsivity * denormal_factor
+    qe = quantum_efficiency(wavelength, responsivity)
+    responsivity = np.round(responsivity, decimals=5)
+    table = Table(
+        data=[wavelength, responsivity, qe],
+        names=[COL.WAVE, COL.RESP, COL.QE],
+        meta={
+            META.GAIN.value: gain,
+            META.REF_WAVE.value: ref_point[0],
+            META.REF_RESP.value: ref_point[1],
+            META.PHAREA.value: sensor_area,
+        },
+    )
+    return table
 
 
 # ====================
