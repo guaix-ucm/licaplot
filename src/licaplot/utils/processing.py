@@ -400,7 +400,7 @@ def active_process(
             sensor_table[PROCOL.PHOTOD_QE] = photod_qe
             sensor_qe = (
                 photod_qe
-                * (sensor_area / photod_area)
+                * ( photod_area / sensor_area)
                 * (sensor_table[sensor_column] * gain) / photod_table[TBCOL.CURRENT]
             ).decompose()
             sensor_table[COL.QE] = np.round(sensor_qe, decimals=5) * u.dimensionless_unscaled
@@ -437,7 +437,7 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
                     f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 filter_dict[key][i] = filter_table  # Necessary to capture the new table in the dict
-            transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT]).decompose()
+            transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT])
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
             filter_table[PROCOL.TRANS] = (
                 np.round(transmission, decimals=5) * u.dimensionless_unscaled
