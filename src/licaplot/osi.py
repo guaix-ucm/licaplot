@@ -43,7 +43,7 @@ from . import TBCOL
 from ._version import __version__
 from .utils.mpl import plot_overlapped
 from .utils.validators import vecsvfile
-from .utils.table import read_scan_csv
+from .utils.processing import read_scan_csv
 
 # -----------------------
 # Module global variables
@@ -89,8 +89,6 @@ def plot_cross(
     axes.minorticks_on()
     axes.legend()
     plt.show()
-
-
 
 
 def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:
@@ -168,11 +166,13 @@ def interpolate_table(table: Table, method: str, resolution: int) -> Table:
 def cross_calibrate(
     osi_readings: Table, hama_readings: Table, hama_reference: Table, resolution: int
 ) -> Table:
-    osi_responsivity = hama_reference[COL.RESP] * (
-        osi_readings[TBCOL.CURRENT] / hama_readings[TBCOL.CURRENT]
-    )
+    osi_responsivity = (
+        hama_reference[COL.RESP]
+        * (osi_readings[TBCOL.CURRENT] / hama_readings[TBCOL.CURRENT])
+        * (hama_reference.meta["Photosensitive area"] / OSI.PHS_AREA)
+    ).to(u.A / u.W)
     osi_qe = Column(quantum_efficiency(osi_readings[COL.WAVE], osi_responsivity), name=COL.QE)
-    osi_responsivity = Column(np.round(osi_responsivity, decimals=5) * (u.A / u.W), name=COL.RESP)
+    osi_responsivity = Column(np.round(osi_responsivity, decimals=5), name=COL.RESP)
     table = Table([hama_reference[COL.WAVE], osi_responsivity, osi_qe])
     table.meta = {
         "Manufacturer": OSI.MANUF,
@@ -213,7 +213,7 @@ def cli_cross_calibration(args: Namespace) -> None:
     name = f"{PhotodiodeModel.OSI}+Cross-Calibrated@{args.resolution}nm.ecsv"
     output_path = os.path.join(os.path.dirname(args.osi_readings), name)
     if args.save:
-        log.info("Saving Cross Calibrated ECSV to %s",output_path)
+        log.info("Saving Cross Calibrated ECSV to %s", output_path)
         osi_reference.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
         plot_overlapped(
@@ -263,7 +263,7 @@ def cli_compare(args: Namespace) -> None:
         PhotodiodeModel.HAMAMATSU,
         1,
         BENCH.WAVE_START,
-        BENCH.WAVE_END - 1,  # ScanExe alwais skips the end wavelength :-(
+        BENCH.WAVE_END,
     )
     osi = f"{OSI.MANUF} {OSI.MODEL}"
     hama = f"{Hamamatsu.MANUF} {Hamamatsu.MODEL}"
@@ -430,6 +430,7 @@ def add_args(parser: ArgumentParser) -> None:
 # ================
 # MAIN ENTRY POINT
 # ================
+
 
 def cli_main(args: Namespace) -> None:
     args.func(args)
