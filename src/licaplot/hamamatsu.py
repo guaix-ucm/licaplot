@@ -30,7 +30,7 @@ from astropy.table import Table
 import scipy.interpolate
 
 from lica.cli import execute
-from lica.validators import vfile
+from lica.validators import vfile, vmonth
 from lica.photodiode import COL, BENCH, Hamamatsu
 
 # ------------------------
@@ -266,6 +266,7 @@ def cli_pipeline(args: Namespace) -> None:
     )
     combined_table = combine_tables(npl_table, sliced_table, args.x, args.y)
     interpolated_table = interpolate_table(combined_table, args.method, args.resolution)
+    interpolated_table.meta["Revision"] = args.revision.strftime("%Y-%m")
     output_path, _ = os.path.splitext(args.input_file)
     output_path += f"+Datasheet+Interpolated@{args.resolution}nm.ecsv"
     log.info("Generating %s", output_path)
@@ -425,7 +426,13 @@ def add_args(parser: ArgumentParser) -> None:
         help="ECSV with NPL + Datasheet calibration",
     )
     # ------------------------------------------------------------------------
-
+    parser_pipe.add_argument(
+        "--revision",
+        type=vmonth,
+        required=True,
+        metavar="<YYYY-MM>",
+        help="ECSV File Revison string",
+    )
 
 # ================
 # MAIN ENTRY POINT

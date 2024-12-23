@@ -31,7 +31,7 @@ import scipy.interpolate
 
 
 from lica.cli import execute
-from lica.validators import vfile
+from lica.validators import vfile, vmonth
 from lica.photodiode import PhotodiodeModel, COL, BENCH, Hamamatsu, OSI
 import lica.photodiode
 
@@ -210,6 +210,7 @@ def cli_cross_calibration(args: Namespace) -> None:
     osi_readings = read_scan_csv(args.osi_readings)
     hama_readings = read_scan_csv(args.hama_readings)
     osi_reference = cross_calibrate(osi_readings, hama_readings, hama_reference, args.resolution)
+    osi_reference.meta["Revision"] = args.revision.strftime("%Y-%m")
     name = f"{PhotodiodeModel.OSI}+Cross-Calibrated@{args.resolution}nm.ecsv"
     output_path = os.path.join(os.path.dirname(args.osi_readings), name)
     if args.save:
@@ -233,6 +234,7 @@ def cli_cross_calibration(args: Namespace) -> None:
 def cli_digitized_datasheet(args: Namespace) -> None:
     datasheet_table = create_osi_table(path=args.input_file)
     interpolated_table = interpolate_table(datasheet_table, args.method, args.resolution)
+    interpolated_table.meta["Revision"] = args.revision.strftime("%Y-%m")
     output_path, _ = os.path.splitext(args.input_file)
     output_path += f"+Interpolated@{args.resolution}nm.ecsv"
     if args.save:
@@ -347,6 +349,15 @@ def combi_parser() -> ArgumentParser:
         metavar="<CSV>",
         help="CSV with Hamamatsu photodiode readings",
     )
+    parser.add_argument(
+        "-r",
+        "--resolution",
+        type=int,
+        choices=tuple(range(1, 11)),
+        default=1,
+        metavar="<N nm>",
+        help="Interpolate at equal resolution (defaults to %(default)d nm)",
+    )
     return parser
 
 
@@ -366,6 +377,13 @@ def add_args(parser: ArgumentParser) -> None:
         action="store_true",
         help="Save resulting file to ECSV",
     )
+    parser_cross.add_argument(
+        "--revision",
+        type=vmonth,
+        required=True,
+        metavar="<YYYY-MM>",
+        help="ECSV File Revison string",
+    )
     # ---------------------------------------------------------------
     parser_datasheet = subparser.add_parser(
         "datasheet",
@@ -381,20 +399,18 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<CSV>",
         help="CSV file with digitized datasheet points",
     )
-    parser.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        choices=tuple(range(1, 11)),
-        default=1,
-        metavar="<N nm>",
-        help="Interpolate at equal resolution (defaults to %(default)d nm)",
-    )
     parser_datasheet.add_argument(
         "-s",
         "--save",
         action="store_true",
         help="Save resulting file to ECSV",
+    )
+    parser_datasheet.add_argument(
+        "--revision",
+        type=vmonth,
+        required=True,
+        metavar="<YYYY-MM>",
+        help="ECSV File Revison string",
     )
     # ------------------------------------------------------------------------
     parser_comp = subparser.add_parser(
