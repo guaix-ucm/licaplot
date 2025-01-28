@@ -146,9 +146,9 @@ def trim_table(
             min(xmax, BENCH.WAVE_END.value * u.nm),
             max(xmin, BENCH.WAVE_START.value * u.nm),
         )
-    table = table[x * wave_unit <= xmax]
+    table = table[x <= xmax]
     x = table.columns[wave_idx]
-    table = table[x * wave_unit >= xmin]
+    table = table[x >= xmin]
     log.info("Trimmed table to wavelength [%s - %s] range", xmin, xmax)
     return table
 
@@ -246,7 +246,7 @@ def single(args: Namespace) -> None:
             x=args.wave_col_order - 1,
             y=args.y_col_order - 1,
             marker=None,
-            linewidth=0,
+            linewidth=args.lines or 0
         )
 
 
@@ -401,6 +401,11 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<FILE>",
         default=None,
         help="Export to ECSV",
+    )
+    parser_single.add_argument(
+        "--lines",
+        action="store_true",
+        help="Connect dots with lines %(default)s",
     )
 
     # --------------------------------------------------------------------------------------------------

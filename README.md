@@ -40,6 +40,8 @@ Setting the photodiode model is optional unless you are using the Hamamatsu S228
 
 ```bash
 licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
+
+licaplot-csv --console single -i data/filters/green.ecsv --title Filtro Green --label G --lines
 ```
 
 ### More complex case
