@@ -4,7 +4,10 @@ from lica.photodiode import COL
 from ._version import __version__ as __version__
 
 class TBCOL(StrEnum):
-    """Additiona columns names for data produced by Scan.exe or TestBench"""
+    """
+    TestBench Columns.
+    Additiona columns names for data produced by Scan.exe or TestBench
+    """
 
     INDEX = "Index"  # Index number 1, 2, etc produced in the CSV file
     CURRENT = "Electrical Current"  #
@@ -12,7 +15,10 @@ class TBCOL(StrEnum):
 
 
 class PROCOL(StrEnum):
-    """Additional columns added by processing"""
+    """
+    Processing Columns.
+    Additional columns added by processing
+    """
 
     TRANS = "Transmission"
     SPECTRAL = "Spectral Response"
@@ -21,7 +27,10 @@ class PROCOL(StrEnum):
 
 
 class PROMETA(StrEnum):
-    """Matedata values added by processing"""
+    """
+    Processing Metadata.
+    Metadata values added by processing
+    """
 
     PHOTOD = "photodiode"
     FILTER = "filter"
@@ -29,15 +38,21 @@ class PROMETA(StrEnum):
 
 
 class TWCOL(StrEnum):
-    """TESS-W columns as exported by textual-spectess"""
+    """
+    TESS-W Columns
+    TESS-W columns as exported
+    """
 
     TIME = "Timestamp"
     SEQ = "Seq. Number"
     FREQ = "Frequency"
     FILT = "Filter"
-    NORM = "Normalized Responsivity" # Not used in textual-spectess
+    NORM = "Normalized Responsivity"
 
 class META(StrEnum):
+    """
+    Photodiode Metadata
+    """
     PHAREA = "Photosensitive area"
     REF_WAVE = "Reference wavelenght"
     REF_RESP = "Reference responsivity"
