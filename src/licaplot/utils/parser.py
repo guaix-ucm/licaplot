@@ -102,6 +102,7 @@ def photod() -> ArgumentParser:
     )
     return parser
 
+
 def folder() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -114,6 +115,7 @@ def folder() -> ArgumentParser:
     )
     return parser
 
+
 def save() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -121,5 +123,22 @@ def save() -> ArgumentParser:
         "--save",
         action="store_true",
         help="Save processing file to ECSV",
+    )
+    return parser
+
+
+def auxlines() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--filters",
+        action="store_true",
+        default=False,
+        help="Plot Monocromator filter changes (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--lines",
+        default=False,
+        action="store_true",
+        help="Connect dots with lines (default: %(default)s)",
     )
     return parser

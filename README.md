@@ -36,12 +36,12 @@ licaplot-filters classif photod -h
 ### Simple case
 
 In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional.
-Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01.
+Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01. The column in the ECSV file containing the transmission is column number 4.
 
 ```bash
-licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt -wl 350 -wh 800
+licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt
 
-licaplot-csv --console single -i data/filters/green.ecsv --title Filtro Green -yc 4 --label G --lines
+licaplot-csv --console single -i data/filters/green.ecsv --title Green filter -yc 4 --label G --lines --filters
 ```
 
 ### More complex case

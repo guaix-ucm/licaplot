@@ -39,6 +39,7 @@ from lica.photodiode import BENCH
 from ._version import __version__
 from .utils.mpl import plot_overlapped, plot_single, plot_rows, plot_grid
 from .utils.validators import vsequences, vecsv, vecsvfile
+from .utils import parser as prs
 
 # -----------------------
 # Module global variables
@@ -75,9 +76,9 @@ def multi(args: Namespace) -> None:
             title=title,
             labels=labels,
             filters=args.filters,
-            x=args.wave_col_order-1,
-            y=args.y_col_order-1,
-            linewidth=args.lines or 0
+            x=args.wave_col_order - 1,
+            y=args.y_col_order - 1,
+            linewidth=args.lines or 0,
         )
     elif N == 1:
         plot_single(
@@ -85,10 +86,10 @@ def multi(args: Namespace) -> None:
             title=title,
             labels=args.labels,
             filters=args.filters,
-            x=args.wave_col_order-1,
-            y=args.y_col_order-1,
+            x=args.wave_col_order - 1,
+            y=args.y_col_order - 1,
             marker=args.marker,
-            linewidth=args.lines or 0
+            linewidth=args.lines or 0,
         )
     elif N == 2:
         plot_rows(
@@ -96,10 +97,10 @@ def multi(args: Namespace) -> None:
             title=title,
             labels=labels,
             filters=args.filters,
-            x=args.wave_col_order-1,
-            y=args.y_col_order-1,
+            x=args.wave_col_order - 1,
+            y=args.y_col_order - 1,
             marker=args.marker,
-            linewidth=args.lines or 0
+            linewidth=args.lines or 0,
         )
     else:
         plot_grid(
@@ -109,10 +110,10 @@ def multi(args: Namespace) -> None:
             filters=args.filters,
             nrows=2,
             ncols=2,
-            x=args.wave_col_order-1,
-            y=args.y_col_order-1,
+            x=args.wave_col_order - 1,
+            y=args.y_col_order - 1,
             marker=args.marker,
-            linewidth=args.lines or 0
+            linewidth=args.lines or 0,
         )
 
 
@@ -190,10 +191,10 @@ def build_table(
     wave_high: Optional[float],
     wl_unit: u.Unit,
     resolution: Optional[int],
-    lica_trim: Optional[bool], 
+    lica_trim: Optional[bool],
 ) -> Table:
     table = read_csv(path, columns, delimiter)
-   
+
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
         log.info("Not resampling table")
@@ -244,11 +245,11 @@ def single(args: Namespace) -> None:
             tables=[table],
             title=" ".join(args.title),
             labels=[None],
-            filters=None,
+            filters=args.filters,
             x=args.wave_col_order - 1,
             y=args.y_col_order - 1,
             marker=None,
-            linewidth=args.lines or 0
+            linewidth=args.lines or 0,
         )
 
 
@@ -335,7 +336,7 @@ def column_plot_parser() -> ArgumentParser:
         default=u.dimensionless_unscaled,
         help="Astropy Unit string (ie. nm, A/W, etc.) %(default)s",
     )
-   
+
     return parser
 
 
@@ -387,12 +388,13 @@ def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_single = subparser.add_parser(
         "single",
-        parents=[columns_parser(), column_plot_parser(), wave_parser()],
+        parents=[columns_parser(), column_plot_parser(), wave_parser(), prs.auxlines()],
         help="Plot single CSV file",
     )
     parser_single.set_defaults(func=single)
     parser_multi = subparser.add_parser(
         "multi",
+        parents=[prs.auxlines()],
         help="Plot multiple CSV files",
     )
     parser_multi.set_defaults(func=multi)
@@ -404,12 +406,7 @@ def add_args(parser: ArgumentParser) -> None:
         default=None,
         help="Export to ECSV",
     )
-    parser_single.add_argument(
-        "--lines",
-        action="store_true",
-        help="Connect dots with lines %(default)s",
-    )
-
+    
     # --------------------------------------------------------------------------------------------------
     parser_multi.add_argument(
         "-i",
@@ -422,11 +419,14 @@ def add_args(parser: ArgumentParser) -> None:
     )
     parser_multi.add_argument("-o", "--overlap", action="store_true", help="Overlap Plots")
     parser_multi.add_argument(
-        "-t", "--title", nargs="+", type=str, default=None, help="Overall plot title, defaults to %(default)s"
+        "-t",
+        "--title",
+        nargs="+",
+        type=str,
+        default=None,
+        help="Overall plot title, defaults to %(default)s",
     )
-    parser_multi.add_argument(
-        "-f", "--filters", action="store_true", help="Plot Monocromator filter changes"
-    )
+   
     parser_multi.add_argument(
         "-wc",
         "--wave-col-order",
@@ -443,12 +443,8 @@ def add_args(parser: ArgumentParser) -> None:
         default=2,
         help="Column order for Y magnitude in CSV, defaults tp %(default)d",
     )
-    parser_multi.add_argument(
-        "--lines",
-        action="store_true",
-        help="Connect dots with lines %(default)s",
-    )
    
+
 
 # ================
 # MAIN ENTRY POINT
