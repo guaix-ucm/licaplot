@@ -193,6 +193,7 @@ def build_table(
     lica_trim: Optional[bool], 
 ) -> Table:
     table = read_csv(path, columns, delimiter)
+   
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
         log.info("Not resampling table")
@@ -203,15 +204,16 @@ def build_table(
         )
         names = [c for c in table.columns]
         values = [None, None]
-        units = [None, None]
         values[wave_idx] = wavelength
         values[y_idx] = resampled_col
-        units[wave_idx] = wave_unit
-        units[y_idx] = y_unit
         table = Table(data=values, names=names)
         table = trim_table(table, wave_idx, wave_unit, wave_low, wave_high, wl_unit, lica_trim)
-    table[table.columns[y_idx].name] = table[table.columns[y_idx].name] * y_unit
-    table[table.columns[wave_idx].name] = table[table.columns[wave_idx].name] * wave_unit
+    col_x = table.columns[y_idx]
+    col_y = table.columns[y_idx]
+    if col_y.unit is None:
+        table[col_y.name] = table[col_y.name] * y_unit
+    if col_x.unit is None:
+        table[col_x.name] = table[col_x.name] * wave_unit
     table.meta = {"description": description, "label": label}
     log.info(table.info)
     return table
