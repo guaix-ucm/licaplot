@@ -39,9 +39,9 @@ In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting
 Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01. The column in the ECSV file containing the transmission is column number 4.
 
 ```bash
-licaplot-filters --console one -l Green -p data/filters/photodiode.txt -m PIN-10D -i data/filters/green.txt
+licaplot-filters --console one -l Green -p data/filters/Eysdon_RGB/photodiode.txt -m PIN-10D -i data/filters/Eysdon_RGB/green.txt
 
-licaplot-csv --console single -i data/filters/green.ecsv --title Green filter -yc 4 --label G --lines --filters
+licaplot-csv --console single -i data/filters/Eysdon_RGB/green.ecsv --title Green filter -yc 4 --label G --lines --filters
 ```
 
 ### More complex case
@@ -53,7 +53,7 @@ In this case, an RGB filter set was measured with a single clear photodiode read
 If we need to trim the bandwith of the whole set (photodiode + associated filter readings) *this is the time to do it*. The bandwith trimming will be carried over from the photodiode to the associated filters.
 
 ```bash
-licaplot-filters --console classif photod --tag X -p data/filters/photodiode.txt
+licaplot-filters --console classif photod --tag X -p data/filters/Eysdon_RGB/photodiode.txt
 ```
 
 The output of this command is an ECSV file with the same information plus metadata needed for further processing.
@@ -63,9 +63,9 @@ The output of this command is an ECSV file with the same information plus metada
 Tag them with the same tag as chosen by the photodiode file (`X`), as they share the same photodiode file.
 
 ```bash
-licaplot-filters --console classif filter --tag X -i data/filters/green.txt -l Green
-licaplot-filters --console classif filter --tag X -i data/filters/red.txt -l Red
-licaplot-filters --console classif filter --tag X -i data/filters/blue.txt -l Blue
+licaplot-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/green.txt -l Green
+licaplot-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/red.txt -l Red
+licaplot-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/blue.txt -l Blue
 ```
 
 The output of these commands are the ECSV files with the same data but additional metadata for further processing
@@ -75,7 +75,7 @@ The output of these commands are the ECSV files with the same data but additiona
 Just to make sure everything is ok.
 
 ```bash
-licaplot-filters --console classif review -d data/filters/
+licaplot-filters --console classif review -d data/filters/Eysdon_RGB
 ```
 
 4. Data reduction. 
@@ -83,7 +83,7 @@ licaplot-filters --console classif review -d data/filters/
 The optional `--save` flag allows to control the overriting of the input ECSV files with more columns and metadata.
 
 ```bash
-licaplot-filters --console process -d data/filters --save
+licaplot-filters --console process -d data/filters/Eysdon_RGB --save
 ```
 
 After this step both filter ECSV files contains additional columns with the clear photodiode readings, the photodiode model QE and the final transmission curve as the last column.
@@ -93,7 +93,7 @@ After this step both filter ECSV files contains additional columns with the clea
 Plot generated ECSV files using `licaplot-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
 
 ```bash
-licaplot-csv --console multi -i data/filters/blue.ecsv data/filters/red.ecsv data/filters/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
+licaplot-csv --console multi -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 ```
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
