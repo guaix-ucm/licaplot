@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 
 from lica import StrEnum
 
+
 class Markers(StrEnum):
     Circle = "o"
     Square = "s"
@@ -33,6 +34,7 @@ class Markers(StrEnum):
     X = "x"
     Plus = "+"
 
+
 MONOCROMATOR_FILTERS_LABELS = (
     {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
     {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
@@ -41,12 +43,13 @@ MONOCROMATOR_FILTERS_LABELS = (
 # Cycles through the markers enum for overlapping plots
 markers = itertools.cycle([marker for marker in Markers])
 
-def get_labels(table: Table, x: int, y: int) -> Tuple[str, str]:
+
+def get_labels(table: Table, x: int, y: int, percent: bool) -> Tuple[str, str]:
     """Get the labels for a table, using units if necessary"""
     xlabel = table.columns[x].name
     xunit = table.columns[x].unit
     ylabel = table.columns[y].name
-    yunit = table.columns[y].unit
+    yunit = u.pct if percent else table.columns[y].unit
     xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
     ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
     return xlabel, ylabel
@@ -61,16 +64,22 @@ def plot_overlapped(
     y: int,
     linewidth: Optional[int] = 0,
     box: Optional[Tuple[str, float, float]] = None,
+    percent: Optional[bool] = False,
 ) -> None:
     """Plot all datasets in the same Axes using different markers"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
-    xlabel, ylabel = get_labels(tables[0], x, y)
+    xlabel, ylabel = get_labels(tables[0], x, y, percent)
     axes.set_xlabel(xlabel)
     axes.set_ylabel(ylabel)
     for table, label, marker in zip(tables, labels, markers):
-        axes.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth, label=label)
+        if percent:
+            assert table.columns[y].unit == u.dimensionless_unscaled
+        yy = table.columns[y] * 100 * u.pct if percent else table.columns[y]
+        axes.plot(
+            table.columns[x], yy, marker=marker, linewidth=linewidth, label=label
+        )
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
@@ -95,6 +104,7 @@ def plot_grid(
     y: int,
     marker: str,
     linewidth: Optional[int] = 0,
+    percent: Optional[bool] = False,
 ) -> None:
     """Plot datasets in a grid of axes"""
     marker = marker or next(markers)
@@ -108,11 +118,14 @@ def plot_grid(
     if title is not None:
         fig.suptitle(title)
     for i, ax, table, label in zip(indexes, axes, tables, labels):
+        if percent:
+            assert table.columns[y].unit == u.dimensionless_unscaled
         ax.set_title(label)
-        xlabel, ylabel = get_labels(table, x, y)
+        xlabel, ylabel = get_labels(table, x, y, percent)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        ax.plot(table.columns[x], table.columns[y], marker=marker, linewidth=linewidth)
+        yy = table.columns[y] * 100 * u.pct if percent else table.columns[y]
+        ax.plot(table.columns[x], yy, marker=marker, linewidth=linewidth)
         if filters:
             for filt in MONOCROMATOR_FILTERS_LABELS:
                 ax.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
@@ -134,8 +147,9 @@ def plot_cols(
     filters: Optional[bool],
     x: int,
     y: int,
-    marker:  Optional[str] = None,
+    marker: Optional[str] = None,
     linewidth: Optional[int] = 1,
+    percent: Optional[bool] = False,
 ) -> None:
     """Plot datasets as columns of axes"""
     plot_grid(
@@ -149,6 +163,7 @@ def plot_cols(
         y=y,
         marker=marker,
         linewidth=linewidth,
+        percent=percent,
     )
 
 
@@ -161,6 +176,7 @@ def plot_single(
     y: int,
     marker: Optional[str] = None,
     linewidth: Optional[int] = 1,
+    percent: Optional[bool] = False,
 ) -> None:
     """Plot a single dataset"""
     plot_grid(
@@ -174,6 +190,7 @@ def plot_single(
         y=y,
         marker=marker,
         linewidth=linewidth,
+        percent=percent,
     )
 
 
@@ -186,6 +203,7 @@ def plot_rows(
     y: int,
     marker: Optional[str] = None,
     linewidth: Optional[int] = 1,
+    percent: Optional[bool] = False,
 ) -> None:
     """Plot datasets as rows of axes"""
     plot_grid(
@@ -199,4 +217,5 @@ def plot_rows(
         y=y,
         marker=marker,
         linewidth=linewidth,
+        percent=percent,
     )

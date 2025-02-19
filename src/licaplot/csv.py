@@ -250,6 +250,7 @@ def single(args: Namespace) -> None:
             y=args.y_col_order - 1,
             marker=None,
             linewidth=args.lines or 0,
+            percent=args.percent,
         )
 
 
@@ -388,9 +389,23 @@ def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_single = subparser.add_parser(
         "single",
-        parents=[columns_parser(), column_plot_parser(), wave_parser(), prs.auxlines()],
+        parents=[
+            columns_parser(),
+            column_plot_parser(),
+            wave_parser(),
+            prs.auxlines(),
+            prs.percent(),
+        ],
         help="Plot single CSV file",
     )
+    parser_single.add_argument(
+        "--export",
+        type=vecsv,
+        metavar="<FILE>",
+        default=None,
+        help="Export to ECSV",
+    )
+
     parser_single.set_defaults(func=single)
     parser_multi = subparser.add_parser(
         "multi",
@@ -399,14 +414,7 @@ def add_args(parser: ArgumentParser) -> None:
     )
     parser_multi.set_defaults(func=multi)
     # --------------------------------------------------------------------------------------------------
-    parser_single.add_argument(
-        "--export",
-        type=vecsv,
-        metavar="<FILE>",
-        default=None,
-        help="Export to ECSV",
-    )
-    
+
     # --------------------------------------------------------------------------------------------------
     parser_multi.add_argument(
         "-i",
@@ -426,7 +434,7 @@ def add_args(parser: ArgumentParser) -> None:
         default=None,
         help="Overall plot title, defaults to %(default)s",
     )
-   
+
     parser_multi.add_argument(
         "-wc",
         "--wave-col-order",
@@ -443,7 +451,6 @@ def add_args(parser: ArgumentParser) -> None:
         default=2,
         help="Column order for Y magnitude in CSV, defaults tp %(default)d",
     )
-   
 
 
 # ================

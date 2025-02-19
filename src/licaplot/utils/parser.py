@@ -142,3 +142,13 @@ def auxlines() -> ArgumentParser:
         help="Connect dots with lines (default: %(default)s)",
     )
     return parser
+
+def percent() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-%",
+        "--percent",
+        action="store_true",
+        help="Display Y as a percent (must be adimensional)",
+    )
+    return parser
