@@ -46,11 +46,10 @@ test-publish pkg="licaplot": build
 # Adds lica source library as dependency. 'version' may be a tag or branch
 lica-dev version="main":
     #!/usr/bin/env bash
-    set -euo pipefail
+    set -exuo pipefail
     echo "Removing previous LICA dependency"
-    uv add rawpy
-    uv add exifread
-    uv remove lica || echo "Ignoring non existing LICA library";
+    uv add rawpy exifread
+    uv remove lica
     if [[ "{{ version }}" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
         echo "Adding LICA source library --tag {{ version }}"; 
         uv add git+https://github.com/guaix-ucm/lica --tag {{ version }};
@@ -62,13 +61,11 @@ lica-dev version="main":
 # Adds lica release library as dependency with a given version
 lica-rel version="":
     #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Removing previous LICA dependency"
-    uv remove lica || echo "Ignoring non existing LICA library";
+    set -exuo pipefail
+    uv remove lica
     echo "Adding LICA library {{ version }}";
-    uv add --refresh-package lica lica[lica] {{ version }};
-    uv remove rawpy
-    uv remove exifread
+    uv add --refresh-package lica lica[lab] {{ version }};
+    uv remove rawpy exifread
 
 
 # Backup .env to storage unit
