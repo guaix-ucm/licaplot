@@ -140,9 +140,9 @@ licaplot-tessw --console process  -d data/tessw/ --save
 2024-12-08 13:10:08,476 [INFO] [licaplot.tessw] Classifying files in directory data/tessw/
 2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars6502-frequencies
 2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars1277-frequencies
-2024-12-08 13:10:08,534 [INFO] [lica.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
+2024-12-08 13:10:08,534 [INFO] [lica.lab.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
 2024-12-08 13:10:08,546 [INFO] [licaplot.utils.processing] Processing stars6502-frequencies with photodidode PIN-10D
-2024-12-08 13:10:08,546 [INFO] [lica.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
+2024-12-08 13:10:08,546 [INFO] [lica.lab.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
 2024-12-08 13:10:08,557 [INFO] [licaplot.utils.processing] Processing stars1277-frequencies with photodidode PIN-10D
 2024-12-08 13:10:08,558 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars6502-frequencies.ecsv
 2024-12-08 13:10:08,562 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars1277-frequencies.ecsv

@@ -5,7 +5,7 @@ import functools
 from typing import Iterable, Sequence, Any
 
 from lica.validators import vfile
-from lica.photodiode import BENCH
+from lica.lab import BENCH
 
 def vextension(path: str, extension: str) -> str:
     _, ext = os.path.splitext(path)

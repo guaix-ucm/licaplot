@@ -1,5 +1,5 @@
 from lica import StrEnum
-from lica.photodiode import COL
+from lica.lab import COL
 
 from ._version import __version__ as __version__
 
@@ -20,7 +20,7 @@ class PROCOL(StrEnum):
     Additional columns added by processing
     """
 
-    TRANS = "Transmission"
+    TRANS = COL.TRANS
     SPECTRAL = "Spectral Response"
     PHOTOD_QE = "Photodiode " + COL.QE
     PHOTOD_CURRENT = "Photodiode " + TBCOL.CURRENT

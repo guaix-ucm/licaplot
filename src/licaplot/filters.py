@@ -20,7 +20,7 @@ from argparse import Namespace
 # ---------------------
 
 from lica.cli import execute
-from lica.photodiode import BENCH
+from lica.lab import BENCH
 
 # ------------------------
 # Own modules and packages

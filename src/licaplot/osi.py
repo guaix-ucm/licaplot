@@ -32,8 +32,10 @@ import scipy.interpolate
 
 from lica.cli import execute
 from lica.validators import vfile, vmonth
-from lica.photodiode import PhotodiodeModel, COL, BENCH, Hamamatsu, OSI
-import lica.photodiode
+
+from lica.lab import  COL, BENCH
+from lica.lab.photodiode import PhotodiodeModel, Hamamatsu, OSI
+import lica.lab.photodiode
 
 # ------------------------
 # Own modules and packages
@@ -203,7 +205,7 @@ def cross_calibrate(
 
 def cli_cross_calibration(args: Namespace) -> None:
     log.info("reads the reference calibration photodiode data %s", PhotodiodeModel.HAMAMATSU)
-    hama_reference = lica.photodiode.load(
+    hama_reference = lica.lab.photodiode.load(
         PhotodiodeModel.HAMAMATSU,
         args.resolution,
     )
@@ -262,7 +264,7 @@ def cli_compare(args: Namespace) -> None:
     table1 = astropy.io.ascii.read(args.cross_file, format="ecsv")
     table2 = astropy.io.ascii.read(args.datasheet_file, format="ecsv")[0:-1]
     hama_reference = lica.photodiode.load(
-        PhotodiodeModel.HAMAMATSU,
+        PhotodiodeModel.lab.HAMAMATSU,
         1,
         BENCH.WAVE_START,
         BENCH.WAVE_END,

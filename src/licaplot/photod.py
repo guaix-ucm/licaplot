@@ -22,7 +22,8 @@ from matplotlib.axes import Axes
 
 from astropy.table import Table
 from lica.cli import execute
-from lica.photodiode import PhotodiodeModel, COL, BENCH
+from lica.lab import COL, BENCH
+from lica.lab.photodiode import PhotodiodeModel
 import lica
 
 # ------------------------
@@ -83,12 +84,12 @@ def plot_single_photodiode(axes: Axes, table: Table, marker: str):
 
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
-    lica.photodiode.export(args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end)
+    lica.lab.photodiode.export(args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end)
 
 
 def plot(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE PLOT === ")
-    table = lica.photodiode.load(args.model, args.resolution, args.wave_start, args.wave_end)
+    table = lica.lab.photodiode.load(args.model, args.resolution, args.wave_start, args.wave_end)
     log.info("Table info is\n%s", table.info)
     plot_photodiode(
         title=f"{args.model} characteristics @ {args.resolution} nm",

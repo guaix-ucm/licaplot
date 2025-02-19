@@ -21,8 +21,8 @@ from astropy.table import Table, Column
 from astropy.constants import astropyconst20 as const
 import scipy.interpolate
 
-import lica.photodiode
-from lica.photodiode import COL, BENCH
+import lica.lab.photodiode
+from lica.lab.photodiode import COL, BENCH
 
 # ------------------------
 # Own modules and packages
@@ -374,7 +374,7 @@ def active_process(
     for key, photod_table in photodiode_dict.items():
         model = photod_table.meta["Processing"]["model"]
         resolution = photod_table.meta["Processing"]["resolution"]
-        ref_table = lica.photodiode.load(model=model, resolution=int(resolution))
+        ref_table = lica.lab.photodiode.load(model=model, resolution=int(resolution))
         photod_qe = ref_table[COL.QE]
         photod_area = ref_table.meta[META.PHAREA]
         for i, sensor_table in enumerate(sensor_dict[key]):

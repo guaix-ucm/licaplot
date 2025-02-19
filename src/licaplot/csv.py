@@ -30,7 +30,7 @@ import scipy.interpolate
 
 from lica.cli import execute
 from lica.validators import vfile
-from lica.photodiode import BENCH
+from lica.lab import BENCH
 
 # ------------------------
 # Own modules and packages

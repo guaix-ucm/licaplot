@@ -31,7 +31,8 @@ import scipy.interpolate
 
 from lica.cli import execute
 from lica.validators import vfile, vmonth
-from lica.photodiode import COL, BENCH, Hamamatsu
+from lica.lab import COL, BENCH
+from lica.lab.photodiode import Hamamatsu
 
 # ------------------------
 # Own modules and packages

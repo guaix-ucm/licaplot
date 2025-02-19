@@ -17,7 +17,8 @@ from argparse import ArgumentParser
 # ---------------------
 
 from lica.validators import vfile, vdir
-from lica.photodiode import PhotodiodeModel, BENCH
+from lica.lab import BENCH
+from lica.lab.photodiode import PhotodiodeModel
 
 # ------------------------
 # Own modules and packages
