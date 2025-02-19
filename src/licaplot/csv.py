@@ -79,6 +79,7 @@ def multi(args: Namespace) -> None:
             x=args.wave_col_order - 1,
             y=args.y_col_order - 1,
             linewidth=args.lines or 0,
+            percent=args.percent or False,
         )
     elif N == 1:
         plot_single(
@@ -90,6 +91,7 @@ def multi(args: Namespace) -> None:
             y=args.y_col_order - 1,
             marker=args.marker,
             linewidth=args.lines or 0,
+            percent=args.percent or False,
         )
     elif N == 2:
         plot_rows(
@@ -101,6 +103,7 @@ def multi(args: Namespace) -> None:
             y=args.y_col_order - 1,
             marker=args.marker,
             linewidth=args.lines or 0,
+            percent=args.percent or False,
         )
     else:
         plot_grid(
@@ -114,6 +117,7 @@ def multi(args: Namespace) -> None:
             y=args.y_col_order - 1,
             marker=args.marker,
             linewidth=args.lines or 0,
+            percent=args.percent or False,
         )
 
 
@@ -398,6 +402,7 @@ def add_args(parser: ArgumentParser) -> None:
         ],
         help="Plot single CSV file",
     )
+    parser_single.set_defaults(func=single)
     parser_single.add_argument(
         "--export",
         type=vecsv,
@@ -405,17 +410,15 @@ def add_args(parser: ArgumentParser) -> None:
         default=None,
         help="Export to ECSV",
     )
-
-    parser_single.set_defaults(func=single)
     parser_multi = subparser.add_parser(
         "multi",
-        parents=[prs.auxlines()],
+        parents=[
+            prs.auxlines(),
+            prs.percent(),
+        ],
         help="Plot multiple CSV files",
     )
     parser_multi.set_defaults(func=multi)
-    # --------------------------------------------------------------------------------------------------
-
-    # --------------------------------------------------------------------------------------------------
     parser_multi.add_argument(
         "-i",
         "--input-files",
@@ -434,7 +437,6 @@ def add_args(parser: ArgumentParser) -> None:
         default=None,
         help="Overall plot title, defaults to %(default)s",
     )
-
     parser_multi.add_argument(
         "-wc",
         "--wave-col-order",

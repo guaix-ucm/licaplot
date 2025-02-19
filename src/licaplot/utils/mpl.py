@@ -49,7 +49,11 @@ def get_labels(table: Table, x: int, y: int, percent: bool) -> Tuple[str, str]:
     xlabel = table.columns[x].name
     xunit = table.columns[x].unit
     ylabel = table.columns[y].name
-    yunit = u.pct if percent else table.columns[y].unit
+    yunit = (
+        u.pct
+        if percent and table.columns[y].unit == u.dimensionless_unscaled
+        else table.columns[y].unit
+    )
     xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
     ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
     return xlabel, ylabel
@@ -74,12 +78,12 @@ def plot_overlapped(
     axes.set_xlabel(xlabel)
     axes.set_ylabel(ylabel)
     for table, label, marker in zip(tables, labels, markers):
-        if percent:
-            assert table.columns[y].unit == u.dimensionless_unscaled
-        yy = table.columns[y] * 100 * u.pct if percent else table.columns[y]
-        axes.plot(
-            table.columns[x], yy, marker=marker, linewidth=linewidth, label=label
+        yy = (
+            table.columns[y] * 100 * u.pct
+            if percent and table.columns[y].unit == u.dimensionless_unscaled
+            else table.columns[y]
         )
+        axes.plot(table.columns[x], yy, marker=marker, linewidth=linewidth, label=label)
     if filters:
         for filt in MONOCROMATOR_FILTERS_LABELS:
             axes.axvline(filt["wavelength"], linestyle=filt["style"], label=filt["label"])
@@ -118,13 +122,17 @@ def plot_grid(
     if title is not None:
         fig.suptitle(title)
     for i, ax, table, label in zip(indexes, axes, tables, labels):
-        if percent:
+        if percent and u.dimensionless_unscaled:
             assert table.columns[y].unit == u.dimensionless_unscaled
         ax.set_title(label)
         xlabel, ylabel = get_labels(table, x, y, percent)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        yy = table.columns[y] * 100 * u.pct if percent else table.columns[y]
+        yy = (
+            table.columns[y] * 100 * u.pct
+            if percent and table.columns[y].unit == u.dimensionless_unscaled
+            else table.columns[y]
+        )
         ax.plot(table.columns[x], yy, marker=marker, linewidth=linewidth)
         if filters:
             for filt in MONOCROMATOR_FILTERS_LABELS:

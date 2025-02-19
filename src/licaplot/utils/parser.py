@@ -149,6 +149,7 @@ def percent() -> ArgumentParser:
         "-%",
         "--percent",
         action="store_true",
-        help="Display Y as a percent (must be adimensional)",
+        default=False,
+        help="Display adimensional Y as a percent (default: %(default)s)",
     )
     return parser
