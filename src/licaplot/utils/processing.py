@@ -437,11 +437,9 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
                     f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
                 )
                 filter_dict[key][i] = filter_table  # Necessary to capture the new table in the dict
-            transmission = (filter_table[TBCOL.CURRENT] / photod_table[TBCOL.CURRENT])
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
-            filter_table[PROCOL.TRANS] = (
-                np.round(transmission, decimals=5) * u.dimensionless_unscaled
-            )
+            filter_table[PROCOL.TRANS] = (filter_table[TBCOL.CURRENT]) / (photod_table[TBCOL.CURRENT])
+            filter_table[PROCOL.TRANS] /= u.A # Hack. Apparently the op. above doesn't make it adimensional
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
             filter_table.meta["History"].append("Scaled readings wrt photodiode readings")
