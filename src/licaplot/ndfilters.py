@@ -31,13 +31,12 @@ from lica.lab import COL
 # Own modules and packages
 # ------------------------
 
-from . import TBCOL
+from . import TBCOL, PROCOL
 from ._version import __version__
-
-
 from .utils import parser as prs
+from .utils.mpl import plot_single
 from .filters import one_filter
-from . import  PROCOL
+
 
 # -----------------------
 # Module global variables
@@ -59,6 +58,9 @@ plt.style.use("licaplot.resources.global")
 # -------------------
 
 
+# ------------------
+# Auxiliary fnctions
+# ------------------
 
 
 # -----------------------
@@ -80,14 +82,27 @@ def cli_calibrate(args: Namespace) -> None:
     table.remove_columns([TBCOL.CURRENT, PROCOL.PHOTOD_CURRENT])
     table.meta["History"].append(f"Master {args.ndf} transmission file")
     resolution = np.ediff1d(table[COL.WAVE])[0]
-    name = f"{args.ndf}-Transmission@{resolution}nm.ecsv"
+    name = f"{args.ndf}-Transmission@{int(resolution)}nm.ecsv"
     master_path = os.path.join(args.output_dir, name)
     log.info("Producing Master ECSV file %s", master_path)
     table.write(master_path, delimiter=",", overwrite=True)
 
 
 def cli_plot(args: Namespace) -> None:
-    pass
+    name = f"{args.ndf}-Transmission@{args.resolution}nm.ecsv"
+    ecsv_path = os.path.join(args.input_dir, name)
+    table = astropy.io.ascii.read(ecsv_path, format="ecsv")
+    plot_single(
+        title=f"{args.ndf} Transmission",
+        tables=[table],
+        labels=[None],
+        x=0,
+        y=1,
+        filters=args.filters,
+        marker=None,
+        linewidth=args.lines or 0,
+        percent=args.percent,
+    )
 
 
 # ===================================
@@ -108,7 +123,7 @@ def add_args(parser: ArgumentParser) -> None:
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "plot",
-        parents=[prs.idir(), prs.ndf(), prs.resol()],
+        parents=[prs.idir(), prs.ndf(), prs.resol(), prs.percent(), prs.auxlines()],
         help="Plot Neutral Density Filter response",
     )
     parser.set_defaults(func=cli_plot)
