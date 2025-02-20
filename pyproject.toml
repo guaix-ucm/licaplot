@@ -33,8 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 
-# jinja2 module need this
-extra = [
+extras = [
     "notebook",
 ]
 
@@ -44,12 +43,13 @@ Homepage = "https://github.com/guaix-ucm/licaplot"
 Repository = "https://github.com/guaix-ucm/licaplot.git"
 
 [project.scripts]
-licaplot-csv = "licaplot.csv:main"
-licaplot-photod = "licaplot.photod:main"
-licaplot-filters = "licaplot.filters:main"
-licaplot-tessw = "licaplot.tessw:main"
-licaplot-hama = "licaplot.hamamatsu:main"
-licaplot-osi = "licaplot.osi:main"
+lica-csv = "licaplot.csv:main"
+lica-photod = "licaplot.photod:main"
+lica-filters = "licaplot.filters:main"
+lica-tessw = "licaplot.tessw:main"
+lica-hama = "licaplot.hamamatsu:main"
+lica-osi = "licaplot.osi:main"
+lica-ndf = "licaplot.ndfilters:main"
 
 
 [build-system]

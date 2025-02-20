@@ -154,3 +154,15 @@ def percent() -> ArgumentParser:
         help="Display adimensional Y as a percent (default: %(default)s)",
     )
     return parser
+
+def plot_parser(title: str) -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-t",
+        "--title",
+        type=str,
+        default=title,
+        help="Plot title",
+    )
+    return parser
