@@ -15,7 +15,6 @@ import logging
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
-from typing import Optional, Tuple
 
 # ---------------------
 # Thrid-party libraries
@@ -24,18 +23,9 @@ from typing import Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.io.ascii
-import astropy.units as u
-from astropy.constants import astropyconst20 as const
-from astropy.table import Table, Column
-import scipy.interpolate
-
 
 from lica.cli import execute
-from lica.validators import vfile, vmonth
-
-from lica.lab import  COL, BENCH
-from lica.lab.photodiode import PhotodiodeModel, Hamamatsu, OSI
-import lica.lab.photodiode
+from lica.lab import COL
 
 # ------------------------
 # Own modules and packages
@@ -43,9 +33,11 @@ import lica.lab.photodiode
 
 from . import TBCOL
 from ._version import __version__
-from .utils.mpl import plot_overlapped
-from .utils.validators import vecsvfile
-from .utils.processing import read_scan_csv
+
+
+from .utils import parser as prs
+from .filters import one_filter
+from . import  PROCOL
 
 # -----------------------
 # Module global variables
@@ -68,46 +60,6 @@ plt.style.use("licaplot.resources.global")
 
 
 
-def create_nd_table(path: str) -> Table:
-    log.info("Converting input CSV to Astropy Table: %s", path)
-    table = astropy.io.ascii.read(
-        path,
-        delimiter=";",
-        data_start=1,
-        names=(COL.WAVE, COL.RESP),
-        converters={COL.WAVE: np.float64, COL.RESP: np.float64},
-    )
-    table[COL.WAVE] = np.round(table[COL.WAVE], decimals=5) * u.nm
-    table[COL.RESP] = table[COL.RESP] * (u.A / u.W)
-    table[COL.QE] = quantum_efficiency(table[COL.WAVE], table[COL.RESP])
-    resolution = np.ediff1d(table[COL.WAVE])
-    table.meta = {
-        "Manufacturer": OSI.MANUF,
-        "Model": OSI.MODEL,
-        "Serial": OSI.SERIAL,
-        "Window": OSI.WINDOW,
-        "Photosensitive size diameter": OSI.PHS_SIZE,
-        "Photosensitive area": OSI.PHS_AREA,
-        "Dark current": OSI.DARK,
-        "Peak responsivity": OSI.PEAK,
-        "History": [],
-    }
-    history = {
-        "Description": "Loaded Calibration Table from Datasheet",
-        "Date": None,
-        "Resolution": {
-            "mean": np.round(np.mean(resolution), decimals=2) * u.mm,
-            "sigma": np.round(np.std(resolution, ddof=1), decimals=1) * u.mm,
-            "median": np.round(np.median(resolution), decimals=2) * u.mm,
-        },
-        "Comment": "Variable resolution",
-        "Start wavelength": np.min(table[COL.WAVE]) * u.nm,
-        "End wavelength": np.max(table[COL.WAVE]) * u.nm,
-    }
-    table.meta["History"].append(history)
-    log.info("Generated table is\n%s", table.info)
-    return table
-
 
 # -----------------------
 # AUXILIARY MAIN FUNCTION
@@ -115,7 +67,24 @@ def create_nd_table(path: str) -> Table:
 
 
 def cli_calibrate(args: Namespace) -> None:
-    pass
+    one_filter(
+        input_path=args.input_file,
+        photod_path=args.photod_file,
+        model=args.model,
+        label=args.ndf,
+    )
+    ecsv_path, _ = os.path.splitext(args.input_file)
+    ecsv_path += ".ecsv"
+    log.info("Reading back ECSV file %s", ecsv_path)
+    table = astropy.io.ascii.read(ecsv_path, format="ecsv")
+    table.remove_columns([TBCOL.CURRENT, PROCOL.PHOTOD_CURRENT])
+    table.meta["History"].append(f"Master {args.ndf} transmission file")
+    resolution = np.ediff1d(table[COL.WAVE])[0]
+    name = f"{args.ndf}-Transmission@{resolution}nm.ecsv"
+    master_path = os.path.join(args.output_dir, name)
+    log.info("Producing Master ECSV file %s", master_path)
+    table.write(master_path, delimiter=",", overwrite=True)
+
 
 def cli_plot(args: Namespace) -> None:
     pass
@@ -126,25 +95,24 @@ def cli_plot(args: Namespace) -> None:
 # ===================================
 
 
-
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "calib",
-        parents=[],
+        parents=[prs.ipath(), prs.photod(), prs.ndf(), prs.odir()],
         help="Calibrate a Neutral Density Filter",
     )
     parser.set_defaults(func=cli_calibrate)
-    
+
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "plot",
-        parents=[],
+        parents=[prs.idir(), prs.ndf(), prs.resol()],
         help="Plot Neutral Density Filter response",
     )
     parser.set_defaults(func=cli_plot)
-    
+
 
 # ================
 # MAIN ENTRY POINT

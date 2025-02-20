@@ -10,6 +10,7 @@
 # System wide imports
 # -------------------
 
+import os
 from argparse import ArgumentParser
 
 # ---------------------
@@ -19,6 +20,7 @@ from argparse import ArgumentParser
 from lica.validators import vfile, vdir
 from lica.lab import BENCH
 from lica.lab.photodiode import PhotodiodeModel
+from lica.lab.ndfilters import NDFilter
 
 # ------------------------
 # Own modules and packages
@@ -44,7 +46,7 @@ def inputf() -> ArgumentParser:
         "--label",
         type=str,
         nargs="+",
-        help="Label for plotting purposes",
+        help="Label for metadata purposes",
     )
     return parser
 
@@ -144,6 +146,7 @@ def auxlines() -> ArgumentParser:
     )
     return parser
 
+
 def percent() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -155,6 +158,7 @@ def percent() -> ArgumentParser:
     )
     return parser
 
+
 def plot_parser(title: str) -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -164,5 +168,69 @@ def plot_parser(title: str) -> ArgumentParser:
         type=str,
         default=title,
         help="Plot title",
+    )
+    return parser
+
+
+def ipath() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV sensor/filter input file",
+    )
+    return parser
+
+
+def ndf() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-n",
+        "--ndf",
+        type=str,
+        choices=[model for model in NDFilter],
+        default=NDFilter.ND05,
+        help="Neutral Density Filter model, defaults to %(default)s",
+    )
+    return parser
+
+
+def idir() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-dir",
+        type=vdir,
+        default=os.getcwd(),
+        metavar="<Dir>",
+        help="Input ECSV directory (default %(default)s)",
+    )
+    return parser
+
+def odir() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=vdir,
+        default=os.getcwd(),
+        metavar="<Dir>",
+        help="Output ECSV directory (default %(default)s)",
+    )
+    return parser
+
+def resol() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-r",
+        "--resolution",
+        type=int,
+        choices=tuple(range(1, 11)),
+        default=1,
+        metavar="<N nm>",
+        help="Resolution (defaults to %(default)d nm)",
     )
     return parser
