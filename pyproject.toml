@@ -24,11 +24,18 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Atmospheric Science',
 ]
 dependencies = [
-    "matplotlib",
-    "PyQt5",
-    "astropy",
-    "scipy",
-    "lica[lab]",
+    "matplotlib >= 3.9",
+    "pyqt5 >= 5.15",
+    "astropy >= 6.0",
+    "scipy >= 1.13",
+    "lica[lab]>=1.0.16",
+]
+
+[project.optional-dependencies]
+
+# jinja2 module need this
+extra = [
+    "notebook",
 ]
 
 
