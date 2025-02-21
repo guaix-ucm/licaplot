@@ -170,7 +170,7 @@ def add_args(parser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
+        parents=[prs.photod(), prs.ifile(), prs.tag(), prs.limits()],
         help="Process one CSV TESS-W file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=cli_one_tessw)
@@ -189,7 +189,7 @@ def add_args(parser) -> None:
     )
     parser_photod.set_defaults(func=cli_photodiode)
     parser_sensor = subsubparser.add_parser(
-        "sensor", parents=[prs.inputf(), prs.tag()], help="sensor subcommand"
+        "sensor", parents=[prs.ifile(), prs.label("metadata"), prs.tag()], help="sensor subcommand"
     )
     parser_sensor.set_defaults(func=cli_sensor)
     parser_review = subsubparser.add_parser(

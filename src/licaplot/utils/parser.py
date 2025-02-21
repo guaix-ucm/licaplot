@@ -17,6 +17,8 @@ from argparse import ArgumentParser
 # Thrid-party libraries
 # ---------------------
 
+import astropy.units as u
+
 from lica.validators import vfile, vdir
 from lica.lab import BENCH
 from lica.lab.photodiode import PhotodiodeModel
@@ -31,7 +33,7 @@ from lica.lab.ndfilters import NDFilter
 # -----------------
 
 
-def inputf() -> ArgumentParser:
+def ifile() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-i",
@@ -41,15 +43,29 @@ def inputf() -> ArgumentParser:
         metavar="<File>",
         help="CSV sensor/filter input file",
     )
+    return parser
+
+def label(purpose: str) -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-l",
         "--label",
         type=str,
         nargs="+",
-        help="Label for metadata purposes",
+        help=f"Label for {purpose} purposes",
     )
     return parser
 
+def labels(purpose: str) -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-l",
+        "--label",
+        type=str,
+        nargs="+",
+        help=f"One or more labels for {purpose} purposes",
+    )
+    return parser
 
 def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -172,17 +188,6 @@ def plot_parser(title: str) -> ArgumentParser:
     return parser
 
 
-def ipath() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-i",
-        "--input-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV sensor/filter input file",
-    )
-    return parser
 
 
 def ndf() -> ArgumentParser:
@@ -232,5 +237,57 @@ def resol() -> ArgumentParser:
         default=1,
         metavar="<N nm>",
         help="Resolution (defaults to %(default)d nm)",
+    )
+    return parser
+
+
+def wave_limits() -> ArgumentParser:
+    """Generic options dealing with wavelength trimming & resampling and its units"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-wl",
+        "--wave-low",
+        type=float,
+        metavar="\u03bb",
+        default=None,
+        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wh",
+        "--wave-high",
+        type=float,
+        metavar="\u03bb",
+        default=None,
+        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-wlu",
+        "--wave-limit-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
+    )
+    return parser
+
+def resample() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-r",
+        "--resample",
+        choices=tuple(range(1, 11)),
+        type=int,
+        metavar="<N nm>",
+        default=None,
+        help="Resample wavelength to N nm step size, defaults to %(default)s",
+    )
+    return parser
+
+def lica() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--lica",
+        action="store_true",
+        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
     )
     return parser

@@ -115,7 +115,7 @@ def add_args(parser: ArgumentParser) -> None:
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "calib",
-        parents=[prs.ipath(), prs.photod(), prs.ndf(), prs.odir()],
+        parents=[prs.ifile(), prs.photod(), prs.ndf(), prs.odir()],
         help="Calibrate a Neutral Density Filter",
     )
     parser.set_defaults(func=cli_calibrate)
