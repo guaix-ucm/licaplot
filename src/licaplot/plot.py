@@ -64,7 +64,7 @@ plt.style.use("licaplot.resources.global")
 # -----------------------
 
 
-def multi(args: Namespace) -> None:
+def cli_multi(args: Namespace) -> None:
     vsequences(4, args.input_files)
     N = len(args.input_files)
     tables = [astropy.io.ascii.read(f, format="ecsv") for f in args.input_files]
@@ -224,7 +224,7 @@ def build_table(
     return table
 
 
-def single(args: Namespace) -> None:
+def cli_single(args: Namespace) -> None:
     table = build_table(
         path=args.input_file,
         columns=args.columns,
@@ -315,7 +315,7 @@ def column_plot_parser() -> ArgumentParser:
         type=int,
         metavar="<N>",
         default=1,
-        help="Wavelength column order in CSV, defaults to %(default)d",
+        help="Wavelength column number in CSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-wu",
@@ -331,7 +331,7 @@ def column_plot_parser() -> ArgumentParser:
         type=int,
         metavar="<N>",
         default=2,
-        help="Column order for Y magnitude in CSV, defaults tp %(default)d",
+        help="column number for Y magnitude in CSV, defaults tp %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -402,7 +402,7 @@ def add_args(parser: ArgumentParser) -> None:
         ],
         help="Plot single CSV file",
     )
-    parser_single.set_defaults(func=single)
+    parser_single.set_defaults(func=cli_single)
     parser_single.add_argument(
         "--export",
         type=vecsv,
@@ -418,7 +418,7 @@ def add_args(parser: ArgumentParser) -> None:
         ],
         help="Plot multiple CSV files",
     )
-    parser_multi.set_defaults(func=multi)
+    parser_multi.set_defaults(func=cli_multi)
     parser_multi.add_argument(
         "-i",
         "--input-files",
@@ -443,7 +443,7 @@ def add_args(parser: ArgumentParser) -> None:
         type=int,
         metavar="<N>",
         default=1,
-        help="Wavelength column order in CSV, defaults to %(default)d",
+        help="Wavelength column number in CSV, defaults to %(default)d",
     )
     parser_multi.add_argument(
         "-yc",
@@ -451,7 +451,7 @@ def add_args(parser: ArgumentParser) -> None:
         type=int,
         metavar="<N>",
         default=2,
-        help="Column order for Y magnitude in CSV, defaults tp %(default)d",
+        help="Column number for Y magnitude in CSV, defaults tp %(default)d",
     )
 
 
@@ -460,15 +460,15 @@ def add_args(parser: ArgumentParser) -> None:
 # ================
 
 
-def csvs(args):
+def cli_plot(args):
     args.func(args)
 
 
 def main():
     execute(
-        main_func=csvs,
+        main_func=cli_plot,
         add_args_func=add_args,
         name=__name__,
         version=__version__,
-        description="Plot CSV files",
+        description="Plot CSV/ECSV files",
     )

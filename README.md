@@ -17,7 +17,8 @@ pip install licaplot
 * `lica-photod`. Plot and export LICA photodiodes spectral response curves.
 * `lica-hama`. Build LICA's Hamamtsu S2281-04 photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
 * `lica-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve un ECSV format to be used for other calibration purposes elsewhere.
- `lica-csv`. Very simple plot utility to plot CSV files.
+* `lica-ndf`. Build Spectral reponse for LICA's Optical Bench Neutral Density Filters.
+ `lica-plot`. Very simple plot utility to plot CSV/ECSV files.
 
 Every command listed (and subcommands) con be described with `-h | --help`
 
@@ -41,7 +42,7 @@ Setting the photodiode model is optional unless you are using the Hamamatsu S228
 ```bash
 lica-filters --console one -l Green -p data/filters/Eysdon_RGB/photodiode.txt -m PIN-10D -i data/filters/Eysdon_RGB/green.txt
 
-lica-csv --console single -i data/filters/Eysdon_RGB/green.ecsv --title Green filter -yc 4 --label G --lines --filters
+lica-plot --console single -i data/filters/Eysdon_RGB/green.ecsv --title Green filter -yc 4 --label G --lines --filters
 ```
 
 ### More complex case
@@ -90,10 +91,10 @@ After this step both filter ECSV files contains additional columns with the clea
 
 5. Plot the result
 
-Plot generated ECSV files using `lica-csv`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
+Plot generated ECSV files using `lica-plot`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
 
 ```bash
-lica-csv --console multi -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
+lica-plot --console multi -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 ```
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
@@ -153,7 +154,7 @@ lica-tessw --console process  -d data/tessw/ --save
 the `-yc 0` denotes the last column
 
 ```bash
-lica-csv --console multi -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv  --overlap -wc 1 -yc 0  --filters --lines
+lica-plot --console multi -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv  --overlap -wc 1 -yc 0  --filters --lines
 ```
 
 ![Sensor comparison](doc/image/sensor_comparison.png)

@@ -43,7 +43,7 @@ Homepage = "https://github.com/guaix-ucm/licaplot"
 Repository = "https://github.com/guaix-ucm/licaplot.git"
 
 [project.scripts]
-lica-csv = "licaplot.csv:main"
+lica-plot = "licaplot.csv:main"
 lica-photod = "licaplot.photod:main"
 lica-filters = "licaplot.filters:main"
 lica-tessw = "licaplot.tessw:main"
