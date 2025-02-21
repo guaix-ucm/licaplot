@@ -21,6 +21,7 @@ from argparse import Namespace
 
 from lica.cli import execute
 from lica.lab import BENCH
+from lica.lab.ndfilters import NDFilter
 
 # ------------------------
 # Own modules and packages
@@ -55,11 +56,11 @@ log = logging.getLogger(__name__)
 # --------------------------------------------------
 
 
-def process(dir_path: str, save_flag: bool) -> None:
+def process(dir_path: str, save_flag: bool, ndf: NDFilter) -> None:
     log.info("Classifying files in directory %s", dir_path)
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, filter_dict = processing.classify(dir_iterable)
-    filter_dict = processing.passive_process(photodiode_dict, filter_dict)
+    filter_dict = processing.passive_process(photodiode_dict, filter_dict, ndf)
     if save_flag:
         processing.save(filter_dict, dir_path)
 
@@ -91,6 +92,7 @@ def one_filter(
     tag: str = "",
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
+    ndf: NDFilter = None,
 ) -> str:
     tag = tag or processing.random_tag()
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
@@ -102,7 +104,7 @@ def one_filter(
     dir_iterable = glob.iglob(os.path.join(dir_path, "*.ecsv"))
     photodiode_dict, filter_dict = processing.classify(dir_iterable, just_name)
     processing.review(photodiode_dict, filter_dict)
-    filter_dict = processing.passive_process(photodiode_dict, filter_dict)
+    filter_dict = processing.passive_process(photodiode_dict, filter_dict, ndf)
     processing.save(filter_dict, dir_path)
     return result
 
@@ -113,7 +115,7 @@ def one_filter(
 
 
 def cli_process(args: Namespace) -> None:
-    process(args.directory, args.save)
+    process(args.directory, args.save, args.ndf)
 
 
 def cli_photodiode(args: Namespace) -> None:
@@ -135,6 +137,7 @@ def cli_one_filter(args: Namespace) -> None:
         args.tag,
         args.wave_low,
         args.wave_high,
+        args.ndf,
     )
 
 
@@ -154,7 +157,7 @@ def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits()],
+        parents=[prs.photod(), prs.inputf(), prs.tag(), prs.limits(), prs.ndf()],
         help="Process one CSV filter file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=cli_one_filter)

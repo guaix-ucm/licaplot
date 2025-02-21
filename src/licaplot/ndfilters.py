@@ -127,6 +127,7 @@ def add_args(parser: ArgumentParser) -> None:
         help="Plot Neutral Density Filter response",
     )
     parser.set_defaults(func=cli_plot)
+    # ---------------------------------------------------------------
 
 
 # ================

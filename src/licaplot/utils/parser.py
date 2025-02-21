@@ -190,9 +190,9 @@ def ndf() -> ArgumentParser:
     parser.add_argument(
         "-n",
         "--ndf",
-        type=str,
-        choices=[model for model in NDFilter],
-        default=NDFilter.ND05,
+        type=NDFilter,
+        choices=NDFilter,
+        default=None,
         help="Neutral Density Filter model, defaults to %(default)s",
     )
     return parser

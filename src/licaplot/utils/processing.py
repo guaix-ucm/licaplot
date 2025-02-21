@@ -21,8 +21,9 @@ from astropy.table import Table, Column
 from astropy.constants import astropyconst20 as const
 import scipy.interpolate
 
-import lica.lab.photodiode
+import lica.lab
 from lica.lab.photodiode import COL, BENCH
+from lica.lab.ndfilters import NDFilter
 
 # ------------------------
 # Own modules and packages
@@ -308,7 +309,7 @@ def classify(dir_iterable: Iterable, device_name: str = None) -> Tuple[DiodeDict
         if table.meta["Processing"]["type"] == PROMETA.PHOTOD:
             if photodiode_dict.get(key):
                 msg = (
-                    f'Another photodiode table has the same tag: {table.meta["Processing"]["name"]}',
+                    f"Another photodiode table has the same tag: {table.meta['Processing']['name']}",
                 )
                 log.critical(msg)
                 raise RuntimeError(msg)
@@ -400,8 +401,9 @@ def active_process(
             sensor_table[PROCOL.PHOTOD_QE] = photod_qe
             sensor_qe = (
                 photod_qe
-                * ( photod_area / sensor_area)
-                * (sensor_table[sensor_column] * gain) / photod_table[TBCOL.CURRENT]
+                * (photod_area / sensor_area)
+                * (sensor_table[sensor_column] * gain)
+                / photod_table[TBCOL.CURRENT]
             ).decompose()
             sensor_table[COL.QE] = np.round(sensor_qe, decimals=5) * u.dimensionless_unscaled
             sensor_table.meta["Processing"]["using photodiode"] = model
@@ -412,7 +414,9 @@ def active_process(
     return sensor_dict
 
 
-def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> DeviceDict:
+def passive_process(
+    photodiode_dict: DiodeDict, filter_dict: DeviceDict, ndf: NDFilter = None
+) -> DeviceDict:
     """
     Process Device ECSV files in a given directory.
     As the device is optically passive (i.e. filters) we do not correct by photodiode QE
@@ -438,8 +442,16 @@ def passive_process(photodiode_dict: DiodeDict, filter_dict: DeviceDict) -> Devi
                 )
                 filter_dict[key][i] = filter_table  # Necessary to capture the new table in the dict
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]
-            filter_table[PROCOL.TRANS] = (filter_table[TBCOL.CURRENT]) / (photod_table[TBCOL.CURRENT])
-            filter_table[PROCOL.TRANS] /= u.A # Hack. Apparently the op. above doesn't make it adimensional
+            filter_table[COL.TRANS] = (filter_table[TBCOL.CURRENT]) / (photod_table[TBCOL.CURRENT])
+            filter_table[COL.TRANS] /= (
+                u.A
+            )  # Hack. Apparently the op. above doesn't make it adimensional
+            if ndf is not None:
+                resolution = np.ediff1d(filter_table[COL.WAVE])[0]
+                ndf_table = lica.lab.ndfilters.load(model=ndf, resolution=int(resolution))
+                log.info("Correcting %s %s by %s spectral response", name, COL.TRANS, ndf)
+                column = f"{ndf} Corrected {COL.TRANS}"
+                filter_table[column] = filter_table[COL.TRANS] / ndf_table[COL.TRANS]
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
             filter_table.meta["History"].append("Scaled readings wrt photodiode readings")
