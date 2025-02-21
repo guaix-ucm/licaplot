@@ -39,7 +39,7 @@ from lica.lab import BENCH
 from ._version import __version__
 from .utils.mpl import plot_overlapped, plot_single, plot_rows, plot_grid
 from .utils.validators import vsequences, vecsv, vecsvfile
-from .utils import parser as prs
+from .utils import parser2 as prs
 
 # -----------------------
 # Module global variables
