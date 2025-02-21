@@ -164,7 +164,7 @@ def add_args(parser):
 
     parser_classif = subparser.add_parser("classif", help="Classification commands")
     parser_passive = subparser.add_parser(
-        "process", parents=[prs.folder(), prs.save()], help="Process command"
+        "process", parents=[prs.folder(), prs.save(), prs.ndf()], help="Process command"
     )
     parser_passive.set_defaults(func=cli_process)
 

@@ -74,6 +74,30 @@ env-bak drive=def_drive: (check_mnt drive) (env-backup join(drive, project))
 # Restore .env from storage unit
 env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 
+plotsin dir="data/filters/Eysdon_RGB": (anew dir)
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-filters --console one -l Green -p {{dir}}/photodiode.txt -m PIN-10D -i {{dir}}/green.txt
+    lica-plot --console single -i {{dir}}/green.ecsv --title Green filter -yc 4 --label G --lines --filters
+
+
+plotmul dir="data/filters/Eysdon_RGB": (anew dir)
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
+    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
+    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
+    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
+    lica-filters --console process -d {{dir}} --save
+    lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
+
+
+[private]
+anew dir:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    rm {{dir}}/*.ecsv
+
 [private]
 check_mnt mnt:
     #!/usr/bin/env bash
