@@ -178,9 +178,9 @@ def build_table_yc(
         table[col_x.name] = table[col_x.name] * xu
     table.meta["label"] = table.meta.get("label") or label
     table.meta["title"] = table.meta.get("title") or title or table.meta["label"]
-    log.info(table.info)
     log.info(table.meta)
     return table
+
 
 def build_table_yycc(
     path: str,
@@ -210,6 +210,7 @@ def build_table_yycc(
 
 
 def cli_single_table_column(args: Namespace):
+    title = " ".join(args.title) if args.title else None
     table = build_table_yc(
         path=args.input_file,
         delimiter=args.delimiter,
@@ -223,7 +224,7 @@ def cli_single_table_column(args: Namespace):
         lu=args.limits_unit,
         resolution=args.resample,
         lica_trim=args.lica,
-        title=" ".join(args.title) if args.title else None,
+        title=title,
         label=args.label,
     )
     label = table.meta["label"]
@@ -242,6 +243,7 @@ def cli_single_table_column(args: Namespace):
 
 
 def cli_single_table_columns(args: Namespace):
+    title = " ".join(args.title) if args.title else None
     if args.label is not None:
         assert len(args.y_colums) == len(args.label)
     table = build_table_yycc(
@@ -254,7 +256,7 @@ def cli_single_table_columns(args: Namespace):
         xh=args.x_high,
         lu=args.limits_unit,
         lica_trim=args.lica,
-        title=" ".join(args.title) if args.title else None,
+        title=title,
         label=args.label,
     )
     title = table.meta["title"]
@@ -274,11 +276,40 @@ def cli_single_table_columns(args: Namespace):
 
 
 def cli_single_tables_column(args: Namespace):
-    pass
-
-
-def cli_single_tables_columns(args: Namespace):
-    pass
+    title = " ".join(args.title) if args.title else None
+    tables = list()
+    labels =list()
+    for path in args.input_file:
+        table = build_table_yc(
+            path=path,
+            delimiter=args.delimiter,
+            columns=args.columns,
+            xc=args.x_column - 1,
+            xu=args.x_unit,
+            yc=args.y_column - 1,
+            yu=args.y_unit,
+            xl=args.x_low,
+            xh=args.x_high,
+            lu=args.limits_unit,
+            resolution=args.resample,
+            lica_trim=args.lica,
+            title=title,
+            label=None,
+        )
+        labels.append(table.meta["label"])
+        tables.append(table)
+    title = title or tables[0].meta["title"]
+    with visualization.quantity_support():
+        plot_single_tables_column(
+            tables=tables,
+            x=args.x_column - 1,
+            y=args.y_column - 1,
+            legends=labels,
+            title=title,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=args.lines or 0,
+        )
 
 
 def cli_multi_table_column(args: Namespace):
@@ -347,15 +378,23 @@ def add_args(parser: ArgumentParser):
     p_s_tt = sub_s_t.add_parser("tables", help="Single Axes, multiple tables plot")
     sub_s_tt_c = p_s_tt.add_subparsers(required=True)
     par_s_tt_c = sub_s_tt_c.add_parser(
-        "column", parents=[], help="Single Axes, multiple tables, single column plot"
+        "column",
+        parents=[
+            prs.ifiles(),
+            prs.xlim(),
+            prs.resample(),
+            prs.lica(),
+            prs.xc(),
+            prs.yc(),
+            prs.title(None, "plotting"),
+            prs.labels("plotting"),
+            prs.auxlines(),
+            prs.percent(),
+        ],
+        help="Single Axes, multiple tables, single column plot",
     )
     par_s_tt_c.set_defaults(func=cli_single_tables_column)
-    par_s_tt_cc = sub_s_tt_c.add_parser(
-        "columns",
-        parents=[],
-        help="Single Axes, multiple tables, multiple columns plot",
-    )
-    par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
+    
 
     # =============
     # Multiple Axes

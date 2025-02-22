@@ -45,6 +45,7 @@ MONOCROMATOR_CHANGES_LABELS = (
 # Cycles through the markers enum for overlapping plots
 markers = itertools.cycle([marker for marker in Markers])
 
+
 def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> None:
     """Get the labels for a table, using units if necessary"""
     xlabel = table.columns[x].name
@@ -72,6 +73,7 @@ def plot_single_tables_columns(
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
+    assert len(legends) == len(yy)
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
@@ -121,6 +123,7 @@ def plot_single_table_column(
         box=box,
     )
 
+
 def plot_single_table_columns(
     table: Table,
     x: int,
@@ -144,28 +147,43 @@ def plot_single_table_columns(
         box=box,
     )
 
+
 def plot_single_tables_column(
     tables: Sequence[Table],
     x: int,
     y: int,
-    legend: str,
+    legends: Sequence[str],
     title: Optional[str],
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    plot_single_tables_columns(
-        tables=tables,
-        x=x,
-        yy=[y],
-        legends=[legend],
-        title=title,
-        changes=changes,
-        percent=percent,
-        linewidth=linewidth,
-        box=box,
-    )
+    assert len(legends) == len(tables)
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if title is not None:
+        fig.suptitle(title)
+    set_axes_labels(axes, tables[0], x, y, percent)
+    xcol = tables[0].columns[x]
+    for table, legend, marker in zip(tables, legends, markers):
+        ycol = (
+            table.columns[y] * 100 * u.pct
+            if percent and table.columns[y].unit == u.dimensionless_unscaled
+            else table.columns[y]
+        )
+        axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
+    if changes:
+        for change in MONOCROMATOR_CHANGES_LABELS:
+            axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
+    if box:
+        props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+        axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+    axes.grid(True, which="major", color="silver", linestyle="solid")
+    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+    axes.minorticks_on()
+    axes.legend()
+    plt.show()
+
 
 # ==============================================================================
 # ==============================================================================
@@ -185,7 +203,6 @@ def get_labels(table: Table, x: int, y: int, percent: bool) -> Tuple[str, str]:
     )
     ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
     return xlabel, ylabel
-
 
 
 def plot_table_columns(

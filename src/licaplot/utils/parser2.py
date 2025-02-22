@@ -28,7 +28,7 @@ from lica.lab.ndfilters import NDFilter
 # Own modules and packages
 # ------------------------
 
-from .validators import vsequences, vecsv, vecsvfile
+from .validators import vsequences,  vecsvfile
 
 # ------------------------
 # Plotting Related parsers
@@ -217,7 +217,7 @@ def ifiles() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-i",
-        "--input-files",
+        "--input-file",
         type=vecsvfile,
         required=True,
         nargs="+",
