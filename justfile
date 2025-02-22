@@ -92,10 +92,26 @@ plotmul dir="data/filters/Eysdon_RGB": (anew dir)
     lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 
 # Plot CLI test driver
-test axes="" data ="" cols="" args="":
+test_s_t_c dir="data/filters/Eysdon_RGB" args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-plot --console {{axes}} {{data}} {{cols}} {{args}}
+    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
+    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
+    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
+    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
+    lica-filters --console process -d {{dir}} --save
+    lica-plot --console --trace single table column  --title Filtro Verde -i {{dir}}/green.ecsv -xc 1 -yc 4 --changes --lines {{args}}
+
+test_s_t_cc dir="data/filters/Eysdon_RGB" args="":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
+    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
+    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
+    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
+    lica-filters --console process -d {{dir}} --save
+    lica-plot --console --trace single table columns   -i {{dir}}/blue.ecsv -xc 1 -yc 2 3 --changes --lines {{args}}
+
 
 [private]
 anew dir:

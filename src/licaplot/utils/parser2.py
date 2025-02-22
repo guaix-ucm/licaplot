@@ -35,47 +35,6 @@ from .validators import vsequences, vecsv, vecsvfile
 # ------------------------
 
 
-def ifile() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-i",
-        "--input-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV/ECSV input file",
-    )
-    parser.add_argument(
-        "-d",
-        "--delimiter",
-        type=str,
-        default=",",
-        help="CSV column delimiter. (defaults to %(default)s)",
-    )
-    return parser
-
-
-def ifiles() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-i",
-        "--input-files",
-        type=vecsvfile,
-        required=True,
-        nargs="+",
-        metavar="<File>",
-        help="CSV/ECSV input files",
-    )
-    parser.add_argument(
-        "-d",
-        "--delimiter",
-        type=str,
-        default=",",
-        help="CSV column delimiter. (defaults to %(default)s)",
-    )
-    return parser
-
-
 def title(title: str, purpose: str) -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -144,7 +103,7 @@ def xc() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
-        help="Abcissa axes units string (ie. nm, AA) %(default)s",
+        help="Abcissa axes units string (ie. nm, AA), defaults to %(default)s",
     )
     return parser
 
@@ -157,7 +116,7 @@ def yc() -> ArgumentParser:
         type=int,
         metavar="<N>",
         default=2,
-        help="Ordinate axis column number in CSV/ECSV, defaults tp %(default)d",
+        help="Ordinate axis column number in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -165,7 +124,7 @@ def yc() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.dimensionless_unscaled,
-        help="Ordinate axis string (ie. nm, A/W, etc.) %(default)s",
+        help="Ordinate axis string (ie. nm, A/W, etc.), defaults to %(default)s",
     )
     return parser
 
@@ -174,7 +133,7 @@ def yycc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-yc",
-        "--y-columns",
+        "--y-column",
         type=int,
         nargs="+",
         metavar="<N>",
@@ -216,6 +175,123 @@ def percent() -> ArgumentParser:
         action="store_true",
         default=False,
         help="Display adimensional Y as a percent (default: %(default)s)",
+    )
+    return parser
+
+
+# ----------------------
+# Building Table parsers
+# ----------------------
+
+
+def ifile() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV/ECSV input file",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        default=None,
+        nargs="+",
+        metavar="<NAME>",
+        help="Optional ordered list of CSV column names, if necessary (default %(default)s)",
+    )
+    return parser
+
+
+def ifiles() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-files",
+        type=vecsvfile,
+        required=True,
+        nargs="+",
+        metavar="<File>",
+        help="CSV/ECSV input files",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        default=None,
+        nargs="+",
+        metavar="<NAME>",
+        help="Optional ordered list of CSV column names, if necessary (default %(default)s)",
+    )
+    return parser
+
+
+def xlim() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xl",
+        "--x-low",
+        type=int,
+        metavar="<LOW>",
+        default=BENCH.WAVE_START.value,
+        help="Abcissa axes lower limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-xh",
+        "--x-high",
+        type=int,
+        metavar="<HIGH>",
+        default=BENCH.WAVE_END.value,
+        help="Abcissa axes upper limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-lu",
+        "--limits-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Abscissa limits units (ie. nm, A/W, etc.), defaults to %(default)s",
+    )
+    return parser
+
+
+def lica() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--lica",
+        action="store_true",
+        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
+    )
+    return parser
+
+### ONLY USED IN THE CASE OF  SINGLE COLUMN PLOTS
+def resample() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-r",
+        "--resample",
+        choices=tuple(range(1, 11)),
+        type=int,
+        metavar="<N nm>",
+        default=None,
+        help="Resample wavelength to N nm step size, defaults to %(default)s",
     )
     return parser
 
@@ -264,27 +340,6 @@ def tag() -> ArgumentParser:
     return parser
 
 
-def xlim() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-xl",
-        "--x-low",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_START.value,
-        help="Abcissa axes lower limit, defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-xh",
-        "--x-high",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_END.value,
-        help="Abcissa axes upper limit, defaults to %(default)s",
-    )
-    return parser
-
-
 def photod() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -326,73 +381,5 @@ def ndf() -> ArgumentParser:
         choices=NDFilter,
         default=None,
         help="Neutral Density Filter model, defaults to %(default)s",
-    )
-    return parser
-
-
-def resol() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        choices=tuple(range(1, 11)),
-        default=1,
-        metavar="<N nm>",
-        help="Resolution (defaults to %(default)d nm)",
-    )
-    return parser
-
-
-def wave_limits() -> ArgumentParser:
-    """Generic options dealing with wavelength trimming & resampling and its units"""
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-wl",
-        "--wave-low",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wh",
-        "--wave-high",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wlu",
-        "--wave-limit-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
-    )
-    return parser
-
-
-def resample() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-r",
-        "--resample",
-        choices=tuple(range(1, 11)),
-        type=int,
-        metavar="<N nm>",
-        default=None,
-        help="Resample wavelength to N nm step size, defaults to %(default)s",
-    )
-    return parser
-
-
-def lica() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "--lica",
-        action="store_true",
-        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
     )
     return parser

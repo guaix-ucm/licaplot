@@ -20,6 +20,7 @@ from typing import Iterable, Sequence, Optional, Tuple
 from astropy.table import Table
 import astropy.units as u
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
 from lica import StrEnum
 
@@ -44,6 +45,132 @@ MONOCROMATOR_CHANGES_LABELS = (
 # Cycles through the markers enum for overlapping plots
 markers = itertools.cycle([marker for marker in Markers])
 
+def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> None:
+    """Get the labels for a table, using units if necessary"""
+    xlabel = table.columns[x].name
+    xunit = table.columns[x].unit
+    xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
+    ylabel = table.columns[y].name
+    yunit = (
+        u.pct
+        if percent and table.columns[y].unit == u.dimensionless_unscaled
+        else table.columns[y].unit
+    )
+    ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
+    axes.set_xlabel(xlabel)
+    axes.set_ylabel(ylabel)
+
+
+def plot_single_tables_columns(
+    tables: Sequence[Table],
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    title: Optional[str],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if title is not None:
+        fig.suptitle(title)
+    set_axes_labels(axes, tables[0], x, yy[0], percent)
+    xcol = tables[0].columns[x]
+    for table in tables:
+        for y, legend, marker in zip(yy, legends, markers):
+            ycol = (
+                table.columns[y] * 100 * u.pct
+                if percent and table.columns[y].unit == u.dimensionless_unscaled
+                else table.columns[y]
+            )
+            axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
+    if changes:
+        for change in MONOCROMATOR_CHANGES_LABELS:
+            axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
+    if box:
+        props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+        axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+    axes.grid(True, which="major", color="silver", linestyle="solid")
+    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+    axes.minorticks_on()
+    axes.legend()
+    plt.show()
+
+
+def plot_single_table_column(
+    table: Table,
+    x: int,
+    y: int,
+    legend: str,
+    title: Optional[str],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    plot_single_tables_columns(
+        tables=[table],
+        x=x,
+        yy=[y],
+        legends=[legend],
+        title=title,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        box=box,
+    )
+
+def plot_single_table_columns(
+    table: Table,
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    title: Optional[str],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    plot_single_tables_columns(
+        tables=[table],
+        x=x,
+        yy=yy,
+        legends=legends,
+        title=title,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        box=box,
+    )
+
+def plot_single_tables_column(
+    tables: Sequence[Table],
+    x: int,
+    y: int,
+    legend: str,
+    title: Optional[str],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    plot_single_tables_columns(
+        tables=tables,
+        x=x,
+        yy=[y],
+        legends=[legend],
+        title=title,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        box=box,
+    )
+
+# ==============================================================================
+# ==============================================================================
+# ==============================================================================
+
 
 def get_labels(table: Table, x: int, y: int, percent: bool) -> Tuple[str, str]:
     """Get the labels for a table, using units if necessary"""
@@ -60,6 +187,7 @@ def get_labels(table: Table, x: int, y: int, percent: bool) -> Tuple[str, str]:
     return xlabel, ylabel
 
 
+
 def plot_table_columns(
     table: Table,
     x: int,
@@ -70,7 +198,6 @@ def plot_table_columns(
     percent: Optional[bool],
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
-    
 ) -> None:
     """Plot some columns of the same table in the same Axes using different markers"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -111,7 +238,6 @@ def plot_overlapped(
     percent: Optional[bool],
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
-   
 ) -> None:
     """Plot the same columns of differnet tables in the same Axes using different markers"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -153,7 +279,7 @@ def plot_grid(
     title: Optional[str],
     changes: Optional[bool],
     percent: Optional[bool],
-    linewidth: Optional[int],   
+    linewidth: Optional[int],
 ) -> None:
     """Plot datasets in a grid of axes"""
     marker = marker or next(markers)
