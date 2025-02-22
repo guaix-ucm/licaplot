@@ -345,7 +345,6 @@ def column_plot_parser() -> ArgumentParser:
     return parser
 
 
-
 def add_args(parser: ArgumentParser) -> None:
     subparser = parser.add_subparsers(dest="command")
     parser_single = subparser.add_parser(
@@ -412,6 +411,125 @@ def add_args(parser: ArgumentParser) -> None:
         default=2,
         help="Column number for Y magnitude in CSV, defaults tp %(default)d",
     )
+
+
+def cli_single_table_column(args: Namespace):
+    pass
+
+
+def cli_single_table_columns(args: Namespace):
+    pass
+
+
+def cli_single_tables_column(args: Namespace):
+    pass
+
+
+def cli_single_tables_columns(args: Namespace):
+    pass
+
+
+def cli_multi_table_column(args: Namespace):
+    pass
+
+
+def cli_multi_table_columns(args: Namespace):
+    pass
+
+
+def cli_multi_tables_column(args: Namespace):
+    pass
+
+
+def cli_multi_tables_columns(args: Namespace):
+    pass
+
+
+def add_args(parser: ArgumentParser):
+    sub_s = parser.add_subparsers(required=True)
+    p_s = sub_s.add_parser("single", help="Single Axes plot")
+    p_m = sub_s.add_parser("multiple", help="Multiple Axes plot")
+
+    # ================
+    # Single Axes case
+    # ================
+
+    sub_s_t = p_s.add_subparsers(required=True)
+
+    p_s_t = sub_s_t.add_parser("table", help="Single Axes, single table plot")
+    sub_s_t_c = p_s_t.add_subparsers(required=True)
+    par_s_t_c = sub_s_t_c.add_parser(
+        "column",
+        parents=[
+            prs.title(None,"plotting"),
+            prs.ifile(),
+            prs.xc(),
+            prs.xlim(),
+            prs.yc(),
+            prs.label("plotting"),
+            prs.auxlines(),
+            prs.percent(),
+        ],
+        help="Single Axes, single table, single column plot",
+    )
+    par_s_t_c.set_defaults(func=cli_single_table_column)
+    par_s_t_cc = sub_s_t_c.add_parser(
+        "columns",
+        parents=[
+            prs.title(None,"Plotting"),
+            prs.ifile(),
+            prs.xc(),
+            prs.xlim(),
+            prs.yycc(),
+            prs.labels("plotting"), # Column labels
+            prs.auxlines(),
+            prs.percent(),
+        ],
+        help="Single Axes, single table, multiple columns plot",
+    )
+    par_s_t_cc.set_defaults(func=cli_single_table_columns)
+
+    p_s_tt = sub_s_t.add_parser("tables", help="Single Axes, multiple tables plot")
+    sub_s_tt_c = p_s_tt.add_subparsers(required=True)
+    par_s_tt_c = sub_s_tt_c.add_parser(
+        "column", parents=[], help="Single Axes, multiple tables, single column plot"
+    )
+    par_s_tt_c.set_defaults(func=cli_single_tables_column)
+    par_s_tt_cc = sub_s_tt_c.add_parser(
+        "columns",
+        parents=[],
+        help="Single Axes, multiple tables, multiple columns plot",
+    )
+    par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
+
+    # =============
+    # Multiple Axes
+    # =============
+    sub_m_t = p_m.add_subparsers(required=True)
+
+    p_m_t = sub_m_t.add_parser("table", help="Multiple Axes, single table plot")
+    sub_m_t_c = p_m_t.add_subparsers(required=True)
+    par_m_t_c = sub_m_t_c.add_parser(
+        "column", parents=[], help="Multiple Axes, single table, single column plot"
+    )
+    par_m_t_c.set_defaults(func=cli_multi_table_column)
+    par_m_t_cc = sub_m_t_c.add_parser(
+        "columns", parents=[], help="Multiple Axes, single table, multiple columns plot"
+    )
+    par_m_t_cc.set_defaults(func=cli_multi_table_columns)
+
+    p_m_tt = sub_m_t.add_parser("tables", help="Mulitple Axes, multiple tables plot")
+    sub_m_tt_c = p_m_tt.add_subparsers(required=True)
+    par_m_tt_c = sub_m_tt_c.add_parser(
+        "column", parents=[], help="Mulitple Axes, multiple tables, single column plot"
+    )
+    par_m_tt_c.set_defaults(func=cli_multi_tables_column)
+    par_m_tt_cc = sub_m_tt_c.add_parser(
+        "columns",
+        parents=[],
+        help="Mulitple Axes, multiple tables, multiple columns plot",
+    )
+    par_m_tt_cc.set_defaults(func=cli_multi_tables_columns)
 
 
 # ================

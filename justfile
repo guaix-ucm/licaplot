@@ -91,6 +91,11 @@ plotmul dir="data/filters/Eysdon_RGB": (anew dir)
     lica-filters --console process -d {{dir}} --save
     lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
 
+# Plot CLI test driver
+test axes="" data ="" cols="" args="":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-plot --console {{axes}} {{data}} {{cols}} {{args}}
 
 [private]
 anew dir:

@@ -157,7 +157,7 @@ def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[prs.photod(), prs.ifile(), prs.label("metadata"), prs.tag(), prs.limits(), prs.ndf()],
+        parents=[prs.photod(), prs.ifile(), prs.label("metadata"), prs.tag(), prs.xlim(), prs.ndf()],
         help="Process one CSV filter file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=cli_one_filter)
@@ -171,7 +171,7 @@ def add_args(parser):
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
         "photod",
-        parents=[prs.photod(), prs.tag(), prs.limits()],
+        parents=[prs.photod(), prs.tag(), prs.xlim()],
         help="photodiode subcommand",
     )
     parser_photod.set_defaults(func=cli_photodiode)

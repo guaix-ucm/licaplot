@@ -80,7 +80,7 @@ def tag() -> ArgumentParser:
     return parser
 
 
-def limits() -> ArgumentParser:
+def xlim() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-wl",

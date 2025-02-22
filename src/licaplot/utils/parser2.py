@@ -28,9 +28,11 @@ from lica.lab.ndfilters import NDFilter
 # Own modules and packages
 # ------------------------
 
-# -----------------
-# Auxiliary parsers
-# -----------------
+from .validators import vsequences, vecsv, vecsvfile
+
+# ------------------------
+# Plotting Related parsers
+# ------------------------
 
 
 def ifile() -> ArgumentParser:
@@ -41,33 +43,38 @@ def ifile() -> ArgumentParser:
         type=vfile,
         required=True,
         metavar="<File>",
-        help="CSV sensor/filter input file",
+        help="CSV/ECSV input file",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
     )
     return parser
 
-def idir() -> ArgumentParser:
+
+def ifiles() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-i",
-        "--input-dir",
-        type=vdir,
-        default=os.getcwd(),
-        metavar="<Dir>",
-        help="Input ECSV directory (default %(default)s)",
+        "--input-files",
+        type=vecsvfile,
+        required=True,
+        nargs="+",
+        metavar="<File>",
+        help="CSV/ECSV input files",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
     )
     return parser
 
-def odir() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-o",
-        "--output-dir",
-        type=vdir,
-        default=os.getcwd(),
-        metavar="<Dir>",
-        help="Output ECSV directory (default %(default)s)",
-    )
-    return parser
 
 def title(title: str, purpose: str) -> ArgumentParser:
     """Common options for plotting"""
@@ -78,9 +85,10 @@ def title(title: str, purpose: str) -> ArgumentParser:
         type=str,
         nargs="+",
         default=title,
-        help=f"{purpose} itle",
+        help=f"{purpose} title",
     )
     return parser
+
 
 def titles(title: str, purpose: str) -> ArgumentParser:
     """Common options for plotting"""
@@ -91,7 +99,7 @@ def titles(title: str, purpose: str) -> ArgumentParser:
         type=str,
         nargs="+",
         default=title,
-        help=f"{purpose} itle",
+        help=f"{purpose} title",
     )
     return parser
 
@@ -107,6 +115,7 @@ def label(purpose: str) -> ArgumentParser:
     )
     return parser
 
+
 def labels(purpose: str) -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -118,38 +127,6 @@ def labels(purpose: str) -> ArgumentParser:
     )
     return parser
 
-def tag() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-t",
-        "--tag",
-        type=str,
-        metavar="<tag>",
-        default="A",
-        help="File tag. Sensor/filter tags should match a photodiode tag, defaults value = '%(default)s'",
-    )
-    return parser
-
-
-def limits() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-xl",
-        "--x-low",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_START.value,
-        help="Abcissa axes lower limit, defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-xh",
-        "--x-high",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_END.value,
-        help="Abcissa axes upper limit, defaults to %(default)s",
-    )
-    return parser
 
 def xc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -171,6 +148,7 @@ def xc() -> ArgumentParser:
     )
     return parser
 
+
 def yc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -187,8 +165,10 @@ def yc() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.dimensionless_unscaled,
-        help="Astropy Unit string (ie. nm, A/W, etc.) %(default)s",
+        help="Ordinate axis string (ie. nm, A/W, etc.) %(default)s",
     )
+    return parser
+
 
 def yycc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -201,42 +181,12 @@ def yycc() -> ArgumentParser:
         help="Ordinate axes column numbers in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
-        "-xu",
-        "--x-unit",
+        "-yu",
+        "--y-unit",
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
-        help="Abcissa axes units string (ie. nm, AA) %(default)s",
-    )
-    return parser
-
-def photod() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        choices=[model for model in PhotodiodeModel],
-        default=PhotodiodeModel.OSI,
-        help="Photodiode model, defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-p",
-        "--photod-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV photodiode input file",
-    )
-    return parser
-
-def save() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-s",
-        "--save",
-        action="store_true",
-        help="Save processing file to ECSV",
+        help="Ordinate axis units string (ie. nm, AA) %(default)s",
     )
     return parser
 
@@ -270,8 +220,101 @@ def percent() -> ArgumentParser:
     return parser
 
 
+# -------------
+# Other parsers
+# -------------
 
 
+def idir() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-dir",
+        type=vdir,
+        default=os.getcwd(),
+        metavar="<Dir>",
+        help="Input ECSV directory (default %(default)s)",
+    )
+    return parser
+
+
+def odir() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=vdir,
+        default=os.getcwd(),
+        metavar="<Dir>",
+        help="Output ECSV directory (default %(default)s)",
+    )
+    return parser
+
+
+def tag() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-t",
+        "--tag",
+        type=str,
+        metavar="<tag>",
+        default="A",
+        help="File tag. Sensor/filter tags should match a photodiode tag, defaults value = '%(default)s'",
+    )
+    return parser
+
+
+def xlim() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xl",
+        "--x-low",
+        type=int,
+        metavar="\u03bb",
+        default=BENCH.WAVE_START.value,
+        help="Abcissa axes lower limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-xh",
+        "--x-high",
+        type=int,
+        metavar="\u03bb",
+        default=BENCH.WAVE_END.value,
+        help="Abcissa axes upper limit, defaults to %(default)s",
+    )
+    return parser
+
+
+def photod() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        choices=[model for model in PhotodiodeModel],
+        default=PhotodiodeModel.OSI,
+        help="Photodiode model, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-p",
+        "--photod-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV photodiode input file",
+    )
+    return parser
+
+
+def save() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-s",
+        "--save",
+        action="store_true",
+        help="Save processing file to ECSV",
+    )
+    return parser
 
 
 def ndf() -> ArgumentParser:
@@ -330,6 +373,7 @@ def wave_limits() -> ArgumentParser:
     )
     return parser
 
+
 def resample() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -342,6 +386,7 @@ def resample() -> ArgumentParser:
         help="Resample wavelength to N nm step size, defaults to %(default)s",
     )
     return parser
+
 
 def lica() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
