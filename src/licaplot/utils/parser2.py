@@ -86,6 +86,16 @@ def labels(purpose: str) -> ArgumentParser:
     )
     return parser
 
+def ncols()  -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-nc",
+        "--num-cols",
+        type=int,
+        default=1,
+        help="Number of plotting Axes",
+    )
+    return parser
 
 def xc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

@@ -11,6 +11,7 @@
 # -------------------
 
 import os
+import math
 import logging
 
 # Typing hints
@@ -42,7 +43,9 @@ from .utils.mpl import (
     plot_single_table_column,
     plot_single_table_columns,
     plot_single_tables_column,
-    plot_single_tables_columns,
+    plot_multi_tables_columns,
+    plot_multi_tables_column,
+    plot_multi_table_columns,
 )
 from .utils.validators import vsequences, vecsv, vecsvfile
 from .utils import parser2 as prs
@@ -244,8 +247,6 @@ def cli_single_table_column(args: Namespace):
 
 def cli_single_table_columns(args: Namespace):
     title = " ".join(args.title) if args.title else None
-    if args.label is not None:
-        assert len(args.y_colums) == len(args.label)
     table = build_table_yycc(
         path=args.input_file,
         delimiter=args.delimiter,
@@ -277,8 +278,8 @@ def cli_single_table_columns(args: Namespace):
 
 def cli_single_tables_column(args: Namespace):
     title = " ".join(args.title) if args.title else None
+    labels = list()
     tables = list()
-    labels =list()
     for path in args.input_file:
         table = build_table_yc(
             path=path,
@@ -312,12 +313,8 @@ def cli_single_tables_column(args: Namespace):
         )
 
 
-def cli_multi_table_column(args: Namespace):
-    pass
-
-
 def cli_multi_table_columns(args: Namespace):
-    pass
+    raise NotImplementedError("Not very useful use case")
 
 
 def cli_multi_tables_column(args: Namespace):
@@ -325,13 +322,47 @@ def cli_multi_tables_column(args: Namespace):
 
 
 def cli_multi_tables_columns(args: Namespace):
-    pass
+    titles = list()
+    tables = list()
+    N = len(args.input_file)
+    args_titles = args.title or [None] * N
+    for path, title in zip(args.input_file, args_titles):
+        table = build_table_yycc(
+            path=path,
+            delimiter=args.delimiter,
+            columns=args.columns,
+            xc=args.x_column - 1,
+            xu=args.x_unit,
+            xl=args.x_low,
+            xh=args.x_high,
+            lu=args.limits_unit,
+            lica_trim=args.lica,
+            title=title,
+            label=args.label,
+        )
+        tables.append(table)
+        titles.append(table.meta["title"])
+    yy = [y - 1 for y in args.y_column]
+    labels = args.label or [table[0].columns[y].name[:5] + "." for y in yy]
+    nrows = int(math.ceil(len(table) / args.num_cols))
+    plot_multi_tables_columns(
+        nrows=nrows,
+        ncols=args.num_cols,
+        tables=tables,
+        x=args.x_column - 1,
+        yy=yy,
+        legends=labels,
+        titles=titles,
+        changes=args.changes,
+        percent=args.percent,
+        linewidth=args.lines or 0,
+    )
 
 
 def add_args(parser: ArgumentParser):
     sub_s = parser.add_subparsers(required=True)
     p_s = sub_s.add_parser("single", help="Single Axes plot")
-    p_m = sub_s.add_parser("multiple", help="Multiple Axes plot")
+    p_m = sub_s.add_parser("multi", help="Multiple Axes plot")
 
     # ================
     # Single Axes case
@@ -394,7 +425,6 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, single column plot",
     )
     par_s_tt_c.set_defaults(func=cli_single_tables_column)
-    
 
     # =============
     # Multiple Axes
@@ -403,10 +433,6 @@ def add_args(parser: ArgumentParser):
 
     p_m_t = sub_m_t.add_parser("table", help="Multiple Axes, single table plot")
     sub_m_t_c = p_m_t.add_subparsers(required=True)
-    par_m_t_c = sub_m_t_c.add_parser(
-        "column", parents=[], help="Multiple Axes, single table, single column plot"
-    )
-    par_m_t_c.set_defaults(func=cli_multi_table_column)
     par_m_t_cc = sub_m_t_c.add_parser(
         "columns", parents=[], help="Multiple Axes, single table, multiple columns plot"
     )
@@ -420,7 +446,18 @@ def add_args(parser: ArgumentParser):
     par_m_tt_c.set_defaults(func=cli_multi_tables_column)
     par_m_tt_cc = sub_m_tt_c.add_parser(
         "columns",
-        parents=[],
+        parents=[
+            prs.ncols(),
+            prs.ifiles(),
+            prs.xlim(),
+            prs.lica(),
+            prs.xc(),
+            prs.yycc(),
+            prs.title(None, "Plotting"),
+            prs.labels("plotting"),  # Column labels
+            prs.auxlines(),
+            prs.percent(),
+        ],
         help="Mulitple Axes, multiple tables, multiple columns plot",
     )
     par_m_tt_cc.set_defaults(func=cli_multi_tables_columns)
