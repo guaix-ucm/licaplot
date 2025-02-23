@@ -151,6 +151,7 @@ def photodiode_table(
     path: str,
     model: str,
     tag: str,
+    title: str = None,
     wave_low: int = BENCH.WAVE_START,
     wave_high: int = BENCH.WAVE_END,
     manual: bool = False,
@@ -167,6 +168,7 @@ def photodiode_table(
     name = name_from_file(path)
     table.meta = {
         "label": model,  # label used for display purposes
+        "title": title or f"{model} reference measurements",
         "Processing": {
             "type": PROMETA.PHOTOD.value,
             "model": model,
@@ -203,11 +205,12 @@ def photodiode_ecsv(
     return path
 
 
-def filter_table(path: str, label: str, tag: str = "") -> Table:
+def filter_table(path: str, label: str, title: str = None, tag: str = "") -> Table:
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
         "label": label,  # label used for display purposes
+        "title": title or f"{label} filter measurements",
         "Processing": {
             "type": PROMETA.FILTER.value,
             "tag": tag,
@@ -221,15 +224,15 @@ def filter_table(path: str, label: str, tag: str = "") -> Table:
     return table
 
 
-def filter_ecsv(path: str, label: str, tag: str = "") -> str:
-    table = filter_table(path, label, tag)
+def filter_ecsv(path: str, label: str, title: str = None, tag: str = "") -> str:
+    table = filter_table(path, label, title, tag)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
     return output_path
 
 
-def tessw_table(path: str, label: str, tag: str = "") -> Table:
+def tessw_table(path: str, label: str, title: str = None, tag: str = "") -> Table:
     raw_table = read_tess_csv(path)
     raw_table.remove_column(TWCOL.TIME)
     raw_table.remove_column(TWCOL.SEQ)
@@ -238,6 +241,7 @@ def tessw_table(path: str, label: str, tag: str = "") -> Table:
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
         "label": label,  # label used for display purposes
+        "title": title or f"{label} measurements",
         "Processing": {
             "type": PROMETA.SENSOR.value,
             "tag": tag,
@@ -253,8 +257,8 @@ def tessw_table(path: str, label: str, tag: str = "") -> Table:
     return table
 
 
-def tessw_ecsv(path: str, label: str, tag: str = "") -> str:
-    table = tessw_table(path, label, tag)
+def tessw_ecsv(path: str, label: str, title: str = None, tag: str = "") -> str:
+    table = tessw_table(path, label, title, tag)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)

@@ -180,7 +180,8 @@ def build_table_yc(
     if col_x.unit is None:
         table[col_x.name] = table[col_x.name] * xu
     table.meta["label"] = table.meta.get("label") or label
-    table.meta["title"] = table.meta.get("title") or title or table.meta["label"]
+    table.meta["title"] = table.meta.get("title") or title
+    log.info(table.info)
     log.info(table.meta)
     return table
 
@@ -201,7 +202,7 @@ def build_table_yycc(
     table = read_csv(path, columns, delimiter)
     table = trim_table(table, xc, xu, xl, xh, lu, lica_trim)
     table.meta["label"] = table.meta.get("label") or label
-    table.meta["title"] = table.meta.get("title") or title or table.meta["label"]
+    table.meta["title"] = table.meta.get("title") or title
     log.info(table.info)
     log.info(table.meta)
     return table
@@ -240,6 +241,7 @@ def cli_single_table_column(args: Namespace):
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
+            marker=args.marker,
         )
 
 
@@ -271,6 +273,7 @@ def cli_single_table_columns(args: Namespace):
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
+            markers=args.marker,
         )
 
 
@@ -308,6 +311,7 @@ def cli_single_tables_column(args: Namespace):
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
+            markers=args.marker,
         )
 
 
@@ -355,6 +359,7 @@ def cli_multi_tables_columns(args: Namespace):
         changes=args.changes,
         percent=args.percent,
         linewidth=args.lines or 0,
+        markers=args.marker
     )
 
 
@@ -383,6 +388,7 @@ def add_args(parser: ArgumentParser):
             prs.title(None, "plotting"),
             prs.auxlines(),
             prs.percent(),
+            prs.marker(),
         ],
         help="Single Axes, single table, single column plot",
     )
@@ -399,6 +405,7 @@ def add_args(parser: ArgumentParser):
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
             prs.percent(),
+            prs.markers(),
         ],
         help="Single Axes, single table, multiple columns plot",
     )
@@ -419,6 +426,7 @@ def add_args(parser: ArgumentParser):
             prs.labels("plotting"),
             prs.auxlines(),
             prs.percent(),
+            prs.markers(),
         ],
         help="Single Axes, multiple tables, single column plot",
     )
@@ -455,6 +463,7 @@ def add_args(parser: ArgumentParser):
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
             prs.percent(),
+            prs.markers(),
         ],
         help="Mulitple Axes, multiple tables, multiple columns plot",
     )

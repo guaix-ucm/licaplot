@@ -29,7 +29,7 @@ from lica.lab.ndfilters import NDFilter
 # ------------------------
 
 from .validators import vecsvfile
-
+from .mpl import Markers
 # ------------------------
 # Plotting Related parsers
 # ------------------------
@@ -59,6 +59,32 @@ def titles(title: str, purpose: str) -> ArgumentParser:
         nargs="+",
         default=title,
         help=f"{purpose} title",
+    )
+    return parser
+
+def marker() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--marker",
+        type=Markers,
+        default=None,
+        help="Plot line marker, defaults to %(default)s",
+    )
+    return parser
+
+
+def markers() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--marker",
+        type=Markers,
+        nargs="+",
+        default=None,
+        help="Plot line markers, defaults to %(default)s",
     )
     return parser
 

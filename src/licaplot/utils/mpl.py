@@ -42,10 +42,6 @@ MONOCROMATOR_CHANGES_LABELS = (
     {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
 )
 
-# Cycles through the Markers enum for overlapping plots
-MARKERS = itertools.cycle([marker for marker in Markers])
-
-
 def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> None:
     """Get the labels for a table, using units if necessary"""
     xlabel = table.columns[x].name
@@ -71,6 +67,7 @@ def plot_single_tables_columns(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     assert len(legends) == len(yy)
@@ -79,8 +76,10 @@ def plot_single_tables_columns(
         fig.suptitle(title)
     set_axes_labels(axes, tables[0], x, yy[0], percent)
     xcol = tables[0].columns[x]
+    markers = markers or [marker for marker in Markers]
+    markers = itertools.cycle(markers)
     for table in tables:
-        for y, legend, marker in zip(yy, legends, MARKERS):
+        for y, legend, marker in zip(yy, legends, markers):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -108,6 +107,7 @@ def plot_single_table_column(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
+    marker: Optional[Markers],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     plot_single_tables_columns(
@@ -119,6 +119,7 @@ def plot_single_table_column(
         changes=changes,
         percent=percent,
         linewidth=linewidth,
+        markers=[marker] if marker is not None else None,
         box=box,
     )
 
@@ -132,6 +133,7 @@ def plot_single_table_columns(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     plot_single_tables_columns(
@@ -143,6 +145,7 @@ def plot_single_table_columns(
         changes=changes,
         percent=percent,
         linewidth=linewidth,
+        markers=markers,
         box=box,
     )
 
@@ -156,6 +159,7 @@ def plot_single_tables_column(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     assert len(legends) == len(tables)
@@ -164,7 +168,9 @@ def plot_single_tables_column(
         fig.suptitle(title)
     set_axes_labels(axes, tables[0], x, y, percent)
     xcol = tables[0].columns[x]
-    for table, legend, marker in zip(tables, legends, MARKERS):
+    markers = markers or [marker for marker in Markers]
+    markers = itertools.cycle(markers)
+    for table, legend, marker in zip(tables, legends, markers):
         ycol = (
             table.columns[y] * 100 * u.pct
             if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -195,6 +201,7 @@ def plot_multi_tables_columns(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     N = len(tables)
@@ -209,7 +216,9 @@ def plot_multi_tables_columns(
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
-        for y, legend, marker in zip(yy, legends, MARKERS):
+        markers2 = markers or [marker for marker in Markers]
+        markers2 = itertools.cycle(markers2)
+        for y, legend, marker in zip(yy, legends, markers2):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -279,7 +288,8 @@ def plot_multi_table_columns(
     indexes = list(range(nrows * ncols))
     axes = axes.flatten() if len(indexes) > 1 else [axes]
     xcol = table.columns[x]
-    marker = next(MARKERS)
+    markers = itertools.cycle([marker for marker in Markers])
+    marker = next(markers)
     N = len(yy)
     for i, ax, title, legend, y in zip(indexes, axes, titles, legends, yy):
         set_axes_labels(ax, table, x, y, percent)
