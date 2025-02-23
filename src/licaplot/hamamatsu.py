@@ -39,7 +39,7 @@ from lica.lab.photodiode import Hamamatsu
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import plot_overlapped
+from .utils.mpl import plot_single_table_column, plot_single_tables_column
 
 # -----------------------
 # Module global variables
@@ -180,16 +180,12 @@ def cli_stage1(args: Namespace) -> None:
     if args.plot:
         x = table.colnames.index(COL.WAVE)
         y = table.colnames.index(COL.RESP)
-        plot_overlapped(
-            title=f"{args.title} #{table.meta['Serial']}",
-            tables=[table],
-            labels=["NPL Calib."],
-            filters=False,
+        plot_single_table_column(
+            table=table,
             x=x,
             y=y,
-            linewidth=0,
+            title=f"{args.title} #{table.meta['Serial']}, NPL Calibrated",
         )
-
 
 def cli_stage2(args: Namespace) -> None:
     """Iterative merge curves and saves the combined results"""
@@ -204,24 +200,20 @@ def cli_stage2(args: Namespace) -> None:
         y=args.y,
         threshold=threshold,
     )
-    plot_overlapped(
-        title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
+    plot_single_tables_column(
         tables=[npl_table, datasheet_table],
-        labels=["NPL Calib", "Datasheet"],
-        filters=False,
         x=x,
         y=y,
-        linewidth=0,
+        title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
+        legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
-    plot_overlapped(
-        title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
+    plot_single_tables_column(
         tables=[npl_table, sliced_table],
-        labels=["NPL Calib", "Datasheet"],
-        filters=False,
         x=x,
         y=y,
-        linewidth=0,
+        title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
+        legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     if args.save:
@@ -245,14 +237,16 @@ def cli_stage3(args: Namespace) -> None:
     if args.plot:
         x = interpolated_table.colnames.index(COL.WAVE)
         y = interpolated_table.colnames.index(COL.RESP)
-        plot_overlapped(
-            title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
+        plot_single_tables_column(
             tables=[interpolated_table, table],
-            labels=["Interp.", "NPL+Datasheet"],
-            filters=False,
             x=x,
             y=y,
+            title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
+            legends=["Interp.", "NPL+Datasheet"],
+            changes=False,
             linewidth=0,
+            markers=None,
+            box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
 
 
@@ -276,17 +270,17 @@ def cli_pipeline(args: Namespace) -> None:
     if args.plot:
         x = interpolated_table.colnames.index(COL.WAVE)
         y = interpolated_table.colnames.index(COL.RESP)
-        plot_overlapped(
-            title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
+        plot_single_tables_column(
             tables=[interpolated_table, npl_table, sliced_table],
-            labels=["Interp.", "NPL Calib.", "Datasheet"],
-            filters=False,
             x=x,
             y=y,
+            legends=["Interp.", "NPL Calib.", "Datasheet"],
+            title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
+            changes=False,
             linewidth=0,
+            markers=None,
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
-
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS

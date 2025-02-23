@@ -74,6 +74,16 @@ env-bak drive=def_drive: (check_mnt drive) (env-backup join(drive, project))
 # Restore .env from storage unit
 env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 
+hama1:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-hama --console --trace stage1 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL.csv
+
+hama2:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-hama --console --trace stage2 --plot --save -i data/hamamatsu/S2281-01-Responsivity-NPL.ecsv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
+
 plotsin dir="data/filters/Eysdon_RGB": (anew dir)
     #!/usr/bin/env bash
     set -exuo pipefail
