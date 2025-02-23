@@ -81,7 +81,7 @@ def photodiode(
 def filters(input_path: str, label: str = "", tag: str = "",) -> None:
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
-    return processing.filter_ecsv(input_path, label, tag)
+    return processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
 
 
 def one_filter(
@@ -97,7 +97,7 @@ def one_filter(
     tag = tag or processing.random_tag()
     wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
     processing.photodiode_ecsv(photod_path, model, tag, wave_low, wave_high)
-    result = processing.filter_ecsv(input_path, label, tag)
+    result = processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)

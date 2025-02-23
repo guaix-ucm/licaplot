@@ -95,6 +95,7 @@ plotmul dir="data/filters/Eysdon_RGB": (anew dir)
 test_s_t_c dir="data/filters/Eysdon_RGB" args="":
     #!/usr/bin/env bash
     set -exuo pipefail
+    rm {{dir}}/*.ecsv
     lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
     lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
     lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
@@ -105,6 +106,7 @@ test_s_t_c dir="data/filters/Eysdon_RGB" args="":
 test_s_tt_c dir="data/filters/Eysdon_RGB" args="":
     #!/usr/bin/env bash
     set -exuo pipefail
+    rm {{dir}}/*.ecsv
     lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
     lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
     lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
