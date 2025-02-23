@@ -89,7 +89,7 @@ plotmul dir="data/filters/Eysdon_RGB": (anew dir)
     lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
     lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
     lica-filters --console process -d {{dir}} --save
-    lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --changes --lines
+    lica-plot --console single tables column -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv -yc 4  --changes --lines
 
 # Plot CLI test driver
 test_s_t_c dir="data/filters/Eysdon_RGB" args="":

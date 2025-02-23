@@ -151,13 +151,12 @@ def photodiode_table(
     path: str,
     model: str,
     tag: str,
-    title: str = None,
-    x_low: int = BENCH.WAVE_START,
-    x_high: int = BENCH.WAVE_END,
+    title: str,
+    x_low: int,
+    x_high: int,
     manual: bool = False,
 ) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
-
     table = read_manual_csv(path) if manual else read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
@@ -178,6 +177,7 @@ def photodiode_table(
         },
         "History": [],
     }
+    log.info(len(table))
     if history:
         log.info("Trinming %s to [%d-%d] nm", name, x_low, x_high)
         table.meta["History"].append(history)
@@ -194,18 +194,21 @@ def photodiode_ecsv(
     path: str,
     model: str,
     tag: str,
-    x_low: int = BENCH.WAVE_START,
-    x_high: int = BENCH.WAVE_END,
+    title: str,
+    x_low: int,
+    x_high: int,
     manual=False,
 ) -> str:
-    table = photodiode_table(path, model, tag, x_low, x_high, manual)
+    table = photodiode_table(
+        path=path, model=model, tag=tag, title=title, x_low=x_low, x_high=x_high, manual=manual
+    )
     output_path = str(equivalent_ecsv(path))
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
     return path
 
 
-def filter_table(path: str, label: str, title: str = None, tag: str = "") -> Table:
+def filter_table(path: str, label: str, title: str, tag: str) -> Table:
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     table.meta = {
@@ -225,7 +228,7 @@ def filter_table(path: str, label: str, title: str = None, tag: str = "") -> Tab
 
 
 def filter_ecsv(path: str, label: str, title: str = None, tag: str = "") -> str:
-    table = filter_table(path, label, title, tag)
+    table = filter_table(path=path, label=label, title=title, tag=tag)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)

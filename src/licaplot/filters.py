@@ -75,10 +75,16 @@ def photodiode(
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", photod_path)
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
-    return processing.photodiode_ecsv(photod_path, model, tag, x_low, x_high)
+    return processing.photodiode_ecsv(
+        path=photod_path, model=model, title=None, tag=tag, x_low=x_low, x_high=x_high
+    )
 
 
-def filters(input_path: str, label: str = "", tag: str = "",) -> None:
+def filters(
+    input_path: str,
+    label: str = "",
+    tag: str = "",
+) -> None:
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
     return processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
@@ -88,16 +94,20 @@ def one_filter(
     input_path: str,
     photod_path: str,
     model: str,
-    label: str = "",
-    tag: str = "",
-    x_low: int = BENCH.WAVE_START,
-    x_high: int = BENCH.WAVE_END,
-    ndf: NDFilter = None,
+    label: str,
+    title: str,
+    tag: str,
+    x_low: int,
+    x_high: int,
+    ndf: NDFilter,
 ) -> str:
-    tag = tag or processing.random_tag()
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
-    processing.photodiode_ecsv(photod_path, model, tag, x_low, x_high)
-    result = processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
+
+    tag = tag or processing.random_tag()
+    processing.photodiode_ecsv(
+        path=photod_path, model=model, title=None, tag=tag, x_low=x_low, x_high=x_high
+    )
+    result = processing.filter_ecsv(path=input_path, label=label, title=title, tag=tag)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)
@@ -130,14 +140,15 @@ def cli_filters(args: Namespace) -> None:
 def cli_one_filter(args: Namespace) -> None:
     label = " ".join(args.label) if args.label else ""
     one_filter(
-        args.input_file,
-        args.photod_file,
-        args.model,
-        label,
-        args.tag,
-        args.x_low,
-        args.x_high,
-        args.ndf,
+        input_path=args.input_file,
+        photod_path=args.photod_file,
+        model=args.model,
+        label=label,
+        title=None,
+        tag=args.tag,
+        x_low=args.x_low,
+        x_high=args.x_high,
+        ndf=args.ndf,
     )
 
 
@@ -157,7 +168,14 @@ def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_one = subparser.add_parser(
         "one",
-        parents=[prs.photod(), prs.ifile(), prs.label("metadata"), prs.tag(), prs.xlim(), prs.ndf()],
+        parents=[
+            prs.photod(),
+            prs.ifile(),
+            prs.label("metadata"),
+            prs.tag(),
+            prs.xlim(),
+            prs.ndf(),
+        ],
         help="Process one CSV filter file with one CSV photodiode file",
     )
     parser_one.set_defaults(func=cli_one_filter)
