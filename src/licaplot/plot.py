@@ -11,8 +11,8 @@
 # -------------------
 
 import os
-import math
 import logging
+from math import ceil, sqrt
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
@@ -344,10 +344,11 @@ def cli_multi_tables_columns(args: Namespace):
         titles.append(table.meta["title"])
     yy = [y - 1 for y in args.y_column]
     labels = args.label or [table[0].columns[y].name[:5] + "." for y in yy]
-    nrows = int(math.ceil(len(table) / args.num_cols))
+    ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
+    nrows = int(ceil(len(tables) / ncols))
     plot_multi_tables_columns(
         nrows=nrows,
-        ncols=args.num_cols,
+        ncols=ncols,
         tables=tables,
         x=args.x_column - 1,
         yy=yy,

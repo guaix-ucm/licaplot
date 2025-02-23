@@ -19,7 +19,7 @@ from argparse import ArgumentParser
 
 import astropy.units as u
 
-from lica.validators import vfile, vdir
+from lica.validators import vfile, vdir, vnat
 from lica.lab import BENCH
 from lica.lab.photodiode import PhotodiodeModel
 from lica.lab.ndfilters import NDFilter
@@ -28,7 +28,7 @@ from lica.lab.ndfilters import NDFilter
 # Own modules and packages
 # ------------------------
 
-from .validators import vsequences,  vecsvfile
+from .validators import vecsvfile
 
 # ------------------------
 # Plotting Related parsers
@@ -91,8 +91,8 @@ def ncols()  -> ArgumentParser:
     parser.add_argument(
         "-nc",
         "--num-cols",
-        type=int,
-        default=1,
+        type=vnat,
+        default=None,
         help="Number of plotting Axes",
     )
     return parser
@@ -102,10 +102,10 @@ def xc() -> ArgumentParser:
     parser.add_argument(
         "-xc",
         "--x-column",
-        type=int,
+        type=vnat,
         metavar="<N>",
         default=1,
-        help="Abcissa axes column number in CSV/ECSV, defaults to %(default)d",
+        help="Abcissa axes column (1,2..) in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-xu",
@@ -123,10 +123,10 @@ def yc() -> ArgumentParser:
     parser.add_argument(
         "-yc",
         "--y-column",
-        type=int,
+        type=vnat,
         metavar="<N>",
         default=2,
-        help="Ordinate axis column number in CSV/ECSV, defaults to %(default)d",
+        help="Ordinate axis column (1,2..) in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -144,10 +144,10 @@ def yycc() -> ArgumentParser:
     parser.add_argument(
         "-yc",
         "--y-column",
-        type=int,
+        type=vnat,
         nargs="+",
         metavar="<N>",
-        help="Ordinate axes column numbers in CSV/ECSV, defaults to %(default)d",
+        help="Ordinate axes columns (1,2..) in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -258,7 +258,7 @@ def xlim() -> ArgumentParser:
     parser.add_argument(
         "-xl",
         "--x-low",
-        type=int,
+        type=vnat,
         metavar="<LOW>",
         default=BENCH.WAVE_START.value,
         help="Abcissa axes lower limit, defaults to %(default)s",
@@ -266,7 +266,7 @@ def xlim() -> ArgumentParser:
     parser.add_argument(
         "-xh",
         "--x-high",
-        type=int,
+        type=vnat,
         metavar="<HIGH>",
         default=BENCH.WAVE_END.value,
         help="Abcissa axes upper limit, defaults to %(default)s",
@@ -298,7 +298,7 @@ def resample() -> ArgumentParser:
         "-r",
         "--resample",
         choices=tuple(range(1, 11)),
-        type=int,
+        type=vnat,
         metavar="<N nm>",
         default=None,
         help="Resample wavelength to N nm step size, defaults to %(default)s",
