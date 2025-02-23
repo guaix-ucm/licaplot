@@ -152,8 +152,8 @@ def photodiode_table(
     model: str,
     tag: str,
     title: str = None,
-    wave_low: int = BENCH.WAVE_START,
-    wave_high: int = BENCH.WAVE_END,
+    x_low: int = BENCH.WAVE_START,
+    x_high: int = BENCH.WAVE_END,
     manual: bool = False,
 ) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
@@ -161,8 +161,8 @@ def photodiode_table(
     table = read_manual_csv(path) if manual else read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
-    if not (wave_low == BENCH.WAVE_START and wave_high == BENCH.WAVE_END):
-        history = f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
+    if not (x_low == BENCH.WAVE_START and x_high == BENCH.WAVE_END):
+        history = f"Trimmed to [{x_low:04d}-{x_high:04d}] nm wavelength range"
     else:
         history = None
     name = name_from_file(path)
@@ -179,13 +179,13 @@ def photodiode_table(
         "History": [],
     }
     if history:
-        log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
+        log.info("Trinming %s to [%d-%d] nm", name, x_low, x_high)
         table.meta["History"].append(history)
-        table.meta["Processing"]["wave_low"] = wave_low
-        table.meta["Processing"]["wave_high"] = wave_high
+        table.meta["Processing"]["x_low"] = x_low
+        table.meta["Processing"]["x_high"] = x_high
     if not manual:
         table.remove_column(TBCOL.INDEX)
-    table = table[(table[COL.WAVE] >= wave_low) & (table[COL.WAVE] <= wave_high)]
+    table = table[(table[COL.WAVE] >= x_low) & (table[COL.WAVE] <= x_high)]
     log.info("Processing metadata is added: %s", table.meta)
     return table
 
@@ -194,11 +194,11 @@ def photodiode_ecsv(
     path: str,
     model: str,
     tag: str,
-    wave_low: int = BENCH.WAVE_START,
-    wave_high: int = BENCH.WAVE_END,
+    x_low: int = BENCH.WAVE_START,
+    x_high: int = BENCH.WAVE_END,
     manual=False,
 ) -> str:
-    table = photodiode_table(path, model, tag, wave_low, wave_high, manual)
+    table = photodiode_table(path, model, tag, x_low, x_high, manual)
     output_path = str(equivalent_ecsv(path))
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
@@ -389,15 +389,15 @@ def active_process(
                 log.warn("Skipping %s. Already been processed with %s", name, model)
                 continue
             log.info("Processing %s with photodidode %s", name, model)
-            wave_low = photod_table.meta["Processing"].get("wave_low")
-            wave_high = photod_table.meta["Processing"].get("wave_high")
-            if wave_low:
-                log.info("Trimming %s to [%d-%d] nm", name, wave_low, wave_high)
+            x_low = photod_table.meta["Processing"].get("x_low")
+            x_high = photod_table.meta["Processing"].get("x_high")
+            if x_low:
+                log.info("Trimming %s to [%d-%d] nm", name, x_low, x_high)
                 sensor_table = sensor_table[
-                    (sensor_table[COL.WAVE] >= wave_low) & (sensor_table[COL.WAVE] <= wave_high)
+                    (sensor_table[COL.WAVE] >= x_low) & (sensor_table[COL.WAVE] <= x_high)
                 ]
                 sensor_table.meta["History"].append(
-                    f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
+                    f"Trimmed to [{x_low:04d}-{x_high:04d}] nm wavelength range"
                 )
                 sensor_dict[key][i] = sensor_table  # Necessary to capture the new table in the dict
             # Now do the math
@@ -434,15 +434,15 @@ def passive_process(
                 log.warn("Skipping %s. Already been processed with %s", name, model)
                 continue
             log.info("Processing %s with photodidode %s", name, model)
-            wave_low = photod_table.meta["Processing"].get("wave_low")
-            wave_high = photod_table.meta["Processing"].get("wave_high")
-            if wave_low:
-                log.info("Trinming %s to [%d-%d] nm", name, wave_low, wave_high)
+            x_low = photod_table.meta["Processing"].get("x_low")
+            x_high = photod_table.meta["Processing"].get("x_high")
+            if x_low:
+                log.info("Trinming %s to [%d-%d] nm", name, x_low, x_high)
                 filter_table = filter_table[
-                    (filter_table[COL.WAVE] >= wave_low) & (filter_table[COL.WAVE] <= wave_high)
+                    (filter_table[COL.WAVE] >= x_low) & (filter_table[COL.WAVE] <= x_high)
                 ]
                 filter_table.meta["History"].append(
-                    f"Trimmed to [{wave_low:04d}-{wave_high:04d}] nm wavelength range"
+                    f"Trimmed to [{x_low:04d}-{x_high:04d}] nm wavelength range"
                 )
                 filter_dict[key][i] = filter_table  # Necessary to capture the new table in the dict
             filter_table[PROCOL.PHOTOD_CURRENT] = photod_table[TBCOL.CURRENT]

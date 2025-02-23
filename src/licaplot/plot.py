@@ -47,8 +47,8 @@ from .utils.mpl import (
     plot_multi_tables_column,
     plot_multi_table_columns,
 )
-from .utils.validators import vsequences, vecsv, vecsvfile
-from .utils import parser2 as prs
+
+from .utils import parser as prs
 
 # -----------------------
 # Module global variables

@@ -19,7 +19,7 @@ from argparse import ArgumentParser
 
 import astropy.units as u
 
-from lica.validators import vfile, vdir
+from lica.validators import vfile, vdir, vnat
 from lica.lab import BENCH
 from lica.lab.photodiode import PhotodiodeModel
 from lica.lab.ndfilters import NDFilter
@@ -28,22 +28,66 @@ from lica.lab.ndfilters import NDFilter
 # Own modules and packages
 # ------------------------
 
-# -----------------
-# Auxiliary parsers
-# -----------------
+from .validators import vecsvfile
+from .mpl import Markers
 
+# ------------------------
+# Plotting Related parsers
+# ------------------------
 
-def ifile() -> ArgumentParser:
+def title(title: str, purpose: str) -> ArgumentParser:
+    """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-i",
-        "--input-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV sensor/filter input file",
+        "-t",
+        "--title",
+        type=str,
+        nargs="+",
+        default=title,
+        help=f"{purpose} title",
     )
     return parser
+
+
+def titles(title: str, purpose: str) -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-t",
+        "--title",
+        type=str,
+        nargs="+",
+        default=title,
+        help=f"{purpose} title",
+    )
+    return parser
+
+def marker() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--marker",
+        type=Markers,
+        default=None,
+        help="Plot line marker, defaults to %(default)s",
+    )
+    return parser
+
+
+def markers() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--marker",
+        type=Markers,
+        nargs="+",
+        default=None,
+        help="Plot line markers, defaults to %(default)s",
+    )
+    return parser
+
 
 def label(purpose: str) -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -56,6 +100,7 @@ def label(purpose: str) -> ArgumentParser:
     )
     return parser
 
+
 def labels(purpose: str) -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -67,81 +112,76 @@ def labels(purpose: str) -> ArgumentParser:
     )
     return parser
 
-def tag() -> ArgumentParser:
+def ncols()  -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-t",
-        "--tag",
-        type=str,
-        metavar="<tag>",
-        default="A",
-        help="File tag. Sensor/filter tags should match a photodiode tag, defaults value = '%(default)s'",
+        "-nc",
+        "--num-cols",
+        type=vnat,
+        default=None,
+        help="Number of plotting Axes",
+    )
+    return parser
+
+def xc() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xc",
+        "--x-column",
+        type=vnat,
+        metavar="<N>",
+        default=1,
+        help="Abcissa axes column (1,2..) in CSV/ECSV, defaults to %(default)d",
+    )
+    parser.add_argument(
+        "-xu",
+        "--x-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Abcissa axes units string (ie. nm, AA), defaults to %(default)s",
     )
     return parser
 
 
-def xlim() -> ArgumentParser:
+def yc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-wl",
-        "--wave-low",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_START.value,
-        help="Wavelength lower limit (nm), defaults to %(default)s",
+        "-yc",
+        "--y-column",
+        type=vnat,
+        metavar="<N>",
+        default=2,
+        help="Ordinate axis column (1,2..) in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
-        "-wh",
-        "--wave-high",
-        type=int,
-        metavar="\u03bb",
-        default=BENCH.WAVE_END.value,
-        help="Wavelength upper limit (nm), defaults to %(default)s",
+        "-yu",
+        "--y-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.dimensionless_unscaled,
+        help="Ordinate axis string (ie. nm, A/W, etc.), defaults to %(default)s",
     )
     return parser
 
 
-def photod() -> ArgumentParser:
+def yycc() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        choices=[model for model in PhotodiodeModel],
-        default=PhotodiodeModel.OSI,
-        help="Photodiode model, defaults to %(default)s",
+        "-yc",
+        "--y-column",
+        type=vnat,
+        nargs="+",
+        metavar="<N>",
+        help="Ordinate axes columns (1,2..) in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
-        "-p",
-        "--photod-file",
-        type=vfile,
-        required=True,
-        metavar="<File>",
-        help="CSV photodiode input file",
-    )
-    return parser
-
-
-def folder() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-d",
-        "--directory",
-        type=vdir,
-        required=True,
-        metavar="<Dir>",
-        help="ECSV input directory",
-    )
-    return parser
-
-
-def save() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-s",
-        "--save",
-        action="store_true",
-        help="Save processing file to ECSV",
+        "-yu",
+        "--y-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Ordinate axis units string (ie. nm, AA) %(default)s",
     )
     return parser
 
@@ -149,7 +189,7 @@ def save() -> ArgumentParser:
 def auxlines() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "--filters",
+        "--changes",
         action="store_true",
         default=False,
         help="Plot Monocromator filter changes (default: %(default)s)",
@@ -175,33 +215,138 @@ def percent() -> ArgumentParser:
     return parser
 
 
-def plot_parser(title: str) -> ArgumentParser:
-    """Common options for plotting"""
+# ----------------------
+# Building Table parsers
+# ----------------------
+
+
+def ifile() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-t",
-        "--title",
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV/ECSV input file",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
         type=str,
-        default=title,
-        help="Plot title",
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        default=None,
+        nargs="+",
+        metavar="<NAME>",
+        help="Optional ordered list of CSV column names, if necessary (default %(default)s)",
     )
     return parser
 
 
-
-
-def ndf() -> ArgumentParser:
+def ifiles() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-n",
-        "--ndf",
-        type=NDFilter,
-        choices=NDFilter,
+        "-i",
+        "--input-file",
+        type=vecsvfile,
+        required=True,
+        nargs="+",
+        metavar="<File>",
+        help="CSV/ECSV input files",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
         default=None,
-        help="Neutral Density Filter model, defaults to %(default)s",
+        nargs="+",
+        metavar="<NAME>",
+        help="Optional ordered list of CSV column names, if necessary (default %(default)s)",
     )
     return parser
 
+
+def xlim() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xl",
+        "--x-low",
+        type=vnat,
+        metavar="<LOW>",
+        default=BENCH.WAVE_START.value,
+        help="Abcissa axes lower limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-xh",
+        "--x-high",
+        type=vnat,
+        metavar="<HIGH>",
+        default=BENCH.WAVE_END.value,
+        help="Abcissa axes upper limit, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-lu",
+        "--limits-unit",
+        type=u.Unit,
+        metavar="<Unit>",
+        default=u.nm,
+        help="Abscissa limits units (ie. nm, A/W, etc.), defaults to %(default)s",
+    )
+    return parser
+
+
+def lica() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--lica",
+        action="store_true",
+        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
+    )
+    return parser
+
+### ONLY USED IN THE CASE OF  SINGLE COLUMN PLOTS
+def resample() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-r",
+        "--resample",
+        choices=tuple(range(1, 11)),
+        type=vnat,
+        metavar="<N nm>",
+        default=None,
+        help="Resample wavelength to N nm step size, defaults to %(default)s",
+    )
+    return parser
+
+
+# -------------
+# Other parsers
+# -------------
+
+def folder() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-d",
+        "--directory",
+        type=vdir,
+        required=True,
+        metavar="<Dir>",
+        help="ECSV input directory",
+    )
+    return parser
 
 def idir() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -215,6 +360,7 @@ def idir() -> ArgumentParser:
     )
     return parser
 
+
 def odir() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -227,67 +373,60 @@ def odir() -> ArgumentParser:
     )
     return parser
 
-def resol() -> ArgumentParser:
+
+def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-r",
-        "--resolution",
-        type=int,
-        choices=tuple(range(1, 11)),
-        default=1,
-        metavar="<N nm>",
-        help="Resolution (defaults to %(default)d nm)",
+        "-t",
+        "--tag",
+        type=str,
+        metavar="<tag>",
+        default="A",
+        help="File tag. Sensor/filter tags should match a photodiode tag, defaults value = '%(default)s'",
     )
     return parser
 
 
-def wave_limits() -> ArgumentParser:
-    """Generic options dealing with wavelength trimming & resampling and its units"""
+def photod() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-wl",
-        "--wave-low",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength lower limit, (if not specified, taken from CSV), defaults to %(default)s",
+        "-m",
+        "--model",
+        type=str,
+        choices=[model for model in PhotodiodeModel],
+        default=PhotodiodeModel.OSI,
+        help="Photodiode model, defaults to %(default)s",
     )
     parser.add_argument(
-        "-wh",
-        "--wave-high",
-        type=float,
-        metavar="\u03bb",
-        default=None,
-        help="Wavelength upper limit, (if not specified, taken from CSV), defaults to %(default)s",
-    )
-    parser.add_argument(
-        "-wlu",
-        "--wave-limit-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Wavelength limits unit string (ie. nm, AA) %(default)s",
+        "-p",
+        "--photod-file",
+        type=vfile,
+        required=True,
+        metavar="<File>",
+        help="CSV photodiode input file",
     )
     return parser
 
-def resample() -> ArgumentParser:
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-r",
-        "--resample",
-        choices=tuple(range(1, 11)),
-        type=int,
-        metavar="<N nm>",
-        default=None,
-        help="Resample wavelength to N nm step size, defaults to %(default)s",
-    )
-    return parser
 
-def lica() -> ArgumentParser:
+def save() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "--lica",
+        "-s",
+        "--save",
         action="store_true",
-        help="Trims wavelength to LICA Optical Bench range [350nm-1050nm]",
+        help="Save processing file to ECSV",
+    )
+    return parser
+
+
+def ndf() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-n",
+        "--ndf",
+        type=NDFilter,
+        choices=NDFilter,
+        default=None,
+        help="Neutral Density Filter model, defaults to %(default)s",
     )
     return parser
