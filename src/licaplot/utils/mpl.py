@@ -42,8 +42,8 @@ MONOCROMATOR_CHANGES_LABELS = (
     {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
 )
 
-# Cycles through the markers enum for overlapping plots
-markers = itertools.cycle([marker for marker in Markers])
+# Cycles through the Markers enum for overlapping plots
+MARKERS = itertools.cycle([marker for marker in Markers])
 
 
 def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> None:
@@ -80,7 +80,7 @@ def plot_single_tables_columns(
     set_axes_labels(axes, tables[0], x, yy[0], percent)
     xcol = tables[0].columns[x]
     for table in tables:
-        for y, legend, marker in zip(yy, legends, markers):
+        for y, legend, marker in zip(yy, legends, MARKERS):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -164,7 +164,7 @@ def plot_single_tables_column(
         fig.suptitle(title)
     set_axes_labels(axes, tables[0], x, y, percent)
     xcol = tables[0].columns[x]
-    for table, legend, marker in zip(tables, legends, markers):
+    for table, legend, marker in zip(tables, legends, MARKERS):
         ycol = (
             table.columns[y] * 100 * u.pct
             if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -209,7 +209,7 @@ def plot_multi_tables_columns(
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
-        for y, legend, marker in zip(yy, legends, markers):
+        for y, legend, marker in zip(yy, legends, MARKERS):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -279,7 +279,7 @@ def plot_multi_table_columns(
     indexes = list(range(nrows * ncols))
     axes = axes.flatten() if len(indexes) > 1 else [axes]
     xcol = table.columns[x]
-    marker = next(markers)
+    marker = next(MARKERS)
     N = len(yy)
     for i, ax, title, legend, y in zip(indexes, axes, titles, legends, yy):
         set_axes_labels(ax, table, x, y, percent)
@@ -334,7 +334,7 @@ def plot_table_columns(
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    """Plot some columns of the same table in the same Axes using different markers"""
+    """Plot some columns of the same table in the same Axes using different MARKERS"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
@@ -342,7 +342,7 @@ def plot_table_columns(
     xlabel, ylabel = get_labels(table, x, y[0], percent)
     axes.set_xlabel(xlabel)
     axes.set_ylabel(ylabel)
-    for yy, label, marker in zip(y, labels, markers):
+    for yy, label, marker in zip(y, labels, MARKERS):
         xcol = table.columns[x]
         ycol = (
             table.columns[yy] * 100 * u.pct
@@ -374,7 +374,7 @@ def plot_overlapped(
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    """Plot the same columns of differnet tables in the same Axes using different markers"""
+    """Plot the same columns of differnet tables in the same Axes using different MARKERS"""
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
@@ -382,7 +382,7 @@ def plot_overlapped(
     xlabel, ylabel = get_labels(tables[0], x, y, percent)
     axes.set_xlabel(xlabel)
     axes.set_ylabel(ylabel)
-    for table, label, marker in zip(tables, labels, markers):
+    for table, label, marker in zip(tables, labels, MARKERS):
         xcol = table.columns[x]
         ycol = (
             table.columns[y] * 100 * u.pct
@@ -417,7 +417,7 @@ def plot_grid(
     linewidth: Optional[int],
 ) -> None:
     """Plot datasets in a grid of axes"""
-    marker = marker or next(markers)
+    marker = marker or next(MARKERS)
     N = len(tables)
     if nrows * ncols < N:
         raise ValueError(f"{nrows} x {ncols} Grid can't accomodate {N} graphics")
