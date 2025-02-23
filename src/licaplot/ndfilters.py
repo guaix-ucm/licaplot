@@ -36,6 +36,7 @@ from ._version import __version__
 from .utils import parser as prs
 from .utils.mpl import plot_single_table_column
 from .filters import one_filter
+from .plot import cli_single_table_column
 
 
 # -----------------------
@@ -93,19 +94,6 @@ def cli_calibrate(args: Namespace) -> None:
     table.write(master_path, delimiter=",", overwrite=True)
 
 
-def cli_plot(args: Namespace) -> None:
-    table = astropy.io.ascii.read(args.input_file, format="ecsv")
-    plot_single_table_column(
-        table=table,
-        x=0,
-        y=1,
-        title=None,
-        changes=args.changes,
-        linewidth=args.lines or 0,
-        percent=args.percent,
-    )
-
-
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -120,15 +108,6 @@ def add_args(parser: ArgumentParser) -> None:
         help="Calibrate a Neutral Density Filter",
     )
     parser.set_defaults(func=cli_calibrate)
-
-    # ---------------------------------------------------------------
-    parser = subparser.add_parser(
-        "plot",
-        parents=[prs.ifile(), prs.ndf(), prs.resample(), prs.percent(), prs.auxlines()],
-        help="Plot Neutral Density Filter response",
-    )
-    parser.set_defaults(func=cli_plot)
-    # ---------------------------------------------------------------
 
 
 # ================

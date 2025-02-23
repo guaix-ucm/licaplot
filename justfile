@@ -117,7 +117,7 @@ ndf-calib:
 ndf-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-ndf --console --trace plot -n ND-0.5 -i data/ndfilters/ND-0.5-Transmission@5nm.ecsv
+    lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmission@5nm.ecsv --changes
 
 
 
