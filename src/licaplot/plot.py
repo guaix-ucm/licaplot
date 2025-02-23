@@ -228,16 +228,14 @@ def cli_single_table_column(args: Namespace):
         resolution=args.resample,
         lica_trim=args.lica,
         title=title,
-        label=args.label,
+        label=None,
     )
-    label = table.meta["label"]
     title = table.meta["title"] or table.meta["label"]
     with visualization.quantity_support():
         plot_single_table_column(
             table=table,
             x=args.x_column - 1,
             y=args.y_column - 1,
-            legend=label,
             title=title,
             changes=args.changes,
             percent=args.percent,
@@ -383,7 +381,6 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
-            prs.label("plotting"),
             prs.auxlines(),
             prs.percent(),
         ],
