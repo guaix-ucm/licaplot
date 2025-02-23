@@ -119,7 +119,32 @@ ndf-plot:
     set -exuo pipefail
     lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmission@5nm.ecsv --changes
 
+# Plot lica stored resource: Hamamatsu calibration curve
+hama-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-photod --console plot -m S2281-01
 
+# Plot lica stored resource: OSI calibration curve
+osi-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-photod --console plot -m PIN-10D
+
+
+tessw-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-tessw --console --trace classif photod -p data/tessw/stars1277-photodiode.csv --tag A
+    lica-tessw --console classif sensor -i data/tessw/stars1277-frequencies.csv -l TSL237 --tag A
+    lica-tessw --console classif photod -p data/tessw/stars6502-photodiode.csv --tag B
+    lica-tessw --console classif sensor -i data/tessw/stars6502-frequencies.csv -l OTHER --tag B
+    lica-tessw --console process  -d data/tessw/ --save
+
+tessw-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-plot --console single tables column -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv  -yc 2  --changes --lines
 
 plotsin dir="data/filters/Eysdon_RGB": (anew dir)
     #!/usr/bin/env bash
