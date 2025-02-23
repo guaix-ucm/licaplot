@@ -106,6 +106,21 @@ osi-cmp:
     set -exuo pipefail
     lica-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 
+# Calibrates a NDF filter
+ndf-calib:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i data/ndfilters/osi_nd0.5.txt -p data/ndfilters/osi_clear1.txt -o data/ndfilters 
+
+
+# Plot NDF calibration curve
+ndf-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-ndf --console --trace plot -n ND-0.5 -i data/ndfilters/ND-0.5-Transmission@5nm.ecsv
+
+
+
 plotsin dir="data/filters/Eysdon_RGB": (anew dir)
     #!/usr/bin/env bash
     set -exuo pipefail

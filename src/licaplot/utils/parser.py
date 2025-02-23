@@ -332,6 +332,20 @@ def resample() -> ArgumentParser:
     return parser
 
 
+def resol() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-r",
+        "--resolution",
+        type=int,
+        choices=tuple(range(1, 11)),
+        default=1,
+        metavar="<N nm>",
+        help="Resolution (defaults to %(default)d nm)",
+    )
+    return parser
+
+
 # -------------
 # Other parsers
 # -------------

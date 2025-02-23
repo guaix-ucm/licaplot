@@ -34,7 +34,7 @@ from lica.lab import COL
 from . import TBCOL, PROCOL
 from ._version import __version__
 from .utils import parser as prs
-from .utils.mpl import plot_single
+from .utils.mpl import plot_single_table_column
 from .filters import one_filter
 
 
@@ -73,7 +73,12 @@ def cli_calibrate(args: Namespace) -> None:
         input_path=args.input_file,
         photod_path=args.photod_file,
         model=args.model,
-        label=args.ndf,
+        label=args.ndf.value,
+        title=None,
+        tag=args.tag,
+        x_low=args.x_low,
+        x_high=args.x_high,
+        ndf=args.ndf,
     )
     ecsv_path, _ = os.path.splitext(args.input_file)
     ecsv_path += ".ecsv"
@@ -89,17 +94,13 @@ def cli_calibrate(args: Namespace) -> None:
 
 
 def cli_plot(args: Namespace) -> None:
-    name = f"{args.ndf}-Transmission@{args.resolution}nm.ecsv"
-    ecsv_path = os.path.join(args.input_dir, name)
-    table = astropy.io.ascii.read(ecsv_path, format="ecsv")
-    plot_single(
-        title=f"{args.ndf} Transmission",
-        tables=[table],
-        labels=[None],
+    table = astropy.io.ascii.read(args.input_file, format="ecsv")
+    plot_single_table_column(
+        table=table,
         x=0,
         y=1,
-        filters=args.filters,
-        marker=None,
+        title=None,
+        changes=args.changes,
         linewidth=args.lines or 0,
         percent=args.percent,
     )
@@ -115,7 +116,7 @@ def add_args(parser: ArgumentParser) -> None:
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "calib",
-        parents=[prs.ifile(), prs.photod(), prs.ndf(), prs.odir()],
+        parents=[prs.ifile(), prs.photod(), prs.tag(), prs.xlim(), prs.ndf(), prs.odir()],
         help="Calibrate a Neutral Density Filter",
     )
     parser.set_defaults(func=cli_calibrate)
@@ -123,7 +124,7 @@ def add_args(parser: ArgumentParser) -> None:
     # ---------------------------------------------------------------
     parser = subparser.add_parser(
         "plot",
-        parents=[prs.idir(), prs.ndf(), prs.resol(), prs.percent(), prs.auxlines()],
+        parents=[prs.ifile(), prs.ndf(), prs.resample(), prs.percent(), prs.auxlines()],
         help="Plot Neutral Density Filter response",
     )
     parser.set_defaults(func=cli_plot)
