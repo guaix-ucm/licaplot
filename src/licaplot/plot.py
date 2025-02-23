@@ -31,7 +31,6 @@ from astropy import visualization
 import scipy.interpolate
 
 from lica.cli import execute
-from lica.validators import vfile
 from lica.lab import BENCH
 
 # ------------------------
@@ -87,7 +86,6 @@ def read_csv(path: str, columns: Optional[Iterable[str]], delimiter: Optional[st
             if columns
             else astropy.io.ascii.read(path, delimiter)
         )
-
     elif ext == ".ecsv":
         table = astropy.io.ascii.read(path, format="ecsv")
     else:

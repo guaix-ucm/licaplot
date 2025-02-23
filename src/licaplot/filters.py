@@ -69,13 +69,13 @@ def photodiode(
     photod_path: str,
     model: str,
     tag: str,
-    wave_low: int = BENCH.WAVE_START,
-    wave_high: int = BENCH.WAVE_END,
+    x_low: int = BENCH.WAVE_START,
+    x_high: int = BENCH.WAVE_END,
 ) -> None:
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", photod_path)
-    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
-    return processing.photodiode_ecsv(photod_path, model, tag, wave_low, wave_high)
+    x_low, x_high = min(x_low, x_high), max(x_low, x_high)
+    return processing.photodiode_ecsv(photod_path, model, tag, x_low, x_high)
 
 
 def filters(input_path: str, label: str = "", tag: str = "",) -> None:
@@ -90,13 +90,13 @@ def one_filter(
     model: str,
     label: str = "",
     tag: str = "",
-    wave_low: int = BENCH.WAVE_START,
-    wave_high: int = BENCH.WAVE_END,
+    x_low: int = BENCH.WAVE_START,
+    x_high: int = BENCH.WAVE_END,
     ndf: NDFilter = None,
 ) -> str:
     tag = tag or processing.random_tag()
-    wave_low, wave_high = min(wave_low, wave_high), max(wave_low, wave_high)
-    processing.photodiode_ecsv(photod_path, model, tag, wave_low, wave_high)
+    x_low, x_high = min(x_low, x_high), max(x_low, x_high)
+    processing.photodiode_ecsv(photod_path, model, tag, x_low, x_high)
     result = processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
@@ -119,7 +119,7 @@ def cli_process(args: Namespace) -> None:
 
 
 def cli_photodiode(args: Namespace) -> None:
-    photodiode(args.photod_file, args.model, args.tag, args.wave_low, args.wave_high)
+    photodiode(args.photod_file, args.model, args.tag, args.x_low, args.x_high)
 
 
 def cli_filters(args: Namespace) -> None:
@@ -135,8 +135,8 @@ def cli_one_filter(args: Namespace) -> None:
         args.model,
         label,
         args.tag,
-        args.wave_low,
-        args.wave_high,
+        args.x_low,
+        args.x_high,
         args.ndf,
     )
 

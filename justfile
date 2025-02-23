@@ -77,8 +77,8 @@ env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 plotsin dir="data/filters/Eysdon_RGB": (anew dir)
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-filters --console one -l Green -p {{dir}}/photodiode.txt -m PIN-10D -i {{dir}}/green.txt
-    lica-plot --console single -i {{dir}}/green.ecsv --title Green filter -yc 4 --label G --lines --filters
+    lica-filters --console --trace one -l Green -p {{dir}}/photodiode.txt -m PIN-10D -i {{dir}}/green.txt
+    lica-plot --console --trace single table column -i {{dir}}/green.ecsv --title Green filter -yc 4 --lines --changes
 
 
 plotmul dir="data/filters/Eysdon_RGB": (anew dir)
@@ -89,7 +89,7 @@ plotmul dir="data/filters/Eysdon_RGB": (anew dir)
     lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
     lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
     lica-filters --console process -d {{dir}} --save
-    lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
+    lica-plot --console multi -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv --overlap -wc 1 -yc 4  --changes --lines
 
 # Plot CLI test driver
 test_s_t_c dir="data/filters/Eysdon_RGB" args="":
@@ -139,7 +139,7 @@ sunglasses dir="data/sunglasses":
 anew dir:
     #!/usr/bin/env bash
     set -exuo pipefail
-    rm {{dir}}/*.ecsv
+    rm {{dir}}/*.ecsv || exit 0
 
 [private]
 check_mnt mnt:
