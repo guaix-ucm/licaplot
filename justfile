@@ -84,6 +84,28 @@ hama2:
     set -exuo pipefail
     lica-hama --console --trace stage2 --plot --save -i data/hamamatsu/S2281-01-Responsivity-NPL.ecsv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
 
+hama3:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-hama --console --trace stage3 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12
+
+# OSI Pĥotodiode calibration by scanned datasheet
+osi-sheet:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-osi --console datasheet -i data/osi/PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save --revision 2024-12
+
+# OSI Pĥotodiode calibration by cross calibration
+osi-cross:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-osi --console cross --osi data/osi/QEdata_PIN-10D.txt --hama data/osi/QEdata_S2201-01.txt --plot --save --revision 2024-12
+# OSI Pĥotodiode: comparison of methods
+osi-cmp:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
+
 plotsin dir="data/filters/Eysdon_RGB": (anew dir)
     #!/usr/bin/env bash
     set -exuo pipefail

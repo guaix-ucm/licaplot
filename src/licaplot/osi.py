@@ -33,7 +33,7 @@ import scipy.interpolate
 from lica.cli import execute
 from lica.validators import vfile, vmonth
 
-from lica.lab import  COL, BENCH
+from lica.lab import COL, BENCH
 from lica.lab.photodiode import PhotodiodeModel, Hamamatsu, OSI
 import lica.lab.photodiode
 
@@ -43,7 +43,7 @@ import lica.lab.photodiode
 
 from . import TBCOL
 from ._version import __version__
-from .utils.mpl import plot_overlapped
+from .utils.mpl import plot_single_tables_column
 from .utils.validators import vecsvfile
 from .utils.processing import read_scan_csv
 
@@ -219,17 +219,13 @@ def cli_cross_calibration(args: Namespace) -> None:
         log.info("Saving Cross Calibrated ECSV to %s", output_path)
         osi_reference.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        plot_overlapped(
-            title=f"{args.title} #{osi_reference.meta['Serial']} interpolated curves @ {args.resolution} nm",
+        plot_single_tables_column(
             tables=[osi_reference, hama_reference],
-            labels=[
-                "OSI",
-                "Hamamatsu.",
-            ],
-            filters=True,
             x=0,
             y=1,
-            linewidth=0,
+            title=f"{args.title} #{osi_reference.meta['Serial']} interpolated curves @ {args.resolution} nm",
+            legends=["OSI", "Hamamatsu."],
+            changes=True,
         )
 
 
@@ -243,20 +239,12 @@ def cli_digitized_datasheet(args: Namespace) -> None:
         log.info("Saving Digitized Datsheet ECSV to %s", output_path)
         interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        plot_overlapped(
-            title=f"{args.title} #{datasheet_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
-            tables=[
-                datasheet_table,
-                interpolated_table,
-            ],
-            labels=[
-                "Datasheet",
-                "Interp.",
-            ],
-            filters=False,
+        plot_single_tables_column(
+            tables=[datasheet_table, interpolated_table],
             x=0,
             y=1,
-            linewidth=0,
+            title=f"{args.title} #{datasheet_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
+            legends=["Datasheet", "Interp."],
         )
 
 
@@ -274,14 +262,13 @@ def cli_compare(args: Namespace) -> None:
     x = table1.colnames.index(COL.WAVE)
     y = table1.colnames.index(COL.QE) if args.qe else table1.colnames.index(COL.RESP)
     if args.plot:
-        plot_overlapped(
-            title=args.title,
+        plot_single_tables_column(
             tables=[table1, table2, hama_reference],
-            labels=[f"{osi} Cross Calibrated", f"{osi} From Datasheet", f"{hama} (Ref.)"],
-            filters=True,
             x=x,
             y=y,
-            linewidth=0,
+            title=args.title,
+            legends=[f"{osi} Cross Calibrated", f"{osi} From Datasheet", f"{hama} (Ref.)"],
+            changes=True,
         )
 
 

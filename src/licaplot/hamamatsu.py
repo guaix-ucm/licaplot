@@ -187,6 +187,7 @@ def cli_stage1(args: Namespace) -> None:
             title=f"{args.title} #{table.meta['Serial']}, NPL Calibrated",
         )
 
+
 def cli_stage2(args: Namespace) -> None:
     """Iterative merge curves and saves the combined results"""
     log.info("Loading NPL ECSV calibration File: %s", args.input_file)
@@ -243,9 +244,6 @@ def cli_stage3(args: Namespace) -> None:
             y=y,
             title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["Interp.", "NPL+Datasheet"],
-            changes=False,
-            linewidth=0,
-            markers=None,
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
 
@@ -276,11 +274,9 @@ def cli_pipeline(args: Namespace) -> None:
             y=y,
             legends=["Interp.", "NPL Calib.", "Datasheet"],
             title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
-            changes=False,
-            linewidth=0,
-            markers=None,
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
         )
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -428,6 +424,7 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<YYYY-MM>",
         help="ECSV File Revison string",
     )
+
 
 # ================
 # MAIN ENTRY POINT
