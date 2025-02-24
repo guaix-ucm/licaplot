@@ -414,7 +414,11 @@ def cli_multi_tables_columns(args: Namespace):
         tables.append(table)
         titles.append(table.meta["title"])
     yy = [y - 1 for y in args.y_column]
-    labels = args.label or [table[0].columns[y].name[:5] + "." for y in yy]
+    labels = (
+        [table.columns[y].name[:6] for table in tables for y in yy]
+        if args.label is None
+        else args.label
+    )
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     plot_multi_tables_columns(
@@ -465,7 +469,7 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, single table, single column plot",
     )
     par_s_t_c.set_defaults(func=cli_single_table_column)
-    
+
     # ------------------------------------------------
     # Single Axes, Single Table, Multiple Columns case
     # ------------------------------------------------
@@ -487,10 +491,9 @@ def add_args(parser: ArgumentParser):
     )
     par_s_t_cc.set_defaults(func=cli_single_table_columns)
 
-    
     p_s_tt = sub_s_t.add_parser("tables", help="Single Axes, multiple tables plot")
     sub_s_tt = p_s_tt.add_subparsers(required=True)
-    
+
     # ------------------------------------------------
     # Single Axes, Multiple Tables, Single Column case
     # ------------------------------------------------
@@ -542,7 +545,7 @@ def add_args(parser: ArgumentParser):
 
     p_m_tt = sub_m_t.add_parser("tables", help="Mulitple Axes, multiple tables plot")
     sub_m_tt_c = p_m_tt.add_subparsers(required=True)
-    
+
     # ---------------------------------------------------
     # Multiplea Axes, Multiple Tables, Single Column case
     # ---------------------------------------------------
@@ -559,7 +562,7 @@ def add_args(parser: ArgumentParser):
             prs.resample(),
             prs.auxlines(),
             prs.percent(),
-            prs.marker(),
+            prs.markers(),
         ],
         help="Mulitple Axes, multiple tables, single column plot",
     )

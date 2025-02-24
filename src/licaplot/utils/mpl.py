@@ -240,6 +240,9 @@ def plot_single_tables_columns(
         box=box,
     )
 
+# =================== #
+# MULTI AXES PLOTTING #
+# =================== #
 
 def _plot_multi_tables_columns(
     nrows: int,
@@ -247,34 +250,32 @@ def _plot_multi_tables_columns(
     tables: Sequence[Table],
     x: int,
     yy: Sequence[int],
-    legends: Sequence[str],
+    legends_grp: Sequence[Sequence[str]],
     titles: Optional[Sequence[str]],
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
     markers_grp: Optional[Sequence[Markers]],
-    box: Optional[Tuple[str, float, float]] = None,
+    boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
 ) -> None:
-    N = len(tables)
-    assert (nrows * ncols) >= N, f" nrows * ncols ({nrows * ncols}) >= N ({N}) "
-    assert len(legends) == len(yy), f"len(legends) ({len(legends)}) == len(yy) ({len(yy)})"
-    assert len(titles) == len(tables), (
-        f"len(titles) ({len(titles)})  == len(tables) ({len(tables)})"
-    )
-
+    log.info("yy = %s", yy)
+    log.info("legends_grp = %s", legends_grp)
+    log.info("markers_grp = %s", markers_grp)
     # Load global style sheets
     resource = "licaplot.resources.multi"
     log.info("Loading Matplotlib resources from %s", resource)
     plt.style.use(resource)
-
+    N = len(tables)
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+    boxes = [None]*N if boxes is None else boxes
     # From a numpy bidimensional array to a list if len(indexes) > 1
-    indexes = list(range(nrows * ncols))
-    axes = axes.flatten() if len(indexes) > 1 else [axes]
-    for i, ax, table, title, markers in zip(indexes, axes, tables, titles, markers_grp):
+    axes = axes.flatten() if nrows*ncols > 1 else [axes]
+    for ax, table, title, legends, markers, box in zip(axes, tables, titles, legends_grp, markers_grp, boxes):
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
+        log.info("markers = %s", markers)
+        log.info("legends = %s", legends)
         markers = [marker for marker in Markers] if all(m is None for m in markers) else markers
         markers = itertools.cycle(markers)
         for y, legend, marker in zip(yy, legends, markers):
@@ -287,6 +288,9 @@ def _plot_multi_tables_columns(
         if changes:
             for change in MONOCROMATOR_CHANGES_LABELS:
                 ax.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
+        if box:
+            props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+            axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
         ax.grid(True, which="major", color="silver", linestyle="solid")
         ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
         ax.minorticks_on()
@@ -297,6 +301,68 @@ def _plot_multi_tables_columns(
         ax.set_axis_off()
     plt.show()
 
+
+
+def plot_multi_tables_column(
+    nrows: int,
+    ncols: int,
+    tables: Sequence[Table],
+    x: int,
+    y: int,
+    titles: Optional[Sequence[str]],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    marker: Optional[Markers],
+    boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
+) -> None:
+    _plot_multi_tables_columns(
+        nrows=nrows,
+        ncols=nrows,
+        tables=tables,
+        x=x,
+        yy=[y],
+        legends_grp=legends_grp(None, ntab=len(tables), ncol=1),
+        titles=titles,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers_grp=markers_grp(marker, ntab=len(tables), ncol=1),
+        boxes=boxes,
+    )
+
+
+def plot_multi_tables_columns(
+    nrows: int,
+    ncols: int,
+    tables: Sequence[Table],
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    titles: Optional[Sequence[str]],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
+    boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
+) -> None:
+     _plot_multi_tables_columns(
+        nrows=nrows,
+        ncols=nrows,
+        tables=tables,
+        x=x,
+        yy=yy,
+        legends_grp=legends_grp(legends, ntab=len(tables), ncol=len(yy)),
+        titles=titles,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
+        boxes=boxes,
+    )
+
+
+# This is a rare cas, not being used for the time being
 def plot_multi_table_columns(
     nrows: int,
     ncols: int,
@@ -345,63 +411,3 @@ def plot_multi_table_columns(
     for ax in axes[N:]:
         ax.set_axis_off()
     plt.show()
-
-
-def plot_multi_tables_column(
-    nrows: int,
-    ncols: int,
-    tables: Sequence[Table],
-    x: int,
-    y: int,
-    titles: Optional[Sequence[str]],
-    changes: Optional[bool],
-    percent: Optional[bool],
-    linewidth: Optional[int],
-    marker: Optional[Markers],
-    box: Optional[Tuple[str, float, float]] = None,
-) -> None:
-    _plot_multi_tables_columns(
-        nrows=nrows,
-        ncols=nrows,
-        tables=tables,
-        x=x,
-        yy=[y],
-        legends=[None],
-        titles=titles,
-        changes=changes,
-        percent=percent,
-        linewidth=linewidth,
-        markers_grp=markers_grp(marker, ntab=len(tables), ncol=1),
-        box=box,
-    )
-
-
-def plot_multi_tables_columns(
-    nrows: int,
-    ncols: int,
-    tables: Sequence[Table],
-    x: int,
-    yy: Sequence[int],
-    legends: Sequence[str],
-    titles: Optional[Sequence[str]],
-    changes: Optional[bool],
-    percent: Optional[bool],
-    linewidth: Optional[int],
-    markers: Optional[Sequence[Markers]],
-    box: Optional[Tuple[str, float, float]] = None,
-) -> None:
-     _plot_multi_tables_columns(
-        nrows=nrows,
-        ncols=nrows,
-        tables=tables,
-        x=x,
-        yy=yy,
-        legends=legends,
-        titles=titles,
-        changes=changes,
-        percent=percent,
-        linewidth=linewidth,
-        markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
-        box=box,
-    )
-
