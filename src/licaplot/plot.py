@@ -12,7 +12,6 @@
 
 import os
 import logging
-import itertools
 from math import ceil, sqrt
 
 # Typing hints
@@ -61,8 +60,6 @@ log = logging.getLogger(__name__)
 # Matplotlib styles
 # -----------------
 
-# Load global style sheets
-plt.style.use("licaplot.resources.global")
 
 # -------------------
 # Auxiliary functions
@@ -115,7 +112,7 @@ def trim_table(
     table = table[x <= xmax]
     x = table.columns[xc]
     table = table[x >= xmin]
-    log.info("Trimmed table to wavelength [%s - %s] range", xmin, xmax)
+    log.debug("Trimmed table to wavelength [%s - %s] range", xmin, xmax)
     return table
 
 
@@ -131,9 +128,9 @@ def resample_column(
         xmax = np.floor(np.max(x))
         xmin = np.ceil(np.min(x))
     wavelength = np.arange(xmin, xmax + resolution, resolution)
-    log.info("Wavelengh grid to resample is\n%s", wavelength)
+    log.debug("Wavelengh grid to resample is\n%s", wavelength)
     interpolator = scipy.interpolate.Akima1DInterpolator(x, y)
-    log.info(
+    log.debug(
         "Resampled table to wavelength [%s - %s] range with %s resolution",
         xmin,
         xmax,
@@ -161,7 +158,7 @@ def build_table_yc(
     table = read_csv(path, columns, delimiter)
     # Prefer resample before trimming to avoid generating extrapolation NaNs
     if resolution is None:
-        log.info("Not resampling table")
+        log.debug("Not resampling table")
         table = trim_table(table, xc, xu, xl, xh, lu, lica_trim)
     else:
         wavelength, resampled_col = resample_column(table, resolution, xc, xu, yc, lica_trim)
@@ -181,8 +178,8 @@ def build_table_yc(
         table[col_x.name] = table[col_x.name] * xu
     table.meta["label"] = table.meta.get("label") or label
     table.meta["title"] = table.meta.get("title") or title
-    log.info(table.info)
-    log.info(table.meta)
+    log.debug(table.info)
+    log.debug(table.meta)
     return table
 
 
@@ -203,8 +200,8 @@ def build_table_yycc(
     table = trim_table(table, xc, xu, xl, xh, lu, lica_trim)
     table.meta["label"] = table.meta.get("label") or label
     table.meta["title"] = table.meta.get("title") or title
-    log.info(table.info)
-    log.info(table.meta)
+    log.debug(table.info)
+    log.debug(table.meta)
     return table
 
 
@@ -353,10 +350,6 @@ def cli_single_tables_columns(args: Namespace):
     )
 
 
-def cli_multi_table_columns(args: Namespace):
-    raise NotImplementedError("Not very useful use case")
-
-
 def cli_multi_tables_column(args: Namespace):
     pass
 
@@ -492,12 +485,6 @@ def add_args(parser: ArgumentParser):
     # =============
     sub_m_t = p_m.add_subparsers(required=True)
 
-    p_m_t = sub_m_t.add_parser("table", help="Multiple Axes, single table plot")
-    sub_m_t_c = p_m_t.add_subparsers(required=True)
-    par_m_t_cc = sub_m_t_c.add_parser(
-        "columns", parents=[], help="Multiple Axes, single table, multiple columns plot"
-    )
-    par_m_t_cc.set_defaults(func=cli_multi_table_columns)
 
     p_m_tt = sub_m_t.add_parser("tables", help="Mulitple Axes, multiple tables plot")
     sub_m_tt_c = p_m_tt.add_subparsers(required=True)

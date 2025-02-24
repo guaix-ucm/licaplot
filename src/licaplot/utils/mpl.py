@@ -103,6 +103,12 @@ def _plot_single_tables_columns(
     log.info("yy = %s", yy)
     log.info("legends_grp = %s", legends_grp)
     log.info("markers_grp = %s", markers_grp)
+
+    # Load global style sheets
+    resource = "licaplot.resources.single"
+    log.info("Loading Matplotlib resources from %s", resource)
+    plt.style.use(resource)
+
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
@@ -157,33 +163,6 @@ def plot_single_table_column(
         box=box,
     )
 
-
-def plot_single_tables_columns(
-    tables: Sequence[Table],
-    x: int,
-    yy: Sequence[int],
-    legends: Sequence[str],
-    title: Optional[str],
-    changes: Optional[bool] = False,
-    percent: Optional[bool] = False,
-    linewidth: Optional[int] = 0,
-    markers: Optional[Sequence[Markers]] = None,
-    box: Optional[Tuple[str, float, float]] = None,
-) -> None:
-    _plot_single_tables_columns(
-        tables=tables,
-        x=x,
-        yy=yy,
-        legends_grp=legends_grp(legends, ntab=len(tables), ncol=len(yy)),
-        title=title,
-        changes=changes,
-        percent=percent,
-        linewidth=linewidth,
-        markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
-        box=box,
-    )
-
-
 def plot_single_table_columns(
     table: Table,
     x: int,
@@ -236,6 +215,32 @@ def plot_single_tables_column(
     )
 
 
+def plot_single_tables_columns(
+    tables: Sequence[Table],
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    title: Optional[str],
+    changes: Optional[bool] = False,
+    percent: Optional[bool] = False,
+    linewidth: Optional[int] = 0,
+    markers: Optional[Sequence[Markers]] = None,
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    _plot_single_tables_columns(
+        tables=tables,
+        x=x,
+        yy=yy,
+        legends_grp=legends_grp(legends, ntab=len(tables), ncol=len(yy)),
+        title=title,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
+        box=box,
+    )
+
+
 def plot_multi_tables_columns(
     nrows: int,
     ncols: int,
@@ -256,6 +261,12 @@ def plot_multi_tables_columns(
     assert len(titles) == len(tables), (
         f"len(titles) ({len(titles)})  == len(tables) ({len(tables)})"
     )
+
+    # Load global style sheets
+    resource = "licaplot.resources.multi"
+    log.info("Loading Matplotlib resources from %s", resource)
+    plt.style.use(resource)
+
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
     # From a numpy bidimensional array to a list if len(indexes) > 1
     indexes = list(range(nrows * ncols))
@@ -264,9 +275,9 @@ def plot_multi_tables_columns(
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
-        markers2 = markers or [marker for marker in Markers]
-        markers2 = itertools.cycle(markers2)
-        for y, legend, marker in zip(yy, legends, markers2):
+        markers = markers or [marker for marker in Markers]
+        markers = itertools.cycle(markers)
+        for y, legend, marker in zip(yy, legends, markers):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -328,6 +339,10 @@ def plot_multi_table_columns(
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
+    """
+    A strange use case with each column of a table plotted in a single axes.
+    Not being used for the time being.
+    """
     assert (nrows * ncols) >= len(yy)
     assert len(legends) == len(yy)
     assert len(titles) == len(yy)

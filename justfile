@@ -201,21 +201,21 @@ tessw-plot:
     lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
 
 # Plot single axes, table and column
-plot-s_t_c args="":
+plot-s-t-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
     lica-plot --console --trace single table column  -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines {{args}}
 
 # Plot single axes, table and 2 columns
-plot-s_t_cc args="":
+plot-s-t-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/sunglasses"
     lica-plot --console --trace single table columns -% -i ${dir}/02_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
 
 # Plot single axes, 3 table, 1 column each
-plot-s_tt_c args="":
+plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
@@ -223,15 +223,31 @@ plot-s_tt_c args="":
 
 
 # Plot multiple Axes, one table per axes, several column per table
-plot-s_tt_cc args="":
+plot-s-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/sunglasses
     lica-plot --console --trace single tables columns -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
+# Plot multiple Axes, one table only, one column per axes
+plot-m-t-cc args="":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir=data/sunglasses
+    lica-plot --console --trace multi table columns -i ${dir}/01_sg.ecsv -yc 4 5 --changes --lines {{args}}
+
+
+# Plot multiple Axes, one table per axes, one column per table
+plot-m-tt-c args="":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir=data/sunglasses
+    lica-plot --console --trace multi tables column -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 5 --changes --lines {{args}}
+
+
 # Plot multiple Axes, one table per axes, several column per table
-plot-m_tt_cc args="":
+plot-m-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/sunglasses
