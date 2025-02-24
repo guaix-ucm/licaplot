@@ -241,7 +241,7 @@ def plot_single_tables_columns(
     )
 
 
-def plot_multi_tables_columns(
+def _plot_multi_tables_columns(
     nrows: int,
     ncols: int,
     tables: Sequence[Table],
@@ -252,7 +252,7 @@ def plot_multi_tables_columns(
     changes: Optional[bool],
     percent: Optional[bool],
     linewidth: Optional[int],
-    markers: Optional[Sequence[Markers]],
+    markers_grp: Optional[Sequence[Markers]],
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     N = len(tables)
@@ -271,11 +271,11 @@ def plot_multi_tables_columns(
     # From a numpy bidimensional array to a list if len(indexes) > 1
     indexes = list(range(nrows * ncols))
     axes = axes.flatten() if len(indexes) > 1 else [axes]
-    for i, ax, table, title in zip(indexes, axes, tables, titles):
+    for i, ax, table, title, markers in zip(indexes, axes, tables, titles, markers_grp):
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
-        markers = markers or [marker for marker in Markers]
+        markers = [marker for marker in Markers] if all(m is None for m in markers) else markers
         markers = itertools.cycle(markers)
         for y, legend, marker in zip(yy, legends, markers):
             ycol = (
@@ -296,35 +296,6 @@ def plot_multi_tables_columns(
     for ax in axes[N:]:
         ax.set_axis_off()
     plt.show()
-
-
-def plot_multi_tables_column(
-    nrows: int,
-    ncols: int,
-    tables: Sequence[Table],
-    x: int,
-    y: int,
-    legends: Sequence[str],
-    titles: Optional[Sequence[str]],
-    changes: Optional[bool],
-    percent: Optional[bool],
-    linewidth: Optional[int],
-    box: Optional[Tuple[str, float, float]] = None,
-) -> None:
-    plot_multi_tables_columns(
-        nrows=nrows,
-        ncols=nrows,
-        tables=tables,
-        x=x,
-        yy=[y],
-        legends=legends,
-        titles=titles,
-        changes=changes,
-        percent=percent,
-        linewidth=linewidth,
-        box=box,
-    )
-
 
 def plot_multi_table_columns(
     nrows: int,
@@ -374,3 +345,63 @@ def plot_multi_table_columns(
     for ax in axes[N:]:
         ax.set_axis_off()
     plt.show()
+
+
+def plot_multi_tables_column(
+    nrows: int,
+    ncols: int,
+    tables: Sequence[Table],
+    x: int,
+    y: int,
+    titles: Optional[Sequence[str]],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    marker: Optional[Markers],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    _plot_multi_tables_columns(
+        nrows=nrows,
+        ncols=nrows,
+        tables=tables,
+        x=x,
+        yy=[y],
+        legends=[None],
+        titles=titles,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers_grp=markers_grp(marker, ntab=len(tables), ncol=1),
+        box=box,
+    )
+
+
+def plot_multi_tables_columns(
+    nrows: int,
+    ncols: int,
+    tables: Sequence[Table],
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    titles: Optional[Sequence[str]],
+    changes: Optional[bool],
+    percent: Optional[bool],
+    linewidth: Optional[int],
+    markers: Optional[Sequence[Markers]],
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+     _plot_multi_tables_columns(
+        nrows=nrows,
+        ncols=nrows,
+        tables=tables,
+        x=x,
+        yy=yy,
+        legends=legends,
+        titles=titles,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
+        box=box,
+    )
+

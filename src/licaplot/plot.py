@@ -335,7 +335,9 @@ def cli_single_tables_columns(args: Namespace):
         titles.append(table.meta["title"])
     yy = [y - 1 for y in args.y_column]
     if args.label is None:
-        labels = [table.meta["label"] + "-" + table.columns[y].name[:6] for table in tables for y in yy]
+        labels = [
+            table.meta["label"] + "-" + table.columns[y].name[:6] for table in tables for y in yy
+        ]
     title = title or ", ".join([t.meta["title"] for t in tables])
     plot_single_tables_columns(
         tables=tables,
@@ -351,7 +353,43 @@ def cli_single_tables_columns(args: Namespace):
 
 
 def cli_multi_tables_column(args: Namespace):
-    pass
+    titles = list()
+    tables = list()
+    N = len(args.input_file)
+    args_title = args.title or [None] * N
+    for path, title in zip(args.input_file, args_title):
+        table = build_table_yc(
+            path=path,
+            delimiter=args.delimiter,
+            columns=args.columns,
+            xc=args.x_column - 1,
+            xu=args.x_unit,
+            yc=args.y_column - 1,
+            yu=args.y_unit,
+            xl=args.x_low,
+            xh=args.x_high,
+            lu=args.limits_unit,
+            resolution=args.resample,
+            lica_trim=args.lica,
+            title=title,
+            label=None,
+        )
+        tables.append(table)
+        titles.append(table.meta["title"])
+    ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
+    nrows = int(ceil(len(tables) / ncols))
+    plot_multi_tables_column(
+        nrows=nrows,
+        ncols=ncols,
+        tables=tables,
+        x=args.x_column - 1,
+        y=args.y_column - 1,
+        titles=titles,  # ESTOOO REVISAR
+        changes=args.changes,
+        percent=args.percent,
+        linewidth=args.lines or 0,
+        marker=args.marker,
+    )
 
 
 def cli_multi_tables_columns(args: Namespace):
@@ -405,6 +443,9 @@ def add_args(parser: ArgumentParser):
 
     sub_s_t = p_s.add_subparsers(required=True)
 
+    # ---------------------------------------------
+    # Single Axes, Single Table, Single Column case
+    # ---------------------------------------------
     p_s_t = sub_s_t.add_parser("table", help="Single Axes, single table plot")
     sub_s_t_c = p_s_t.add_subparsers(required=True)
     par_s_t_c = sub_s_t_c.add_parser(
@@ -424,6 +465,10 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, single table, single column plot",
     )
     par_s_t_c.set_defaults(func=cli_single_table_column)
+    
+    # ------------------------------------------------
+    # Single Axes, Single Table, Multiple Columns case
+    # ------------------------------------------------
     par_s_t_cc = sub_s_t_c.add_parser(
         "columns",
         parents=[
@@ -442,8 +487,13 @@ def add_args(parser: ArgumentParser):
     )
     par_s_t_cc.set_defaults(func=cli_single_table_columns)
 
+    
     p_s_tt = sub_s_t.add_parser("tables", help="Single Axes, multiple tables plot")
     sub_s_tt = p_s_tt.add_subparsers(required=True)
+    
+    # ------------------------------------------------
+    # Single Axes, Multiple Tables, Single Column case
+    # ------------------------------------------------
     par_s_tt_c = sub_s_tt.add_parser(
         "column",
         parents=[
@@ -462,6 +512,10 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, single column plot",
     )
     par_s_tt_c.set_defaults(func=cli_single_tables_column)
+
+    # ---------------------------------------------------
+    # Single Axes, Multiple Tables, Multiple Columns case
+    # ---------------------------------------------------
     par_s_tt_cc = sub_s_tt.add_parser(
         "columns",
         parents=[
@@ -483,15 +537,37 @@ def add_args(parser: ArgumentParser):
     # =============
     # Multiple Axes
     # =============
-    sub_m_t = p_m.add_subparsers(required=True)
 
+    sub_m_t = p_m.add_subparsers(required=True)
 
     p_m_tt = sub_m_t.add_parser("tables", help="Mulitple Axes, multiple tables plot")
     sub_m_tt_c = p_m_tt.add_subparsers(required=True)
+    
+    # ---------------------------------------------------
+    # Multiplea Axes, Multiple Tables, Single Column case
+    # ---------------------------------------------------
     par_m_tt_c = sub_m_tt_c.add_parser(
-        "column", parents=[], help="Mulitple Axes, multiple tables, single column plot"
+        "column",
+        parents=[
+            prs.ncols(),
+            prs.ifiles(),
+            prs.xlim(),
+            prs.lica(),
+            prs.xc(),
+            prs.yc(),
+            prs.title(None, "Plotting"),
+            prs.resample(),
+            prs.auxlines(),
+            prs.percent(),
+            prs.marker(),
+        ],
+        help="Mulitple Axes, multiple tables, single column plot",
     )
     par_m_tt_c.set_defaults(func=cli_multi_tables_column)
+
+    # ------------------------------------------------------
+    # Multiplea Axes, Multiple Tables, Multiple Columns case
+    # ------------------------------------------------------
     par_m_tt_cc = sub_m_tt_c.add_parser(
         "columns",
         parents=[
