@@ -219,7 +219,7 @@ plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console single tables column -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
+    lica-plot --console --trace single tables column -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table

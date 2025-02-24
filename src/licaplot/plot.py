@@ -16,7 +16,7 @@ from math import ceil, sqrt
 
 # Typing hints
 from argparse import ArgumentParser, Namespace
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Sequence
 
 # ---------------------
 # Thrid-party libraries
@@ -64,11 +64,6 @@ log = logging.getLogger(__name__)
 # -------------------
 # Auxiliary functions
 # -------------------
-
-
-# -----------------------
-# AUXILIARY MAIN FUNCTION
-# -----------------------
 
 
 def read_csv(path: str, columns: Optional[Iterable[str]], delimiter: Optional[str]) -> Table:
@@ -145,8 +140,6 @@ def build_table_yc(
     xu: u.Unit,
     yc: int,
     yu: u.Unit,
-    title: str,
-    label: str,
     columns: Optional[Iterable[str]],
     delimiter: Optional[str],
     xl: Optional[float],
@@ -176,8 +169,6 @@ def build_table_yc(
         table[col_y.name] = table[col_y.name] * yu
     if col_x.unit is None:
         table[col_x.name] = table[col_x.name] * xu
-    table.meta["label"] = table.meta.get("label") or label
-    table.meta["title"] = table.meta.get("title") or title
     log.debug(table.info)
     log.debug(table.meta)
     return table
@@ -187,8 +178,6 @@ def build_table_yycc(
     path: str,
     xc: int,
     xu: u.Unit,
-    title: str,
-    label: str,
     columns: Optional[Iterable[str]],
     delimiter: Optional[str],
     xl: Optional[float],
@@ -198,11 +187,129 @@ def build_table_yycc(
 ) -> Table:
     table = read_csv(path, columns, delimiter)
     table = trim_table(table, xc, xu, xl, xh, lu, lica_trim)
-    table.meta["label"] = table.meta.get("label") or label
-    table.meta["title"] = table.meta.get("title") or title
     log.debug(table.info)
     log.debug(table.meta)
     return table
+
+
+def single_table_column_markers(args_marker: str, table: Table, ycol: int) -> str | None:
+    return args_marker
+
+
+def single_table_column_title(args_title: str, table: Table, ycol: int) -> str | None:
+    return " ".join(args_title) if args_title is not None else table.meta["title"]
+
+
+def single_table_columns_legends(
+    args_label: Sequence[str], table: Table, ycols: Sequence[int]
+) -> Sequence[str]:
+    if args_label is not None and len(args_label) != len(ycols):
+        raise ValueError(
+            "number of labels (%d) should match number of y-columns (%d)",
+            len(args_label),
+            len(ycols),
+        )
+    return (
+        args_label
+        if args_label is not None
+        else [table.columns[y - 1].name[:6] + "." for y in ycols]
+    )
+
+
+def single_table_columns_markers(
+    args_marker: Sequence[str], table: Table, ycols: Sequence[int]
+) -> Sequence[str]:
+    if args_marker is not None and len(args_marker) != len(ycols):
+        raise ValueError(
+            "number of markers (%d) should match number of y-columns (%d)",
+            len(args_marker),
+            len(ycols),
+        )
+    return args_marker
+
+
+def single_table_columns_title(
+    args_title: Sequence[str], table: Table, ycols: Sequence[int]
+) -> str | None:
+    return " ".join(args_title) if args_title is not None else table.meta["title"]
+
+
+def single_tables_column_legends(
+    args_label: str, tables: Sequence[Table], col: int
+) -> Sequence[str]:
+    return [table.meta["label"] for table in tables]
+
+
+def single_tables_column_markers(
+    args_marker: str, tables: Sequence[Table], col: int
+) -> Sequence[str]:
+    if args_marker is not None and len(args_marker) != len(tables):
+        raise ValueError(
+            "number of markers (%d) should match number of tables (%d)",
+            len(args_marker),
+            len(tables),
+        )
+    return args_marker
+
+
+def single_tables_column_title(args_title: str, tables: Sequence[Table], col: int) -> str | None:
+    return " ".join(args_title) if args_title is not None else tables[0].meta["title"]
+
+
+def single_tables_columns_legends(
+    args_label: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> Sequence[str]:
+    NT = len(tables)
+    NC = len(ycols)
+    if args_label is not None:
+        NARGS = len(args_label)
+        if NARGS == NC:
+            result = args_label * NT
+        elif NARGS == NC * NT:
+            result = args_label
+        else:
+            raise ValueError(
+                "number of labels (%d) should match number of y-columns (%d)  or tables x y-columns (%d)",
+                NARGS,
+                NC,
+                NC * NT,
+            )
+        return result
+    else:
+        return [
+            table.meta["label"] + "-" + table.columns[y - 1].name[0:6] + "."
+            for table in tables
+            for y in ycols
+        ]
+
+
+def single_tables_columns_markers(
+    args_marker: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> Sequence[str]:
+    NT = len(tables)
+    NC = len(ycols)
+    if args_marker is not None:
+        NARGS = len(args_marker)
+        if NARGS == NC:
+            result = args_marker * NT
+        elif NARGS == NC * NT:
+            result = args_marker
+        else:
+            raise ValueError(
+                "number of markers (%d) should match number of y-columns (%d) or tables x y-columns (%d)",
+                NARGS,
+                NC,
+                NC * NT,
+            )
+        return result
+    else:
+        return None
+
+
+def single_tables_columns_title(
+    args_title: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> str | None:
+    return " ".join(args_title) if args_title is not None else tables[0].meta["title"]
 
 
 # ===================================
@@ -211,7 +318,6 @@ def build_table_yycc(
 
 
 def cli_single_table_column(args: Namespace):
-    title = " ".join(args.title) if args.title else None
     table = build_table_yc(
         path=args.input_file,
         delimiter=args.delimiter,
@@ -225,10 +331,9 @@ def cli_single_table_column(args: Namespace):
         lu=args.limits_unit,
         resolution=args.resample,
         lica_trim=args.lica,
-        title=title,
-        label=None,
     )
-    title = table.meta["title"] or table.meta["label"]
+    title = single_table_column_title(args.title, table, args.y_column)
+    markers = single_table_column_markers(args.marker, table, args.y_column)
     with visualization.quantity_support():
         plot_single_table_column(
             table=table,
@@ -238,12 +343,11 @@ def cli_single_table_column(args: Namespace):
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
-            marker=args.marker,
+            marker=markers,
         )
 
 
 def cli_single_table_columns(args: Namespace):
-    title = " ".join(args.title) if args.title else None
     table = build_table_yycc(
         path=args.input_file,
         delimiter=args.delimiter,
@@ -254,29 +358,25 @@ def cli_single_table_columns(args: Namespace):
         xh=args.x_high,
         lu=args.limits_unit,
         lica_trim=args.lica,
-        title=title,
-        label=args.label,
     )
-    title = table.meta["title"]
-    yy = [y - 1 for y in args.y_column]
-    labels = args.label or [table.columns[y].name[:5] + "." for y in yy]
+    title = single_table_columns_title(args.title, table, args.y_column)
+    legends = single_table_columns_legends(args.label, table, args.y_column)
+    markers = single_table_columns_markers(args.marker, table, args.y_column)
     with visualization.quantity_support():
         plot_single_table_columns(
             table=table,
             x=args.x_column - 1,
-            yy=yy,
-            legends=labels,
+            yy=[y - 1 for y in args.y_column],
+            legends=legends,
             title=title,
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
-            markers=args.marker,
+            markers=markers,
         )
 
 
 def cli_single_tables_column(args: Namespace):
-    title = " ".join(args.title) if args.title else None
-    labels = list()
     tables = list()
     for path in args.input_file:
         table = build_table_yc(
@@ -292,32 +392,28 @@ def cli_single_tables_column(args: Namespace):
             lu=args.limits_unit,
             resolution=args.resample,
             lica_trim=args.lica,
-            title=title,
-            label=None,
         )
-        labels.append(table.meta["label"])
         tables.append(table)
-    title = title or ", ".join([t.meta["title"] for t in tables])
+    title = single_tables_column_title(args.title, tables, args.y_column)
+    legends = single_tables_column_legends(args.label, tables, args.y_column)
+    markers = single_tables_column_markers(args.marker, tables, args.y_column)
     with visualization.quantity_support():
         plot_single_tables_column(
             tables=tables,
             x=args.x_column - 1,
             y=args.y_column - 1,
-            legends=labels,
+            legends=legends,
             title=title,
             changes=args.changes,
             percent=args.percent,
             linewidth=args.lines or 0,
-            markers=args.marker,
+            markers=markers,
         )
 
 
 def cli_single_tables_columns(args: Namespace):
     tables = list()
-    titles = list()
-    N = len(args.input_file)
-    args_title = args.title or [None] * N
-    for path, title in zip(args.input_file, args_title):
+    for path in args.input_file:
         table = build_table_yycc(
             path=path,
             delimiter=args.delimiter,
@@ -328,27 +424,26 @@ def cli_single_tables_columns(args: Namespace):
             xh=args.x_high,
             lu=args.limits_unit,
             lica_trim=args.lica,
-            title=title,
-            label=args.label,
         )
         tables.append(table)
-        titles.append(table.meta["title"])
-    yy = [y - 1 for y in args.y_column]
-    if args.label is None:
-        labels = [
-            table.meta["label"] + "-" + table.columns[y].name[:6] for table in tables for y in yy
-        ]
-    title = title or ", ".join([t.meta["title"] for t in tables])
+
+    title = single_tables_columns_title(args.title, tables, args.y_column)
+    legends = single_tables_columns_legends(args.label, tables, args.y_column)
+    markers = single_tables_columns_markers(args.marker, tables, args.y_column)
+    log.info("TITLE = %s", title)
+    log.info("LEGENDS = %s", legends)
+    log.info("MARKERS = %s", legends)
+
     plot_single_tables_columns(
         tables=tables,
         x=args.x_column - 1,
-        yy=yy,
-        legends=labels,
+        yy=[y - 1 for y in args.y_column],
+        legends=legends,
         title=title,
         changes=args.changes,
         percent=args.percent,
         linewidth=args.lines or 0,
-        markers=args.marker,
+        markers=markers,
     )
 
 
