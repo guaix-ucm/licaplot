@@ -205,9 +205,8 @@ def single_table_columns_legends(
 ) -> Sequence[str]:
     if args_label is not None and len(args_label) != len(ycols):
         raise ValueError(
-            "number of labels (%d) should match number of y-columns (%d)",
-            len(args_label),
-            len(ycols),
+            "number of labels (%d) should match number of y-columns (%d)"
+            % (len(args_label), len(ycols)),
         )
     return (
         args_label
@@ -221,9 +220,11 @@ def single_table_columns_markers(
 ) -> Sequence[str]:
     if args_marker is not None and len(args_marker) != len(ycols):
         raise ValueError(
-            "number of markers (%d) should match number of y-columns (%d)",
-            len(args_marker),
-            len(ycols),
+            "number of markers (%d) should match number of y-columns (%d)"
+            % (
+                len(args_marker),
+                len(ycols),
+            )
         )
     return args_marker
 
@@ -245,9 +246,8 @@ def single_tables_column_markers(
 ) -> Sequence[str]:
     if args_marker is not None and len(args_marker) != len(tables):
         raise ValueError(
-            "number of markers (%d) should match number of tables (%d)",
-            len(args_marker),
-            len(tables),
+            "number of markers (%d) should match number of tables (%d)"
+            % (len(args_marker), len(tables)),
         )
     return args_marker
 
@@ -269,10 +269,8 @@ def single_tables_columns_legends(
             result = args_label
         else:
             raise ValueError(
-                "number of labels (%d) should match number of y-columns (%d)  or tables x y-columns (%d)",
-                NARGS,
-                NC,
-                NC * NT,
+                "number of labels (%d) should match number of y-columns (%d)  or tables x y-columns (%d)"
+                % (NARGS, NC, NC * NT),
             )
         return result
     else:
@@ -296,10 +294,8 @@ def single_tables_columns_markers(
             result = args_marker
         else:
             raise ValueError(
-                "number of markers (%d) should match number of y-columns (%d) or tables x y-columns (%d)",
-                NARGS,
-                NC,
-                NC * NT,
+                "number of markers (%d) should match number of y-columns (%d) or tables x y-columns (%d)"
+                % (NARGS, NC, NC * NT)
             )
         return result
     else:
@@ -311,6 +307,28 @@ def single_tables_columns_title(
 ) -> str | None:
     return " ".join(args_title) if args_title is not None else tables[0].meta["title"]
 
+
+def mult_tables_columns_title(
+    args_title: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> str | None:
+    NT = len(tables)
+    if args_title is not None:
+        NARGS = len(args_title)
+        if NARGS != NT:
+            raise ValueError(
+                "number of titles (%d) should match number of tables (%d)" % (NARGS, NT)
+            )
+    return " ".join(args_title) if args_title is not None else [t.meta["title"] for t in tables]
+
+def multi_tables_columns_legends(
+    args_label: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> Sequence[str]:
+    return single_tables_columns_markers(args_label, tables, ycols)
+
+def multi_tables_columns_markers(
+    args_marker: Sequence[str], tables: Sequence[Table], ycols: Sequence[int]
+) -> Sequence[str]:
+    return single_tables_columns_markers(args_marker, tables, ycols)
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
@@ -426,14 +444,9 @@ def cli_single_tables_columns(args: Namespace):
             lica_trim=args.lica,
         )
         tables.append(table)
-
     title = single_tables_columns_title(args.title, tables, args.y_column)
     legends = single_tables_columns_legends(args.label, tables, args.y_column)
     markers = single_tables_columns_markers(args.marker, tables, args.y_column)
-    log.info("TITLE = %s", title)
-    log.info("LEGENDS = %s", legends)
-    log.info("MARKERS = %s", legends)
-
     plot_single_tables_columns(
         tables=tables,
         x=args.x_column - 1,
@@ -488,11 +501,8 @@ def cli_multi_tables_column(args: Namespace):
 
 
 def cli_multi_tables_columns(args: Namespace):
-    titles = list()
     tables = list()
-    N = len(args.input_file)
-    args_title = args.title or [None] * N
-    for path, title in zip(args.input_file, args_title):
+    for path in args.input_file:
         table = build_table_yycc(
             path=path,
             delimiter=args.delimiter,
@@ -503,17 +513,14 @@ def cli_multi_tables_columns(args: Namespace):
             xh=args.x_high,
             lu=args.limits_unit,
             lica_trim=args.lica,
-            title=title,
-            label=args.label,
         )
         tables.append(table)
-        titles.append(table.meta["title"])
-    yy = [y - 1 for y in args.y_column]
-    labels = (
-        [table.columns[y].name[:6] for table in tables for y in yy]
-        if args.label is None
-        else args.label
-    )
+    titles = mult_tables_columns_title(args.title, tables, args.y_column)
+    legends = multi_tables_columns_legends(args.label, tables, args.y_column)
+    markers = multi_tables_columns_markers(args.marker, tables, args.y_column)
+    log.info("TITLE = %s", titles)
+    log.info("LEGENDS = %s", legends)
+    log.info("MARKERS = %s", legends)
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     plot_multi_tables_columns(
@@ -521,13 +528,13 @@ def cli_multi_tables_columns(args: Namespace):
         ncols=ncols,
         tables=tables,
         x=args.x_column - 1,
-        yy=yy,
-        legends=labels,
+        yy=[y - 1 for y in args.y_column],
+        legends=legends,
         titles=titles,
         changes=args.changes,
         percent=args.percent,
         linewidth=args.lines or 0,
-        markers=args.marker,
+        markers=markers,
     )
 
 

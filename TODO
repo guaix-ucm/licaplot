@@ -1,5 +1,9 @@
 TODO
 ====
+* Plots:
+Me he quedado en el multi_tables_columns. 
+ - no muestra los labels
+
 * hammatsu.py plotting no funciona
 * osi.py plotting no funciona
 * tessw.py plotting no funciona:
