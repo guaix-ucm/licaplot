@@ -4,7 +4,7 @@ name = "licaplot"
 dynamic = ["version"]
 description = "Plotting tools to analyze sensors and filters from LICA Optical Bench"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 license = {text = "GPL-3.0 license"}
 authors = [
     {name = "Rafael González", email = "rafael08@ucm.es"},
