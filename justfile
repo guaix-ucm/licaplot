@@ -215,7 +215,7 @@ plot-s_t_cc args="":
     lica-plot --console --trace single table columns -% -i ${dir}/02_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
 
 # Plot single axes, 3 table, 1 column each
-plot-s-tt-c args="":
+plot-s_tt_c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"

@@ -12,6 +12,7 @@
 
 import os
 import logging
+import itertools
 from math import ceil, sqrt
 
 # Typing hints
@@ -42,6 +43,7 @@ from .utils.mpl import (
     plot_single_table_column,
     plot_single_table_columns,
     plot_single_tables_column,
+    plot_single_tables_columns,
     plot_multi_tables_columns,
     plot_multi_tables_column,
     plot_multi_table_columns,
@@ -298,7 +300,7 @@ def cli_single_tables_column(args: Namespace):
         )
         labels.append(table.meta["label"])
         tables.append(table)
-    title = title or tables[0].meta["title"]
+    title = title or ", ".join([t.meta["title"] for t in tables])
     with visualization.quantity_support():
         plot_single_tables_column(
             tables=tables,
@@ -314,7 +316,42 @@ def cli_single_tables_column(args: Namespace):
 
 
 def cli_single_tables_columns(args: Namespace):
-    pass
+    tables = list()
+    titles = list()
+    N = len(args.input_file)
+    args_title = args.title or [None] * N
+    for path, title in zip(args.input_file, args_title):
+        table = build_table_yycc(
+            path=path,
+            delimiter=args.delimiter,
+            columns=args.columns,
+            xc=args.x_column - 1,
+            xu=args.x_unit,
+            xl=args.x_low,
+            xh=args.x_high,
+            lu=args.limits_unit,
+            lica_trim=args.lica,
+            title=title,
+            label=args.label,
+        )
+        tables.append(table)
+        titles.append(table.meta["title"])
+    yy = [y - 1 for y in args.y_column]
+    if args.label is None:
+        labels = [table.meta["label"] + "-" + table.columns[y].name[:6] for table in tables for y in yy]
+    title = title or ", ".join([t.meta["title"] for t in tables])
+    plot_single_tables_columns(
+        tables=tables,
+        x=args.x_column - 1,
+        yy=yy,
+        legends=labels,
+        title=title,
+        changes=args.changes,
+        percent=args.percent,
+        linewidth=args.lines or 0,
+        markers=args.marker,
+    )
+
 
 def cli_multi_table_columns(args: Namespace):
     raise NotImplementedError("Not very useful use case")
@@ -328,8 +365,8 @@ def cli_multi_tables_columns(args: Namespace):
     titles = list()
     tables = list()
     N = len(args.input_file)
-    args_titles = args.title or [None] * N
-    for path, title in zip(args.input_file, args_titles):
+    args_title = args.title or [None] * N
+    for path, title in zip(args.input_file, args_title):
         table = build_table_yycc(
             path=path,
             delimiter=args.delimiter,
@@ -360,7 +397,7 @@ def cli_multi_tables_columns(args: Namespace):
         changes=args.changes,
         percent=args.percent,
         linewidth=args.lines or 0,
-        markers=args.marker
+        markers=args.marker,
     )
 
 
@@ -434,7 +471,18 @@ def add_args(parser: ArgumentParser):
     par_s_tt_c.set_defaults(func=cli_single_tables_column)
     par_s_tt_cc = sub_s_tt.add_parser(
         "columns",
-        parents=[],
+        parents=[
+            prs.ifiles(),
+            prs.xlim(),
+            prs.lica(),
+            prs.xc(),
+            prs.yycc(),
+            prs.title(None, "Plotting"),
+            prs.labels("plotting"),  # Column labels
+            prs.auxlines(),
+            prs.percent(),
+            prs.markers(),
+        ],
         help="Single Axes, multiple tables, multiple columns plot",
     )
     par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
