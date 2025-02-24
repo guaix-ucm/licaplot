@@ -54,6 +54,24 @@ MONOCROMATOR_CHANGES_LABELS = (
 )
 
 
+def markers_grp(
+    flat_markers: Sequence[Markers], ntab: int, ncol: int
+) -> Sequence[Sequence[Markers]]:
+    return (
+        list(itertools.batched(flat_markers, ncol))
+        if flat_markers is not None
+        else [[None] * ncol] * ntab
+    )
+
+
+def legends_grp(flat_labels: Sequence[str], ntab: int, ncol: int) -> Sequence[Sequence[str]]:
+    return (
+        list(itertools.batched(flat_labels, ncol))
+        if flat_labels is not None
+        else [[None] * ncol] * ntab
+    )
+
+
 def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> None:
     """Get the labels for a table, using units if necessary"""
     xlabel = table.columns[x].name
@@ -113,65 +131,6 @@ def _plot_single_tables_columns(
     axes.minorticks_on()
     axes.legend()
     plt.show()
-
-
-# def plot_single_tables_columns(
-#     tables: Sequence[Table],
-#     x: int,
-#     yy: Sequence[int],
-#     legends: Sequence[str],
-#     title: Optional[str],
-#     changes: Optional[bool] = False,
-#     percent: Optional[bool] = False,
-#     linewidth: Optional[int] = 0,
-#     markers: Optional[Sequence[Markers]] = None,
-#     box: Optional[Tuple[str, float, float]] = None,
-# ) -> None:
-#     assert len(legends) == len(yy)
-#     fig, axes = plt.subplots(nrows=1, ncols=1)
-#     if title is not None:
-#         fig.suptitle(title)
-#     set_axes_labels(axes, tables[0], x, yy[0], percent)
-#     xcol = tables[0].columns[x]
-#     markers = markers or [marker for marker in Markers]
-#     markers = itertools.cycle(markers)
-#     for table in tables:
-#         for y, legend, marker in zip(yy, legends, markers):
-#             ycol = (
-#                 table.columns[y] * 100 * u.pct
-#                 if percent and table.columns[y].unit == u.dimensionless_unscaled
-#                 else table.columns[y]
-#             )
-#             axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
-#     if changes:
-#         for change in MONOCROMATOR_CHANGES_LABELS:
-#             axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
-#     if box:
-#         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
-#         axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
-#     axes.grid(True, which="major", color="silver", linestyle="solid")
-#     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-#     axes.minorticks_on()
-#     axes.legend()
-#     plt.show()
-
-
-def markers_grp(
-    flat_markers: Sequence[Markers], ntab: int, ncol: int
-) -> Sequence[Sequence[Markers]]:
-    return (
-        list(itertools.batched(flat_markers, ncol))
-        if flat_markers is not None
-        else [[None] * ncol] * ntab
-    )
-
-
-def legends_grp(flat_labels: Sequence[str], ntab: int, ncol: int) -> Sequence[Sequence[str]]:
-    return (
-        list(itertools.batched(flat_labels, ncol))
-        if flat_labels is not None
-        else [[None] * ncol] * ntab
-    )
 
 
 def plot_single_table_column(
