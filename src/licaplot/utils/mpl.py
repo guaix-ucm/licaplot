@@ -11,7 +11,7 @@
 
 import itertools
 
-from typing import Iterable, Sequence, Optional, Tuple
+from typing import Sequence, Optional, Tuple
 
 # ---------------------
 # Thrid-party libraries
@@ -59,28 +59,29 @@ def set_axes_labels(axes: Axes, table: Table, x: int, y: int, percent: bool) -> 
     axes.set_ylabel(ylabel)
 
 
-def plot_single_tables_columns(
+def _plot_single_tables_columns(
     tables: Sequence[Table],
     x: int,
     yy: Sequence[int],
-    legends: Sequence[str],
+    legends: Sequence[Sequence[str]],
     title: Optional[str],
     changes: Optional[bool] = False,
     percent: Optional[bool] = False,
     linewidth: Optional[int] = 0,
-    markers: Optional[Sequence[Markers]] = None,
+    markers: Optional[Sequence[Sequence[Markers]]] = None,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    assert len(legends) == len(yy)
+    assert len(legends) == len(tables)*len(yy)
+    assert len(markers) == len(tables)*len(yy)
     fig, axes = plt.subplots(nrows=1, ncols=1)
     if title is not None:
         fig.suptitle(title)
-    set_axes_labels(axes, tables[0], x, yy[0], percent)
-    xcol = tables[0].columns[x]
-    markers = markers or [marker for marker in Markers]
-    markers = itertools.cycle(markers)
-    for table in tables:
-        for y, legend, marker in zip(yy, legends, markers):
+    for table, legend_grp, marker_grp in zip(tables, legends, markers):
+        set_axes_labels(axes, table, x, yy[0], percent)
+        xcol = table.columns[x]
+        marker_grp = marker_grp or [marker for marker in Markers]
+        marker_grp = itertools.cycle(marker_grp)
+        for y, legend, marker in zip(yy, legend_grp, marker_grp):
             ycol = (
                 table.columns[y] * 100 * u.pct
                 if percent and table.columns[y].unit == u.dimensionless_unscaled
@@ -100,6 +101,48 @@ def plot_single_tables_columns(
     plt.show()
 
 
+
+# def plot_single_tables_columns(
+#     tables: Sequence[Table],
+#     x: int,
+#     yy: Sequence[int],
+#     legends: Sequence[str],
+#     title: Optional[str],
+#     changes: Optional[bool] = False,
+#     percent: Optional[bool] = False,
+#     linewidth: Optional[int] = 0,
+#     markers: Optional[Sequence[Markers]] = None,
+#     box: Optional[Tuple[str, float, float]] = None,
+# ) -> None:
+#     assert len(legends) == len(yy)
+#     fig, axes = plt.subplots(nrows=1, ncols=1)
+#     if title is not None:
+#         fig.suptitle(title)
+#     set_axes_labels(axes, tables[0], x, yy[0], percent)
+#     xcol = tables[0].columns[x]
+#     markers = markers or [marker for marker in Markers]
+#     markers = itertools.cycle(markers)
+#     for table in tables:
+#         for y, legend, marker in zip(yy, legends, markers):
+#             ycol = (
+#                 table.columns[y] * 100 * u.pct
+#                 if percent and table.columns[y].unit == u.dimensionless_unscaled
+#                 else table.columns[y]
+#             )
+#             axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
+#     if changes:
+#         for change in MONOCROMATOR_CHANGES_LABELS:
+#             axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
+#     if box:
+#         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+#         axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+#     axes.grid(True, which="major", color="silver", linestyle="solid")
+#     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+#     axes.minorticks_on()
+#     axes.legend()
+#     plt.show()
+
+
 def plot_single_table_column(
     table: Table,
     x: int,
@@ -111,16 +154,52 @@ def plot_single_table_column(
     marker: Optional[Markers] = None,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    plot_single_tables_columns(
+    _plot_single_tables_columns(
         tables=[table],
         x=x,
         yy=[y],
-        legends=[None],
+        legends=[[None]],
         title=title,
         changes=changes,
         percent=percent,
         linewidth=linewidth,
-        markers=[marker] if marker is not None else None,
+        markers=[[marker] if marker is not None else None],
+        box=box,
+    )
+
+
+def plot_single_tables_columns(
+    tables: Sequence[Table],
+    x: int,
+    yy: Sequence[int],
+    legends: Sequence[str],
+    title: Optional[str],
+    changes: Optional[bool] = False,
+    percent: Optional[bool] = False,
+    linewidth: Optional[int] = 0,
+    markers: Optional[Sequence[Markers]] = None,
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    N = len(tables)
+    M = len(yy)
+    if legends is not None:
+        legends=list(itertools.batched(legends,N))
+    else:
+        legends=[[None]*M]*N
+    if markers is not None:
+         markers=list(itertools.batched(legends,N))
+    else:
+        legends=[[None]*M]*N
+    _plot_single_tables_columns(
+        tables=tables,
+        x=x,
+        yy=yy,
+        legends=legends,
+        title=title,
+        changes=changes,
+        percent=percent,
+        linewidth=linewidth,
+        markers=markers,
         box=box,
     )
 
@@ -137,7 +216,17 @@ def plot_single_table_columns(
     markers: Optional[Sequence[Markers]] = None,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    plot_single_tables_columns(
+    M = len(yy)
+    if legends is not None:
+        legends=list(itertools.batched(legends,1))
+    else:
+        legends=[[None]*M]
+    if markers is not None:
+         markers=list(itertools.batched(legends,1))
+    else:
+        legends=[[None]*M]
+
+    _plot_single_tables_columns(
         tables=[table],
         x=x,
         yy=yy,
@@ -149,7 +238,6 @@ def plot_single_table_columns(
         markers=markers,
         box=box,
     )
-
 
 def plot_single_tables_column(
     tables: Sequence[Table],
@@ -163,32 +251,46 @@ def plot_single_tables_column(
     markers: Optional[Sequence[Markers]] = None,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    assert len(legends) == len(tables)
-    fig, axes = plt.subplots(nrows=1, ncols=1)
-    if title is not None:
-        fig.suptitle(title)
-    set_axes_labels(axes, tables[0], x, y, percent)
-    xcol = tables[0].columns[x]
-    markers = markers or [marker for marker in Markers]
-    markers = itertools.cycle(markers)
-    for table, legend, marker in zip(tables, legends, markers):
-        ycol = (
-            table.columns[y] * 100 * u.pct
-            if percent and table.columns[y].unit == u.dimensionless_unscaled
-            else table.columns[y]
-        )
-        axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
-    if changes:
-        for change in MONOCROMATOR_CHANGES_LABELS:
-            axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
-    if box:
-        props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
-        axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
-    axes.grid(True, which="major", color="silver", linestyle="solid")
-    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-    axes.minorticks_on()
-    axes.legend()
-    plt.show()
+    pass
+
+# def plot_single_tables_column(
+#     tables: Sequence[Table],
+#     x: int,
+#     y: int,
+#     legends: Sequence[str],
+#     title: Optional[str],
+#     changes: Optional[bool] = False,
+#     percent: Optional[bool] = False,
+#     linewidth: Optional[int] = 0,
+#     markers: Optional[Sequence[Markers]] = None,
+#     box: Optional[Tuple[str, float, float]] = None,
+# ) -> None:
+#     assert len(legends) == len(tables)
+#     fig, axes = plt.subplots(nrows=1, ncols=1)
+#     if title is not None:
+#         fig.suptitle(title)
+#     set_axes_labels(axes, tables[0], x, y, percent)
+#     xcol = tables[0].columns[x]
+#     markers = markers or [marker for marker in Markers]
+#     markers = itertools.cycle(markers)
+#     for table, legend, marker in zip(tables, legends, markers):
+#         ycol = (
+#             table.columns[y] * 100 * u.pct
+#             if percent and table.columns[y].unit == u.dimensionless_unscaled
+#             else table.columns[y]
+#         )
+#         axes.plot(xcol, ycol, marker=marker, linewidth=linewidth, label=legend)
+#     if changes:
+#         for change in MONOCROMATOR_CHANGES_LABELS:
+#             axes.axvline(change["wavelength"], linestyle=change["style"], label=change["label"])
+#     if box:
+#         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+#         axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+#     axes.grid(True, which="major", color="silver", linestyle="solid")
+#     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+#     axes.minorticks_on()
+#     axes.legend()
+#     plt.show()
 
 
 def plot_multi_tables_columns(

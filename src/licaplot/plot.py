@@ -313,6 +313,9 @@ def cli_single_tables_column(args: Namespace):
         )
 
 
+def cli_single_tables_columns(args: Namespace):
+    pass
+
 def cli_multi_table_columns(args: Namespace):
     raise NotImplementedError("Not very useful use case")
 
@@ -410,8 +413,8 @@ def add_args(parser: ArgumentParser):
     par_s_t_cc.set_defaults(func=cli_single_table_columns)
 
     p_s_tt = sub_s_t.add_parser("tables", help="Single Axes, multiple tables plot")
-    sub_s_tt_c = p_s_tt.add_subparsers(required=True)
-    par_s_tt_c = sub_s_tt_c.add_parser(
+    sub_s_tt = p_s_tt.add_subparsers(required=True)
+    par_s_tt_c = sub_s_tt.add_parser(
         "column",
         parents=[
             prs.ifiles(),
@@ -429,6 +432,12 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, single column plot",
     )
     par_s_tt_c.set_defaults(func=cli_single_tables_column)
+    par_s_tt_cc = sub_s_tt.add_parser(
+        "columns",
+        parents=[],
+        help="Single Axes, multiple tables, multiple columns plot",
+    )
+    par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
 
     # =============
     # Multiple Axes

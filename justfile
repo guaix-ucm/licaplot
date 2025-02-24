@@ -201,7 +201,7 @@ tessw-plot:
     lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
 
 # Plot single axes, table and column
-plot-t_s_c args="":
+plot-s_t_c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
