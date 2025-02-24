@@ -197,74 +197,47 @@ sunglasses-reduce:
 tessw-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-plot --console single tables column -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv  -yc 2  --changes --lines
+    dir=data/tessw
+    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
 
-plotsin dir="data/filters/Eysdon_RGB": (anew dir)
+# Plot single axes, table and column
+plot-t_s_c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-filters --console --trace one -l Green -p {{dir}}/photodiode.txt -m PIN-10D -i {{dir}}/green.txt
-    lica-plot --console --trace single table column -i {{dir}}/green.ecsv --title Green filter -yc 4 --lines --changes
+    dir="data/filters/Omega_NPB"
+    lica-plot --console --trace single table column  -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines {{args}}
 
-
-plotmul dir="data/filters/Eysdon_RGB": (anew dir)
+# Plot single axes, table and 2 columns
+plot-s_t_cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
-    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
-    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
-    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
-    lica-filters --console process -d {{dir}} --save
-    lica-plot --console single tables column -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv -yc 4  --changes --lines
+    dir="data/sunglasses"
+    lica-plot --console --trace single table columns -% -i ${dir}/02_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
 
-# Plot CLI test driver
-test_s_t_c dir="data/filters/Eysdon_RGB" args="":
+# Plot single axes, 3 table, 1 column each
+plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    rm {{dir}}/*.ecsv
-    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
-    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
-    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
-    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
-    lica-filters --console process -d {{dir}} --save
-    lica-plot --console --trace single table column  --title Filtro Verde -i {{dir}}/green.ecsv -xc 1 -yc 4 --changes --lines {{args}}
+    dir="data/filters/Eysdon_RGB"
+    lica-plot --console single tables column -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
 
-test_s_tt_c dir="data/filters/Eysdon_RGB" args="":
+
+# Plot multiple Axes, one table per axes, several column per table
+plot-s_tt_cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    rm {{dir}}/*.ecsv
-    lica-filters --console classif photod --tag X -p {{dir}}/photodiode.txt
-    lica-filters --console classif filter --tag X -i {{dir}}/green.txt -l Green
-    lica-filters --console classif filter --tag X -i {{dir}}/red.txt -l Red
-    lica-filters --console classif filter --tag X -i {{dir}}/blue.txt -l Blue
-    lica-filters --console process -d {{dir}} --save
-    lica-plot --console --trace single tables column -i {{dir}}/blue.ecsv {{dir}}/red.ecsv {{dir}}/green.ecsv  -xc 1 -yc 4 --changes --lines {{args}}
+    dir=data/sunglasses
+    lica-plot --console --trace single tables columns -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 4 5 --changes --lines {{args}}
 
-t_dir := "data/sunglasses"
-test_s_t_cc args="":
+
+# Plot multiple Axes, one table per axes, several column per table
+plot-m_tt_cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-plot --console --trace single table columns -% -i {{t_dir}}/02_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
+    dir=data/sunglasses
+    lica-plot --console --trace multi tables columns -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
-test_m_tt_cc dir="data/sunglasses" args="":
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    lica-plot --console --trace multi tables columns -i {{dir}}/01_sg.ecsv {{dir}}/02_sg.ecsv {{dir}}/03_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
-
-# Reduce all sunglasses data
-sunglasses dir="data/sunglasses":
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    for i in 01 02 03 04 05 06 07 08 09 10
-    do
-        lica-filters --console one -l $i -t $i -p {{dir}}/${i}_osi_nd0.5.txt -m PIN-10D -i {{dir}}/${i}_sg.txt --ndf ND-0.5
-    done
-
-[private]
-anew dir:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    rm {{dir}}/*.ecsv || exit 0
 
 [private]
 check_mnt mnt:
