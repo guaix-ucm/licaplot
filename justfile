@@ -132,14 +132,67 @@ osi-plot:
     lica-photod --console plot -m PIN-10D
 
 
+# reduce LICA data (tessw, sunglasses, eysdon, omega, sp750, ndf)
+reduce what:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    just {{what}}-reduce
+    
+
+[private]
 tessw-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-tessw --console --trace classif photod -p data/tessw/stars1277-photodiode.csv --tag A
-    lica-tessw --console classif sensor -i data/tessw/stars1277-frequencies.csv -l TSL237 --tag A
-    lica-tessw --console classif photod -p data/tessw/stars6502-photodiode.csv --tag B
-    lica-tessw --console classif sensor -i data/tessw/stars6502-frequencies.csv -l OTHER --tag B
-    lica-tessw --console process  -d data/tessw/ --save
+    dir="data/tessw"
+    lica-tessw --console --trace classif photod -p ${dir}/stars1277-photodiode.csv --tag A
+    lica-tessw --console classif sensor -i ${dir}/stars1277-frequencies.csv -l TSL237 --tag A
+    lica-tessw --console classif photod -p ${dir}/stars6502-photodiode.csv --tag B
+    lica-tessw --console classif sensor -i ${dir}/stars6502-frequencies.csv -l OTHER --tag B
+    lica-tessw --console process  -d ${dir} --save
+
+[private]
+eysdon-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Eysdon_RGB"
+    lica-filters --console classif photod --tag X -p ${dir}/photodiode.txt
+    lica-filters --console classif filter --tag X -i ${dir}/green.txt -l Green
+    lica-filters --console classif filter --tag X -i ${dir}/red.txt -l Red
+    lica-filters --console classif filter --tag X -i ${dir}/blue.txt -l Blue
+    lica-filters --console process -d ${dir} --save
+
+
+[private]
+omega-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Omega_NPB"
+    lica-filters --console --trace one -l OMEGA NPB -p ${dir}/QEdata_diode_2nm.txt -m PIN-10D -i ${dir}/QEdata_filter_2nm.txt
+
+[private]
+sp750-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/IR_cut"
+    lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
+
+[private]
+ndf-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/ndfilters/ndf0.5"
+    lica-filters --console --trace one -l ND 0.5 -p ${dir}/osi_clear1.txt -m PIN-10D -i ${dir}/osi_nd0.5.txt
+
+
+[private]
+sunglasses-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/sunglasses"
+    for i in 01 02 03 04 05 06 07 08 09 10
+    do
+        lica-filters --console one -l $i -t $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_sg.txt --ndf ND-0.5
+    done
 
 tessw-plot:
     #!/usr/bin/env bash
