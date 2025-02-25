@@ -22,7 +22,6 @@ from typing import Optional, Iterable, Sequence
 # Thrid-party libraries
 # ---------------------
 
-import matplotlib.pyplot as plt
 import numpy as np
 import astropy.io.ascii
 import astropy.units as u
@@ -362,6 +361,7 @@ def cli_single_table_column(args: Namespace):
             percent=args.percent,
             linewidth=args.lines or 0,
             marker=markers,
+            save_path=args.save_figure_path,
         )
 
 
@@ -391,6 +391,7 @@ def cli_single_table_columns(args: Namespace):
             percent=args.percent,
             linewidth=args.lines or 0,
             markers=markers,
+            save_path=args.save_figure_path,
         )
 
 
@@ -426,6 +427,7 @@ def cli_single_tables_column(args: Namespace):
             percent=args.percent,
             linewidth=args.lines or 0,
             markers=markers,
+            save_path=args.save_figure_path,
         )
 
 
@@ -447,17 +449,19 @@ def cli_single_tables_columns(args: Namespace):
     title = single_tables_columns_title(args.title, tables, args.y_column)
     legends = single_tables_columns_legends(args.label, tables, args.y_column)
     markers = single_tables_columns_markers(args.marker, tables, args.y_column)
-    plot_single_tables_columns(
-        tables=tables,
-        x=args.x_column - 1,
-        yy=[y - 1 for y in args.y_column],
-        legends=legends,
-        title=title,
-        changes=args.changes,
-        percent=args.percent,
-        linewidth=args.lines or 0,
-        markers=markers,
-    )
+    with visualization.quantity_support():
+        plot_single_tables_columns(
+            tables=tables,
+            x=args.x_column - 1,
+            yy=[y - 1 for y in args.y_column],
+            legends=legends,
+            title=title,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=args.lines or 0,
+            markers=markers,
+            save_path=args.save_figure_path,
+        )
 
 
 def cli_multi_tables_column(args: Namespace):
@@ -486,17 +490,19 @@ def cli_multi_tables_column(args: Namespace):
         titles.append(table.meta["title"])
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
-    plot_multi_tables_column(
-        nrows=nrows,
-        ncols=ncols,
-        tables=tables,
-        x=args.x_column - 1,
-        y=args.y_column - 1,
-        titles=titles,  # ESTOOO REVISAR
-        changes=args.changes,
-        percent=args.percent,
-        linewidth=args.lines or 0,
-        marker=args.marker,
+    with visualization.quantity_support():
+        plot_multi_tables_column(
+            nrows=nrows,
+            ncols=ncols,
+            tables=tables,
+            x=args.x_column - 1,
+            y=args.y_column - 1,
+            titles=titles,  # ESTOOO REVISAR
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=args.lines or 0,
+            marker=args.marker,
+            save_path=args.save_figure_path,
     )
 
 
@@ -523,18 +529,20 @@ def cli_multi_tables_columns(args: Namespace):
     log.info("MARKERS = %s", legends)
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
-    plot_multi_tables_columns(
-        nrows=nrows,
-        ncols=ncols,
-        tables=tables,
-        x=args.x_column - 1,
-        yy=[y - 1 for y in args.y_column],
-        legends=legends,
-        titles=titles,
-        changes=args.changes,
-        percent=args.percent,
-        linewidth=args.lines or 0,
-        markers=markers,
+    with visualization.quantity_support():
+        plot_multi_tables_columns(
+            nrows=nrows,
+            ncols=ncols,
+            tables=tables,
+            x=args.x_column - 1,
+            yy=[y - 1 for y in args.y_column],
+            legends=legends,
+            titles=titles,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=args.lines or 0,
+            markers=markers,
+            save_path=args.save_figure_path,
     )
 
 
@@ -564,9 +572,11 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.label("plotting"),
             prs.auxlines(),
             prs.percent(),
             prs.marker(),
+            prs.savefig(),
         ],
         help="Single Axes, single table, single column plot",
     )
@@ -588,6 +598,7 @@ def add_args(parser: ArgumentParser):
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.savefig(),
         ],
         help="Single Axes, single table, multiple columns plot",
     )
@@ -613,6 +624,7 @@ def add_args(parser: ArgumentParser):
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.savefig(),
         ],
         help="Single Axes, multiple tables, single column plot",
     )
@@ -634,6 +646,7 @@ def add_args(parser: ArgumentParser):
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.savefig(),
         ],
         help="Single Axes, multiple tables, multiple columns plot",
     )
@@ -661,10 +674,12 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "Plotting"),
+            prs.label("plotting"),
             prs.resample(),
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.savefig(),
         ],
         help="Mulitple Axes, multiple tables, single column plot",
     )
@@ -687,6 +702,7 @@ def add_args(parser: ArgumentParser):
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.savefig(),
         ],
         help="Mulitple Axes, multiple tables, multiple columns plot",
     )

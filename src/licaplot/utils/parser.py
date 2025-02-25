@@ -28,7 +28,7 @@ from lica.lab.ndfilters import NDFilter
 # Own modules and packages
 # ------------------------
 
-from .validators import vecsvfile
+from .validators import vecsvfile, vfigext
 from .mpl import Markers
 
 # ------------------------
@@ -429,6 +429,18 @@ def save() -> ArgumentParser:
         "--save",
         action="store_true",
         help="Save processing file to ECSV",
+    )
+    return parser
+
+def savefig() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-sf",
+        "--save-figure-path",
+        type=vfigext,
+        default=None,
+        metavar="<File>",
+        help=".png or .pdf figure file path, defaults to %(default)s",
     )
     return parser
 

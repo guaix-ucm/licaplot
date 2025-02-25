@@ -99,6 +99,7 @@ def _plot_single_tables_columns(
     linewidth: Optional[int] = 0,
     markers_grp: Optional[Sequence[Sequence[Markers]]] = None,
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     log.info("yy = %s", yy)
     log.info("legends_grp = %s", legends_grp)
@@ -136,7 +137,11 @@ def _plot_single_tables_columns(
     axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
     axes.minorticks_on()
     axes.legend()
-    plt.show()
+    if save_path is not None:
+        log.info("Saving to %s", save_path)
+        plt.savefig(save_path, bbox_inches="tight")
+    else:
+        plt.show()
 
 
 def plot_single_table_column(
@@ -149,6 +154,7 @@ def plot_single_table_column(
     linewidth: Optional[int] = 0,
     marker: Optional[Markers] = None,
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     _plot_single_tables_columns(
         tables=[table],
@@ -161,7 +167,9 @@ def plot_single_table_column(
         linewidth=linewidth,
         markers_grp=markers_grp(marker, ntab=1, ncol=1),
         box=box,
+        save_path=save_path,
     )
+
 
 def plot_single_table_columns(
     table: Table,
@@ -174,6 +182,7 @@ def plot_single_table_columns(
     linewidth: Optional[int] = 0,
     markers: Optional[Sequence[Markers]] = None,
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     _plot_single_tables_columns(
         tables=[table],
@@ -186,6 +195,7 @@ def plot_single_table_columns(
         linewidth=linewidth,
         markers_grp=markers_grp(markers, ntab=1, ncol=len(yy)),
         box=box,
+        save_path=save_path,
     )
 
 
@@ -200,6 +210,7 @@ def plot_single_tables_column(
     linewidth: Optional[int] = 0,
     markers: Optional[Sequence[Markers]] = None,
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     _plot_single_tables_columns(
         tables=tables,
@@ -212,6 +223,7 @@ def plot_single_tables_column(
         linewidth=linewidth,
         markers_grp=markers_grp(markers, ntab=len(tables), ncol=1),
         box=box,
+        save_path=save_path,
     )
 
 
@@ -226,6 +238,7 @@ def plot_single_tables_columns(
     linewidth: Optional[int] = 0,
     markers: Optional[Sequence[Markers]] = None,
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     _plot_single_tables_columns(
         tables=tables,
@@ -238,11 +251,14 @@ def plot_single_tables_columns(
         linewidth=linewidth,
         markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
         box=box,
+        save_path=save_path,
     )
+
 
 # =================== #
 # MULTI AXES PLOTTING #
 # =================== #
+
 
 def _plot_multi_tables_columns(
     nrows: int,
@@ -257,6 +273,7 @@ def _plot_multi_tables_columns(
     linewidth: Optional[int],
     markers_grp: Optional[Sequence[Markers]],
     boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     log.info("yy = %s", yy)
     log.info("legends_grp = %s", legends_grp)
@@ -267,10 +284,12 @@ def _plot_multi_tables_columns(
     plt.style.use(resource)
     N = len(tables)
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-    boxes = [None]*N if boxes is None else boxes
+    boxes = [None] * N if boxes is None else boxes
     # From a numpy bidimensional array to a list if len(indexes) > 1
-    axes = axes.flatten() if nrows*ncols > 1 else [axes]
-    for ax, table, title, legends, markers, box in zip(axes, tables, titles, legends_grp, markers_grp, boxes):
+    axes = axes.flatten() if nrows * ncols > 1 else [axes]
+    for ax, table, title, legends, markers, box in zip(
+        axes, tables, titles, legends_grp, markers_grp, boxes
+    ):
         xcol = table.columns[x]
         ax.set_title(title)
         set_axes_labels(ax, table, x, yy[0], percent)
@@ -299,8 +318,11 @@ def _plot_multi_tables_columns(
     # Do not draw in unusued axes
     for ax in axes[N:]:
         ax.set_axis_off()
-    plt.show()
-
+    if save_path is not None:
+        log.info("Saving to %s", save_path)
+        plt.savefig(save_path, bbox_inches="tight")
+    else:
+        plt.show()
 
 
 def plot_multi_tables_column(
@@ -315,6 +337,7 @@ def plot_multi_tables_column(
     linewidth: Optional[int],
     marker: Optional[Markers],
     boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     _plot_multi_tables_columns(
         nrows=nrows,
@@ -329,6 +352,7 @@ def plot_multi_tables_column(
         linewidth=linewidth,
         markers_grp=markers_grp(marker, ntab=len(tables), ncol=1),
         boxes=boxes,
+        save_path=save_path,
     )
 
 
@@ -345,8 +369,9 @@ def plot_multi_tables_columns(
     linewidth: Optional[int],
     markers: Optional[Sequence[Markers]],
     boxes: Optional[Sequence[Tuple[str, float, float]]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
-     _plot_multi_tables_columns(
+    _plot_multi_tables_columns(
         nrows=nrows,
         ncols=nrows,
         tables=tables,
@@ -359,10 +384,11 @@ def plot_multi_tables_columns(
         linewidth=linewidth,
         markers_grp=markers_grp(markers, ntab=len(tables), ncol=len(yy)),
         boxes=boxes,
+        save_path=save_path,
     )
 
 
-# This is a rare cas, not being used for the time being
+# This is a rare case, not being used for the time being
 def plot_multi_table_columns(
     nrows: int,
     ncols: int,
@@ -375,6 +401,7 @@ def plot_multi_table_columns(
     percent: Optional[bool],
     linewidth: Optional[int],
     box: Optional[Tuple[str, float, float]] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     """
     A strange use case with each column of a table plotted in a single axes.
@@ -410,4 +437,8 @@ def plot_multi_table_columns(
     # Do not draw in unusued axes
     for ax in axes[N:]:
         ax.set_axis_off()
-    plt.show()
+    if save_path is not None:
+        log.info("Saving to %s", save_path)
+        plt.savefig(save_path, bbox_inches="tight")
+    else:
+        plt.show()

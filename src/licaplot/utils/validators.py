@@ -16,7 +16,7 @@ def vextension(path: str, extension: str) -> str:
 
 vecsv = functools.partial(vextension, extension=".ecsv")
 
-def vecsvfile(path: str):
+def vecsvfile(path: str) -> str:
     path = vfile(path)
     return vecsv(path)
 
@@ -32,5 +32,12 @@ def vbench(value: str) -> int:
     value = int(value)
     if not (BENCH.WAVE_START <= value <= BENCH.WAVE_END):
         raise ValueError(f"Wavelength {value} outside Optical Bench limits [{BENCH.WAVE_START}-{BENCH.WAVE_END}]")
+    return value
+
+def vfigext(value: str) -> str:
+    _, ext = os.path.splitext(value)
+    if ext not in (".png", ".pdf"):
+        raise ValueError(f"File path should be '.png' or '.pdf', not {ext}")
+    return value
 
 

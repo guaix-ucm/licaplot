@@ -131,6 +131,14 @@ osi-plot:
     set -exuo pipefail
     lica-photod --console plot -m PIN-10D
 
+sunglasses-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/sunglasses"
+    for i in 01 02 03 04 05 06 07 08 09 10
+    do
+        lica-plot --console --trace single table columns -yc 4 5 -t Eclipse Glasses $i -i ${dir}/${i}_sg.ecsv -sf ${dir}/${i}_eg.png --changes --lines 
+    done
 
 # reduce LICA data (tessw, sunglasses, eysdon, omega, sp750, ndf)
 reduce what:
