@@ -131,16 +131,16 @@ osi-plot:
     set -exuo pipefail
     lica-photod --console plot -m PIN-10D
 
-sunglasses-plot:
+eclipse-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir="data/sunglasses"
+    dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10
     do
-        lica-plot --console --trace single table columns -yc 4 5 -t Eclipse Glasses $i -i ${dir}/${i}_sg.ecsv -sf ${dir}/${i}_eg.png --changes --lines 
+        lica-plot --console --trace single table columns -yc 4 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --changes --lines 
     done
 
-# reduce LICA data (tessw, sunglasses, eysdon, omega, sp750, ndf)
+# reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf]
 reduce what:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -193,13 +193,13 @@ ndf-reduce:
 
 
 [private]
-sunglasses-reduce:
+eclipse-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir="data/sunglasses"
+    dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10
     do
-        lica-filters --console one -l $i -t $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_sg.txt --ndf ND-0.5
+        lica-filters --console one -l $i -t $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
     done
 
 tessw-plot:
@@ -219,8 +219,8 @@ plot-s-t-c args="":
 plot-s-t-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir="data/sunglasses"
-    lica-plot --console --trace single table columns -% -i ${dir}/02_sg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
+    dir="data/eclipse"
+    lica-plot --console --trace single table columns -% -i ${dir}/02_eg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
 
 # Plot single axes, 3 table, 1 column each
 plot-s-tt-c args="":
@@ -234,32 +234,32 @@ plot-s-tt-c args="":
 plot-s-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir=data/sunglasses
-    lica-plot --console --trace single tables columns -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 4 5 --changes --lines {{args}}
+    dir=data/eclipse
+    lica-plot --console --trace single tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table only, one column per axes
 plot-m-t-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir=data/sunglasses
-    lica-plot --console --trace multi table columns -i ${dir}/01_sg.ecsv -yc 4 5 --changes --lines {{args}}
+    dir=data/eclipse
+    lica-plot --console --trace multi table columns -i ${dir}/01_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, one column per table
 plot-m-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir=data/sunglasses
-    lica-plot --console --trace multi tables column -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 5 --changes --lines {{args}}
+    dir=data/eclipse
+    lica-plot --console --trace multi tables column -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table
 plot-m-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir=data/sunglasses
-    lica-plot --console --trace multi tables columns -i ${dir}/01_sg.ecsv ${dir}/02_sg.ecsv ${dir}/03_sg.ecsv -yc 4 5 --changes --lines {{args}}
+    dir=data/eclipse
+    lica-plot --console --trace multi tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
 
