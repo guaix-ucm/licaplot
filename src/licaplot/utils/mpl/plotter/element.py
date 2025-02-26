@@ -14,14 +14,11 @@ from __future__ import annotations  # lazy evaluations of annotations
 import logging
 from abc import ABC, abstractmethod
 from itertools import batched
-from typing import Sequence, Iterable, Any
+from typing import Sequence, Any
 
 # ---------------------
 # Thrid-party libraries
 # ---------------------
-
-import astropy.units as u
-from astropy.table import Table
 
 # ---------
 # Own stuff
@@ -67,9 +64,10 @@ class IElementsBuilder(ABC):
 
 
 class ElementsBase(IElementsBuilder):
-    # -------------------------------------------------
-    # Useful methods to reuse / override in sublclasses
-    # -------------------------------------------------
+    """
+    Useful methods to reuse in subclasses
+    No constructor, just take advamntage of attributes late binding.
+    """
 
     def _default_table_title(self) -> Titles:
         if self._title is not None:
@@ -131,8 +129,6 @@ class SingleTableColumnBuilder(ElementsBase):
         self._table = self._tb_builder.build_tables()
         return [self._table]
 
-    
-
 
 class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
@@ -142,7 +138,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         labels: Legends | None,
         markers: MarkerSeq | None,
         ycols: ColNums,
-        def_lb_len: int = 6
+        def_lb_len: int = 6,
     ):
         self._tb_builder = builder
         self._markers = markers
@@ -169,7 +165,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         flat_legends = (
             self._legends
             if self._legends is not None
-            else [self._table.columns[y].name[:self._trim] + "." for y in self._ycols]
+            else [self._table.columns[y].name[: self._trim] + "." for y in self._ycols]
         )
         return self._grouped(flat_legends)
 
@@ -178,19 +174,16 @@ class SingleTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        xcol: ColNum,
-        xunit: u.Unit,
-        ycol: ColNum,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
+        ycol: ColNum,
     ):
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
         self._yc = ycol - 1
-        self._xc = xcol - 1
         self._ncol = 1
 
     def build_tables(self) -> Tables:
@@ -215,20 +208,19 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        xcol: ColNum,
-        ycols: ColNums,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-       
+        ycols: ColNums,
+        def_lb_len: int = 6,
     ):
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
         self._ycols = [y - 1 for y in ycols]
-        self._xc = xcol - 1
         self._ncol = len(ycols)
+        self._trim = def_lb_len
 
     def _check_markers(self) -> None:
         if self._markers is not None and len(self._markers) != len(self._tables):
@@ -261,7 +253,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = [
-            table.meta["label"] + "-" + table.columns[y].name[0:6] + "."
+            table.meta["label"] + "-" + table.columns[y].name[: self._trim] + "."
             for table in self._tables
             for y in self._ycols
         ]
