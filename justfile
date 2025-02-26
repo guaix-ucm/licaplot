@@ -261,7 +261,12 @@ plot-m-tt-cc args="":
     dir=data/eclipse
     lica-plot --console --trace multi tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
-
+# run unut test on [table|element]
+test what:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    uv run python -m unittest -v test.{{what}}
+   
 
 [private]
 check_mnt mnt:
