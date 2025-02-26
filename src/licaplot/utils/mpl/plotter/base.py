@@ -12,32 +12,19 @@
 
 import itertools
 import logging
-from abc import ABC, abstractmethod
-from typing import Sequence, Optional, Tuple
+from enum import EnumType
+from abc import ABC
+from typing import Optional, Tuple
 
 # ---------------------
 # Thrid-party libraries
 # ---------------------
 
-from astropy.table import Table
 import astropy.units as u
 import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
 
-from .types import Markers
+from .types import Markers, ColNum, ColNums, Tables, Titles, MarkersT, LegendsGroup, MarkersGroup
 
-# ----------------
-# Types shorhands
-# ----------------
-
-ColNum = int
-ColNums = Sequence[int]
-Tables = Sequence[Table]
-Titles = Sequence[str]
-Legends = Sequence[str]
-MarkersT = Sequence[Markers]
-LegendsGroup = Sequence[Legends]
-MarkersGroup = Sequence[MarkersT]
 
 # ----------------
 # Global variables
@@ -67,6 +54,7 @@ class PlotterBase(ABC):
         nrows: int = 1,
         ncols: int = 1,
         save_path: Optional[str] = None,
+        markers_type: EnumType = Markers,
     ):
         self.x = x
         self.yy = yy
@@ -80,6 +68,17 @@ class PlotterBase(ABC):
         self.nrows = nrows
         self.ncols = ncols
         self.single = nrows * ncols == 1
+        # --------------------------------------------------
+        # This context is created during the plot outer loop
+        # --------------------------------------------------
+        self.xcol = None  # Current Column object
+        self.ax = None  # Current Axes object
+        self.table = None  # Current Table object
+        self.yy = None  # Current column number list
+        self.title = None  # Current title
+        self.markers = None  # current markers list
+        self.legends = None  # current legends list
+        self.ycol = None
         log.info("yy = %s", yy)
         log.info("legends_grp = %s", legends_grp)
         log.info("markers_grp = %s", markers_grp)
@@ -98,17 +97,16 @@ class PlotterBase(ABC):
             if not self.single:
                 self.ax.set_title(self.title)
             self.set_axes_labels(self.yy[0])
+            log.info("title = %s", self.title)
             log.info("markers = %s", self.markers)
             log.info("legends = %s", self.legends)
             for y, legend, marker in zip(self.yy, self.legends, self.get_markers()):
-                self.ycol = (
+                ycol = (
                     self.table.columns[y] * 100 * u.pct
                     if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
                     else self.table.columns[y]
                 )
-                self.ax.plot(
-                    self.xcol, self.ycol, marker=marker, linewidth=self.linewidth, label=legend
-                )
+                self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend)
                 self.inner_loop_hook(legend, marker)
             if self.changes:
                 for change in MONOCROMATOR_CHANGES_LABELS:
@@ -132,7 +130,6 @@ class PlotterBase(ABC):
             plt.savefig(self.save_path, bbox_inches="tight")
         else:
             plt.show()
-        self.plot_end_hook()
 
     # =====
     # Hooks
@@ -146,19 +143,12 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed. i.e. a box per axes"""
         self.ax, self.table, self.title, self.legends, self.markers = t
 
-    @abstractmethod
     def plot_start_hook(self):
         pass
 
-    @abstractmethod
-    def plot_end_hook(self):
-        pass
-
-    @abstractmethod
     def outer_loop_round(self):
         pass
 
-    @abstractmethod
     def outer_loop_end(self):
         pass
 
@@ -168,7 +158,9 @@ class PlotterBase(ABC):
 
     def get_markers(self) -> MarkersT:
         markers = (
-            [marker for marker in Markers] if all(m is None for m in self.markers) else self.markers
+            [marker for marker in self.markers_type]
+            if all(m is None for m in self.markers)
+            else self.markers
         )
         return itertools.cycle(markers)
 
@@ -194,7 +186,7 @@ class PlotterBase(ABC):
 
     def configure_axes(self):
         self.fig, axes = plt.subplots(nrows=self.nrows, ncols=self.ncols)
-        self.axes = axes.flatten() if not self.single > 1 else [axes]
+        self.axes = axes.flatten() if not self.single else [axes] * len(self.tables)
 
     def plot_init_inner_loop_hook(self):
         return zip(self.axes, self.tables, self.titles, self.legends_grp, self.markers_grp)
