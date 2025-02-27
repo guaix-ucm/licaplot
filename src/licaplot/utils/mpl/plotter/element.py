@@ -343,3 +343,32 @@ class SingleTablesColumnsBuilder(ElementsBase):
         part = self._grouped(flat_legends)
         self._elements.append(part)
         return part
+
+class MultiTablesColumnBuilder(SingleTablesColumnBuilder):
+    def __init__(
+        self,
+        builder: ITableBuilder,
+        titles: str | None,
+        label: Legends | None,
+        marker: MarkerSeq | None,
+        label_length: int = 6,
+    ):
+        super().__init__()
+        self._tb_builder = builder
+        self._marker = marker
+        self._legend = label
+        self._titles = titles
+        self._trim = label_length
+
+class MultiTablesColumnsBuilder(SingleTablesColumnsBuilder):
+
+    def build_legends_grp(self) -> LegendsGroup:
+        self._check_legends()
+        flat_legends = [
+            table.columns[y].name[: self._trim] + "."
+            for table in self._tables
+            for y in self._ycols
+        ] if self._legends is None else self._legends
+        part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part
