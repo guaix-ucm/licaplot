@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Union
 
 from astropy.table import Table
 from lica import StrEnum
@@ -28,3 +28,6 @@ Legends = Sequence[str]
 MarkerSeq = Sequence[StrEnum]
 LegendsGroup = Sequence[Legends]
 MarkersGroup = Sequence[MarkerSeq]
+
+Element = Union[ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup]
+Elements = Sequence[Element]

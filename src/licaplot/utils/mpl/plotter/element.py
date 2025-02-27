@@ -27,7 +27,6 @@ from astropy.table import Table
 # ---------
 
 from .types import (
-    Markers,
     ColNum,
     ColNums,
     MarkerSeq,
@@ -36,6 +35,7 @@ from .types import (
     Titles,
     LegendsGroup,
     MarkersGroup,
+    Elements
 )
 
 from .table import ITableBuilder
@@ -44,7 +44,31 @@ from .table import ITableBuilder
 # Module global variables
 # -----------------------
 
+
 log = logging.getLogger(__name__)
+
+class Director:
+    """
+    Ensures the differenct elements are constructed in a given order
+    """
+
+    def __init__(self) -> None:
+        self._builder = None
+
+    @property
+    def builder(self) -> IElementsBuilder:
+        return self._builder
+
+    @builder.setter
+    def builder(self, builder: IElementsBuilder) -> None:
+        self._builder = builder
+
+    def build_elements(self) -> Elements:
+        self._builder.build_tables()
+        self._builder.build_titles()
+        self._builder.build_legends_grp()
+        self._builder.build_markers_grp()
+        return self._builder.elements
 
 
 class IElementsBuilder(ABC):
@@ -68,8 +92,25 @@ class IElementsBuilder(ABC):
 class ElementsBase(IElementsBuilder):
     """
     Useful methods to reuse in subclasses
-    No constructor, just take advamntage of attributes late binding.
+    very simple constructor, just take advamntage of attributes late binding.
     """
+
+    def __init__(self) -> None:
+        """
+        A fresh builder instance should contain a blank elements object, which is
+        used in further assembly.
+        """
+        self._elements = list()
+
+    @property
+    def elements(self) -> Elements:
+        """Convenient for the Director based building process"""
+        elements = self._elements
+        self._reset()
+        return elements
+
+    def _reset(self) -> None:
+        self._elements = list()
 
     def _default_table_title(self) -> Titles:
         if self._title is not None:
@@ -122,6 +163,7 @@ class SingleTableColumnBuilder(ElementsBase):
         label: str | None,
         marker: str | None,
     ):
+        super().__init__()
         self._tb_builder = builder
         self._xcol = xcol
         self._ycol = ycol
@@ -134,18 +176,28 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._table = self._tb_builder.build_tables()
         tables = [self._table]
+        ycols = [self._ycol]
         self._check_col_range([self._xcol], tables, tag="X")
         self._check_col_range([self._ycol], tables, tag="Y")
+        self._elements.append(self._xcol)
+        self._elements.append(ycols)
+        self._elements.append(tables)
         return tables
 
     def build_titles(self) -> Titles:
-        return self._default_table_title()
+        part = self._default_table_title()
+        self._elements.append(part)
+        return part
 
     def build_markers_grp(self) -> LegendsGroup:
-        return [[self._marker]] if self._marker is not None else [[None]]
+        part = [[self._marker]] if self._marker is not None else [[None]]
+        self._elements.append(part)
+        return part
 
     def build_legends_grp(self) -> LegendsGroup:
-        return [[self._legend]] if self._legend is not None else [[None]]
+        part = [[self._legend]] if self._legend is not None else [[None]]
+        self._elements.append(part)
+        return part
 
 
 class SingleTableColumnsBuilder(ElementsBase):
@@ -159,6 +211,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         markers: MarkerSeq | None,
         def_lb_len: int = 6,
     ):
+        super().__init__()
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
@@ -174,14 +227,21 @@ class SingleTableColumnsBuilder(ElementsBase):
         tables = [self._table]
         self._check_col_range([self._xcol], tables, tag="X")
         self._check_col_range(self._ycols, tables, tag="Y")
+        self._elements.append(self._xcol)
+        self._elements.append(self._ycols)
+        self._elements.append(tables)
         return tables
 
     def build_titles(self) -> Titles:
-        return self._default_table_title()
-
-    def build_markers_grp(self) -> MarkersGroup:
+        part = self._default_table_title()
+        self._elements.append(part)
+        return part
+         
+    def build_markers_grp(self) -> LegendsGroup:
         self._check_markers()
-        return self._grouped(self._markers)
+        part =  self._grouped(self._markers)
+        self._elements.append(part)
+        return part
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -190,7 +250,9 @@ class SingleTableColumnsBuilder(ElementsBase):
             if self._legends is not None
             else [self._table.columns[y].name[: self._trim] + "." for y in self._ycols]
         )
-        return self._grouped(flat_legends)
+        part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part
 
 
 class SingleTablesColumnBuilder(ElementsBase):
@@ -203,6 +265,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         xcol: ColNum,
         ycol: ColNum,
     ):
+        super().__init__()
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
@@ -213,21 +276,31 @@ class SingleTablesColumnBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._tables = self._tb_builder.build_tables()
         self._ntab = len(self._tables)
+        ycols = [self._ycol]
         self._check_col_range([self._xcol], self._tables, tag="X")
-        self._check_col_range([self._ycol], self._tables, tag="Y")
+        self._check_col_range(ycols, self._tables, tag="Y")
+        self._elements.append(self._xcol)
+        self._elements.append(ycols)
+        self._elements.append(self._tables)
         return self._tables
 
     def build_titles(self) -> Titles:
-        return self._default_tables_title()
+        part = self._default_tables_title()
+        self._elements.append(part)
+        return part
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
-        return self._grouped(self._markers)
+        part = self._grouped(self._markers)
+        self._elements.append(part)
+        return part
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = [table.meta["label"] for table in self._tables]
-        return self._grouped(flat_legends)
+        part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part
 
 
 class SingleTablesColumnsBuilder(ElementsBase):
@@ -241,6 +314,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         markers: MarkerSeq | None,
         def_lb_len: int = 6,
     ):
+        super().__init__()
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
@@ -271,14 +345,21 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._ntab = len(self._tables)
         self._check_col_range([self._xcol], self._tables, tag="X")
         self._check_col_range(self._ycols, self._tables, tag="Y")
+        self._elements.append(self._xcol)
+        self._elements.append(self._ycols)
+        self._elements.append(self._tables)
         return self._tables
 
     def build_titles(self) -> Titles:
-        return self._default_tables_title()
+        part = self._default_tables_title()
+        self._elements.append(part)
+        return part
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
-        return self._grouped(self._markers)
+        part = self._grouped(self._markers)
+        self._elements.append(part)
+        return part
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -287,4 +368,6 @@ class SingleTablesColumnsBuilder(ElementsBase):
             for table in self._tables
             for y in self._ycols
         ]
-        return self._grouped(flat_legends)
+        part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part

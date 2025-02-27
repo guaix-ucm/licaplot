@@ -20,6 +20,7 @@ import unittest
 import astropy.units as u
 
 from licaplot.utils.mpl.plotter.element import (
+    Director,
     SingleTableColumnBuilder,
     SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
@@ -27,9 +28,9 @@ from licaplot.utils.mpl.plotter.element import (
 )
 
 from licaplot.utils.mpl.plotter.table import (
-    TableFromFile, TablesFromFiles,
+    TableFromFile,
+    TablesFromFiles,
 )
-
 
 
 class TestSingleTableColumn(unittest.TestCase):
@@ -56,7 +57,7 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2,           
+            ycol=2,
             title="Omega Nebula Band Pass Filter",
             label=None,
             marker=None,
@@ -68,7 +69,7 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2,  
+            ycol=2,
             title=["Omega", "Nebula", "Band", "Pass", "Filter"],
             label=None,
             marker=None,
@@ -80,7 +81,7 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2,             
+            ycol=2,
             title=None,
             label=None,
             marker=None,
@@ -94,10 +95,10 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2, 
+            ycol=2,
             title=None,
             label=None,
-            marker=None, 
+            marker=None,
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
@@ -108,10 +109,10 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2,  
+            ycol=2,
             title=None,
             label="label 1",
-            marker=None, 
+            marker=None,
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
@@ -122,10 +123,10 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             xcol=1,
-            ycol=2,   
+            ycol=2,
             title=None,
             label=None,
-            marker=None, 
+            marker=None,
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
@@ -134,12 +135,12 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_tables_column_marker_2(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder, 
+            builder=self.tb_builder,
             xcol=1,
-            ycol=2,  
+            ycol=2,
             title=None,
             label=None,
-            marker="o", 
+            marker="o",
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
@@ -148,12 +149,12 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_tables_column_range_1(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder, 
+            builder=self.tb_builder,
             xcol=1,
-            ycol=7,  
+            ycol=7,
             title=None,
             label=None,
-            marker="o", 
+            marker="o",
         )
         with self.assertRaises(ValueError) as cm:
             _ = builder.build_tables()
@@ -181,14 +182,14 @@ class TestSingleTableColumns(unittest.TestCase):
             lica_trim=None,
         )
 
-    def test_single_table_column_labels_1(self):
+    def test_single_table_columns_labels_1(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
-            xcol = 1,
-            ycols=[2]
+            xcol=1,
+            ycols=[2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
@@ -197,93 +198,125 @@ class TestSingleTableColumns(unittest.TestCase):
         labels_grp = builder.build_legends_grp()
         self.assertEqual(labels_grp, [("Electr.",)])
 
-    def test_single_table_column_labels_2(self):
+    def test_single_table_columns_labels_2(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         labels_grp = builder.build_legends_grp()
         self.assertEqual(labels_grp, [("Wavele.", "Electr.")])
 
-    def test_single_table_column_labels_3(self):
+    def test_single_table_columns_labels_3(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=("Foo", "Bar"),
             markers=None,
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         labels_grp = builder.build_legends_grp()
         self.assertEqual(labels_grp, [("Foo", "Bar")])
 
-    def test_single_table_column_labels_4(self):
+    def test_single_table_columns_labels_4(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=("Foo", "Bar", "Baz"),
             markers=None,
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         with self.assertRaises(ValueError) as cm:
             _ = builder.build_legends_grp()
         msg = cm.exception.args[0]
-        self.assertEqual(msg, 'number of labels (3) should match number of y-columns (2)')
+        self.assertEqual(msg, "number of labels (3) should match number of y-columns (2)")
 
-    def test_single_table_column_markers_1(self):
+    def test_single_table_columns_markers_1(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         markers_grp = builder.build_markers_grp()
         self.assertEqual(markers_grp, [[None, None]])
 
-    def test_single_table_column_markers_2(self):
+    def test_single_table_columns_markers_2(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=("o", "."),
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         markers_grp = builder.build_markers_grp()
         self.assertEqual(markers_grp, [("o", ".")])
 
-    def test_single_table_column_markers_3(self):
+    def test_single_table_columns_markers_3(self):
         builder = SingleTableColumnsBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=["o", "+", "."],
-            xcol = 1,
-            ycols=[1, 2]
+            xcol=1,
+            ycols=[1, 2],
         )
         tables = builder.build_tables()
         self.assertEqual(len(tables), 1)
         with self.assertRaises(ValueError) as cm:
             _ = builder.build_markers_grp()
         msg = cm.exception.args[0]
-        self.assertEqual(msg, 'number of markers (3) should match number of y-columns (2)')
+        self.assertEqual(msg, "number of markers (3) should match number of y-columns (2)")
+
+    def test_single_table_columns_director_1(self):
+        builder = SingleTableColumnsBuilder(
+            builder=self.tb_builder,
+            title="Omega Nebula Band Pass Filter",
+            labels=None,
+            markers=("o", "."),
+            xcol=1,
+            ycols=[1, 2],
+        )
+        director = Director()
+        director.builder = builder
+        xc, yycc, tables, titles, legends_grp, markers_grp = director.build_elements()
+        self.assertEqual(markers_grp, [("o", ".")])
+
+
+    def test_single_table_columns_director_2(self):
+        builder = SingleTableColumnsBuilder(
+            builder=self.tb_builder,
+            title="Omega Nebula Band Pass Filter",
+            labels=None,
+            markers=["o", "+", "."],
+            xcol=1,
+            ycols=[1, 2],
+        )
+        director = Director()
+        director.builder = builder
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(msg, "number of markers (3) should match number of y-columns (2)")
+
 
 if __name__ == "__main__":
     unittest.main()
