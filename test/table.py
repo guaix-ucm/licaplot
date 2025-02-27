@@ -26,32 +26,15 @@ class TestTableFromFile(unittest.TestCase):
     def setUpClass(cls):
         cls.path = os.path.join("data", "filters", "Omega_NPB", "QEdata_filter_2nm.ecsv")
 
+
     def test_table_1(self):
         builder = TableFromFile(
             path=self.path,
-            delimiter=None,
-            columns=None,
             xcol=1,
-            xunit=u.nm,
-            ycol=None,
-            yunit=u.dimensionless_unscaled,
-            xlow=None,
-            xhigh=None,
-            lunit=u.nm,
-            resolution=None,
-            lica_trim=None,
-        )
-        table = builder.build_tables()
-        self.assertIsNotNone(table)
-
-    def test_table_2(self):
-        builder = TableFromFile(
-            path=self.path,
-            delimiter=None,
-            columns=None,
-            xcol=1,
-            xunit=u.nm,
             ycol=2,
+            delimiter=None,
+            columns=None,
+            xunit=u.nm,
             yunit=u.dimensionless_unscaled,
             xlow=None,
             xhigh=None,
@@ -59,7 +42,7 @@ class TestTableFromFile(unittest.TestCase):
             resolution=5,
             lica_trim=None,
         )
-        table = builder.build_tables()
+        table, xc, yc = builder.build_tables()
         self.assertIsNotNone(table)
 
 
@@ -79,7 +62,7 @@ class TestTablesFromFiles(unittest.TestCase):
             columns=None,
             xcol=1,
             xunit=u.nm,
-            ycol=None,
+            ycol=[1, 2],
             yunit=u.dimensionless_unscaled,
             xlow=None,
             xhigh=None,
@@ -87,27 +70,7 @@ class TestTablesFromFiles(unittest.TestCase):
             resolution=None,
             lica_trim=None,
         )
-        tables = builder.build_tables()
-        self.assertEqual(len(tables), len(self.paths))
-        for i in range(len(self.paths)):
-            self.assertIsNotNone(tables[i])
-
-    def test_table_2(self):
-        builder = TablesFromFiles(
-            paths=self.paths,
-            delimiter=None,
-            columns=None,
-            xcol=1,
-            xunit=u.nm,
-            ycol=2,
-            yunit=u.dimensionless_unscaled,
-            xlow=None,
-            xhigh=None,
-            lunit=u.nm,
-            resolution=5,
-            lica_trim=None,
-        )
-        tables = builder.build_tables()
+        xc, yc, tables = builder.build_tables()
         self.assertEqual(len(tables), len(self.paths))
         for i in range(len(self.paths)):
             self.assertIsNotNone(tables[i])
