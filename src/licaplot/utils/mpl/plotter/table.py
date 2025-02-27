@@ -11,7 +11,7 @@
 
 import os
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple, Union
 from abc import ABC, abstractmethod
 
 # ---------------------
@@ -29,7 +29,7 @@ import scipy.interpolate
 # Own stuff
 # ---------
 
-from .types import Tables, ColNum
+from .types import Tables, ColNum, ColNums
 
 # -----------------------
 # Module global variables
@@ -117,6 +117,14 @@ class ITableBuilder(ABC):
 
 
 class TableBase(ITableBuilder):
+    def _check_col_range(self, table: Table, cols: Iterable[ColNum], tag: str) -> None:
+        ncols = len(table.columns)
+        for col in cols:
+            if not (0 <= col < ncols):
+                raise ValueError(
+                    "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, col + 1, ncols)
+                )
+
     def _build_one_table(self, path) -> Table:
         log.debug("Not resampling table")
         table = read_csv(path, self._columns, self._delim)
@@ -160,6 +168,7 @@ class TableFromFile(TableBase):
         columns: Iterable[str] | None,
         delimiter: str | None,
         xcol: ColNum,
+        ycol: Union[ColNum,ColNums],
         xunit: u.Unit,
         yunit: u.Unit,
         xlow: float | None,
@@ -167,10 +176,9 @@ class TableFromFile(TableBase):
         lunit: u.Unit,
         resolution: int | None,
         lica_trim: bool | None,
-        ycol: ColNum | None = None,
     ):
         self._path = path
-        self._yc = ycol - 1 if ycol is not None else None
+        self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._xc = xcol - 1
         self._xu = xunit
         self._yu = yunit
@@ -182,12 +190,15 @@ class TableFromFile(TableBase):
         self._resol = resolution
         self._lica_trim = lica_trim
 
-    def build_tables(self) -> Table:
-        return (
+    def build_tables(self) -> Tuple[Table, ColNum, ColNum]:
+        table = (
             self._build_one_table(self._path)
-            if self._yc is None
+            if self._resol is None
             else self._build_one_resampled_table(self._path, self._yc, self._yu)
         )
+        self._check_col_range(table, [self._xc], tag="X")
+        self._check_col_range(table, [self._yc], tag="Y")
+        return table, self._xc, self._yc
 
 
 class TablesFromFiles(TableBase):
@@ -197,6 +208,7 @@ class TablesFromFiles(TableBase):
         columns: Iterable[str] | None,
         delimiter: str | None,
         xcol: ColNum,
+        ycol: Union[ColNum,ColNums],
         xunit: u.Unit,
         yunit: u.Unit,
         xlow: float | None,
@@ -204,10 +216,9 @@ class TablesFromFiles(TableBase):
         lunit: u.Unit,
         resolution: int | None,
         lica_trim: bool | None,
-        ycol: ColNum | None = None,
     ):
         self._paths = paths
-        self._yc = ycol - 1 if ycol is not None else None
+        self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._xc = xcol - 1
         self._xu = xunit
         self._yu = yunit
@@ -219,37 +230,56 @@ class TablesFromFiles(TableBase):
         self._resol = resolution
         self._lica_trim = lica_trim
 
-    def build_tables(self) -> Tables:
+    def build_tables(self) -> Tuple[Tables, ColNum,  Union[ColNum, ColNums]]:
         tables = list()
         for path in self._paths:
-            if self._yc is None:
+            if self._resol is None:
                 table = self._build_one_table(path)
             else:
+                assert isinstance(self._yc, int), "Y Column only"
                 table = self._build_one_resampled_table(path, self._yc, self._yu)
+            self._check_col_range(table, [self._xc], tag="X")
+            if isinstance(self._yc, int):
+                self._check_col_range(table, [self._yc], tag="Y")
+            else:
+                self._check_col_range(table, self._yc, tag="Y")
             tables.append(table)
-        return tables
+        return tables, self._xc, self._yc
 
 
 class TableWrapper(ITableBuilder):
     def __init__(
         self,
         table: Table,
+        xcol: ColNum,
+        ycol: Union[ColNum, ColNums],
     ):
         self._table = table
+        self._xc = xcol - 1
+        self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
 
-    def build_tables(self) -> Table:
-        return self._table
+    def build_tables(self) -> Tuple[Table, ColNum, Union[ColNum, ColNums]]:
+        self._check_col_range(self._table, [self._xc], tag="X")
+        if isinstance(self._yc, int):
+            self._check_col_range(self._table, [self._yc], tag="Y")
+        else:
+            self._check_col_range(self._table, self._yc, tag="Y")
+        return self._table, self._xc, self._yc
 
 
 class TablesWrapper(ITableBuilder):
     def __init__(
         self,
         tables: Tables,
+        xcol: ColNum,
+        ycol: Union[ColNum, ColNums],
     ):
+        self._xc = xcol - 1
+        self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._tables = tables
 
-    def build_tables(self) -> Tables:
-        return self._tables
+    def build_tables(self) -> Tuple[Tables, ColNum, Union[ColNum, ColNums]]:
+        return self._tables, self._xc, self._yc
 
 
 __all__ = [

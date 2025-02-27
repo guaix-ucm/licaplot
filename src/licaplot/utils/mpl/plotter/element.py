@@ -136,15 +136,6 @@ class ElementsBase(IElementsBuilder):
                 % (len(self._markers), self._ncol)
             )
 
-    def _check_col_range(self, cols: Iterable[ColNum], tables: Iterable[Table], tag: str) -> None:
-        for table in tables:
-            ncols = len(table.columns)
-            for col in cols:
-                if not (0 <= col < ncols):
-                    raise ValueError(
-                        "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, col + 1, ncols)
-                    )
-
     def _grouped(self, sequence: Sequence[Any]) -> Sequence[Sequence[Any]]:
         return (
             list(batched(sequence, self._ncol))
@@ -157,16 +148,12 @@ class SingleTableColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        xcol: ColNum,
-        ycol: ColNum,
         title: str | None,
         label: str | None,
         marker: str | None,
     ):
         super().__init__()
         self._tb_builder = builder
-        self._xcol = xcol
-        self._ycol = ycol
         self._marker = marker
         self._legend = label
         self._title = title
@@ -174,11 +161,9 @@ class SingleTableColumnBuilder(ElementsBase):
         self._ntab = 1
 
     def build_tables(self) -> Tables:
-        self._table = self._tb_builder.build_tables()
+        self._table, self._xcol, self._ycol = self._tb_builder.build_tables()
         tables = [self._table]
         ycols = [self._ycol]
-        self._check_col_range([self._xcol], tables, tag="X")
-        self._check_col_range([self._ycol], tables, tag="Y")
         self._elements.append(self._xcol)
         self._elements.append(ycols)
         self._elements.append(tables)
@@ -204,8 +189,6 @@ class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        xcol: ColNum,
-        ycols: ColNums,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
@@ -216,17 +199,13 @@ class SingleTableColumnsBuilder(ElementsBase):
         self._markers = markers
         self._legends = labels
         self._title = title
-        self._xcol = xcol
-        self._ycols = [y - 1 for y in ycols]
-        self._ncol = len(ycols)
         self._ntab = 1
         self._trim = def_lb_len
 
     def build_tables(self) -> Tables:
-        self._table = self._tb_builder.build_tables()
+        self._table, self._xcol, self._ycols = self._tb_builder.build_tables()
+        self._ncol = len(self._ycols)
         tables = [self._table]
-        self._check_col_range([self._xcol], tables, tag="X")
-        self._check_col_range(self._ycols, tables, tag="Y")
         self._elements.append(self._xcol)
         self._elements.append(self._ycols)
         self._elements.append(tables)
@@ -262,23 +241,18 @@ class SingleTablesColumnBuilder(ElementsBase):
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-        xcol: ColNum,
-        ycol: ColNum,
     ):
         super().__init__()
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
-        self._yc = ycol - 1
         self._ncol = 1
 
     def build_tables(self) -> Tables:
-        self._tables = self._tb_builder.build_tables()
+        self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
         self._ntab = len(self._tables)
         ycols = [self._ycol]
-        self._check_col_range([self._xcol], self._tables, tag="X")
-        self._check_col_range(ycols, self._tables, tag="Y")
         self._elements.append(self._xcol)
         self._elements.append(ycols)
         self._elements.append(self._tables)
@@ -307,8 +281,6 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        xcol: ColNum,
-        ycols: ColNums,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
@@ -319,8 +291,6 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._markers = markers
         self._legends = labels
         self._title = title
-        self._xcol = xcol
-        self._ycols = [y - 1 for y in ycols]
         self._ncol = len(ycols)
         self._trim = def_lb_len
 
@@ -341,10 +311,9 @@ class SingleTablesColumnsBuilder(ElementsBase):
                 )
 
     def build_tables(self) -> Tables:
-        self._tables = self._tb_builder.build_tables()
+        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
+        self._ncol = len(self._ycols)
         self._ntab = len(self._tables)
-        self._check_col_range([self._xcol], self._tables, tag="X")
-        self._check_col_range(self._ycols, self._tables, tag="Y")
         self._elements.append(self._xcol)
         self._elements.append(self._ycols)
         self._elements.append(self._tables)
