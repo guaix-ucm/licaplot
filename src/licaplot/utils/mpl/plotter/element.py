@@ -196,7 +196,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-        def_lb_len: int = 6,
+        label_length: int = 6,
     ):
         super().__init__()
         self._tb_builder = builder
@@ -204,7 +204,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         self._legends = labels
         self._title = title
         self._ntab = 1
-        self._trim = def_lb_len
+        self._trim = label_length
 
     def build_tables(self) -> Tables:
         self._table, self._xcol, self._ycols = self._tb_builder.build_tables()
@@ -288,14 +288,14 @@ class SingleTablesColumnsBuilder(ElementsBase):
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-        def_lb_len: int = 6,
+        label_length: int = 6,
     ):
         super().__init__()
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
-        self._trim = def_lb_len
+        self._trim = label_length
 
     def _check_markers(self) -> None:
         if self._markers is not None and len(self._markers) != len(self._tables):
@@ -336,7 +336,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = [
-            table.meta["label"] + "-" + table.columns[y].name[0: self._trim] + "."
+            table.meta["label"] + "-" + table.columns[y].name[: self._trim] + "."
             for table in self._tables
             for y in self._ycols
         ]

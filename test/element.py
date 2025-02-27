@@ -70,7 +70,7 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_table_column_title_2(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
-            title=["Eysdon", "RGB" ,"Filter" ,"set"],
+            title=["Eysdon", "RGB", "Filter", "set"],
             label=None,
             marker=None,
         )
@@ -173,19 +173,13 @@ class TestSingleTableColumn(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        print(labels_grp)
         self.assertEqual(xc, 0)
         self.assertEqual(yc, [1])
         self.assertEqual(len(tables), 1)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
-        self.assertEqual(
-            labels_grp,
-            [
-                ("Blue-Photod.",),
-                ("Green-Photod.",),
-                ("Red-Photod.",),
-            ],
-        )
-        self.assertEqual(markers_grp, [[None], [None], [None]])
+        self.assertEqual(labels_grp, [[None]])
+        self.assertEqual(markers_grp, [[None]])
 
 
 # =============================================================================
@@ -373,14 +367,7 @@ class TestSingleTablesColumn(unittest.TestCase):
         self.assertEqual(yc, [2])
         self.assertEqual(len(tables), 3)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
-        self.assertEqual(
-            labels_grp,
-            [
-                ("Blue-Photod.",),
-                ("Green-Photod.",),
-                ("Red-Photod.",),
-            ],
-        )
+        self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
         self.assertEqual(markers_grp, [[None], [None], [None]])
 
 
@@ -427,12 +414,39 @@ class TestSingleTablesColumns(unittest.TestCase):
         self.assertEqual(yc, [1, 2])
         self.assertEqual(len(tables), 3)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
+        # Table label +  Tablle collumn abbreviatted
         self.assertEqual(
             labels_grp,
             [
                 ("Blue-Electr.", "Blue-Photod."),
                 ("Green-Electr.", "Green-Photod."),
                 ("Red-Electr.", "Red-Photod."),
+            ],
+        )
+        self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
+
+    def test_single_tables_columns_all_2(self):
+        builder = SingleTablesColumnsBuilder(
+            builder=self.tb_builder,
+            title="Eysdon RGB Filter set",
+            labels=None,
+            markers=None,
+            label_length=3
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, 0)
+        self.assertEqual(yc, [1, 2])
+        self.assertEqual(len(tables), 3)
+        self.assertEqual(titles, ["Eysdon RGB Filter set"])
+        # Table label +  Tablle collumn abbreviatted
+        self.assertEqual(
+            labels_grp,
+            [
+                ("Blue-Ele.", "Blue-Pho."),
+                ("Green-Ele.", "Green-Pho."),
+                ("Red-Ele.", "Red-Pho."),
             ],
         )
         self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
