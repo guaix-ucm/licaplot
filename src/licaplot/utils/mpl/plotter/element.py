@@ -14,11 +14,13 @@ from __future__ import annotations  # lazy evaluations of annotations
 import logging
 from abc import ABC, abstractmethod
 from itertools import batched
-from typing import Sequence, Any
+from typing import Sequence, Iterable, Any
 
 # ---------------------
 # Thrid-party libraries
 # ---------------------
+
+from astropy.table import Table
 
 # ---------
 # Own stuff
@@ -93,6 +95,15 @@ class ElementsBase(IElementsBuilder):
                 % (len(self._markers), self._ncol)
             )
 
+    def _check_col_range(self, cols: Iterable[ColNum], tables: Iterable[Table], tag: str) -> None:
+        for table in tables:
+            ncols = len(table.columns)
+            for col in cols:
+                if not (0 <= col < ncols):
+                    raise ValueError(
+                        "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, col + 1, ncols)
+                    )
+
     def _grouped(self, sequence: Sequence[Any]) -> Sequence[Sequence[Any]]:
         return (
             list(batched(sequence, self._ncol))
@@ -105,16 +116,27 @@ class SingleTableColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
+        xcol: ColNum,
+        ycol: ColNum,
         title: str | None,
         label: str | None,
         marker: str | None,
     ):
         self._tb_builder = builder
+        self._xcol = xcol
+        self._ycol = ycol
         self._marker = marker
         self._legend = label
         self._title = title
         self._ncol = 1
         self._ntab = 1
+
+    def build_tables(self) -> Tables:
+        self._table = self._tb_builder.build_tables()
+        tables = [self._table]
+        self._check_col_range([self._xcol], tables, tag="X")
+        self._check_col_range([self._ycol], tables, tag="Y")
+        return tables
 
     def build_titles(self) -> Titles:
         return self._default_table_title()
@@ -125,29 +147,34 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_legends_grp(self) -> LegendsGroup:
         return [[self._legend]] if self._legend is not None else [[None]]
 
-    def build_tables(self) -> Tables:
-        self._table = self._tb_builder.build_tables()
-        return [self._table]
-
 
 class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
+        xcol: ColNum,
+        ycols: ColNums,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-        ycols: ColNums,
         def_lb_len: int = 6,
     ):
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
+        self._xcol = xcol
         self._ycols = [y - 1 for y in ycols]
         self._ncol = len(ycols)
         self._ntab = 1
         self._trim = def_lb_len
+
+    def build_tables(self) -> Tables:
+        self._table = self._tb_builder.build_tables()
+        tables = [self._table]
+        self._check_col_range([self._xcol], tables, tag="X")
+        self._check_col_range(self._ycols, tables, tag="Y")
+        return tables
 
     def build_titles(self) -> Titles:
         return self._default_table_title()
@@ -155,10 +182,6 @@ class SingleTableColumnsBuilder(ElementsBase):
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
         return self._grouped(self._markers)
-
-    def build_tables(self) -> Tables:
-        self._table = self._tb_builder.build_tables()
-        return [self._table]
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -177,6 +200,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
+        xcol: ColNum,
         ycol: ColNum,
     ):
         self._tb_builder = builder
@@ -189,6 +213,8 @@ class SingleTablesColumnBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._tables = self._tb_builder.build_tables()
         self._ntab = len(self._tables)
+        self._check_col_range([self._xcol], self._tables, tag="X")
+        self._check_col_range([self._ycol], self._tables, tag="Y")
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -208,16 +234,18 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
+        xcol: ColNum,
+        ycols: ColNums,
         title: str | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
-        ycols: ColNums,
         def_lb_len: int = 6,
     ):
         self._tb_builder = builder
         self._markers = markers
         self._legends = labels
         self._title = title
+        self._xcol = xcol
         self._ycols = [y - 1 for y in ycols]
         self._ncol = len(ycols)
         self._trim = def_lb_len
@@ -241,6 +269,8 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._tables = self._tb_builder.build_tables()
         self._ntab = len(self._tables)
+        self._check_col_range([self._xcol], self._tables, tag="X")
+        self._check_col_range(self._ycols, self._tables, tag="Y")
         return self._tables
 
     def build_titles(self) -> Titles:

@@ -54,7 +54,9 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_table_column_title_1(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
+            xcol=1,
+            ycol=2,           
             title="Omega Nebula Band Pass Filter",
             label=None,
             marker=None,
@@ -65,6 +67,8 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_table_column_title_2(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
+            xcol=1,
+            ycol=2,  
             title=["Omega", "Nebula", "Band", "Pass", "Filter"],
             label=None,
             marker=None,
@@ -74,7 +78,9 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_table_column_title_3(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder,           
+            builder=self.tb_builder,
+            xcol=1,
+            ycol=2,             
             title=None,
             label=None,
             marker=None,
@@ -86,7 +92,9 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_table_column_label_1(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder, 
+            builder=self.tb_builder,
+            xcol=1,
+            ycol=2, 
             title=None,
             label=None,
             marker=None, 
@@ -98,7 +106,9 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_table_columns_label_2(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder, 
+            builder=self.tb_builder,
+            xcol=1,
+            ycol=2,  
             title=None,
             label="label 1",
             marker=None, 
@@ -110,7 +120,9 @@ class TestSingleTableColumn(unittest.TestCase):
 
     def test_single_tables_column_marker_1(self):
         builder = SingleTableColumnBuilder(
-            builder=self.tb_builder, 
+            builder=self.tb_builder,
+            xcol=1,
+            ycol=2,   
             title=None,
             label=None,
             marker=None, 
@@ -123,6 +135,8 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_tables_column_marker_2(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder, 
+            xcol=1,
+            ycol=2,  
             title=None,
             label=None,
             marker="o", 
@@ -131,6 +145,21 @@ class TestSingleTableColumn(unittest.TestCase):
         self.assertEqual(len(tables), 1)
         markers_grp = builder.build_markers_grp()
         self.assertEqual(markers_grp, [["o"]])
+
+    def test_single_tables_column_range_1(self):
+        builder = SingleTableColumnBuilder(
+            builder=self.tb_builder, 
+            xcol=1,
+            ycol=7,  
+            title=None,
+            label=None,
+            marker="o", 
+        )
+        with self.assertRaises(ValueError) as cm:
+            _ = builder.build_tables()
+        msg = cm.exception.args[0]
+        self.assertEqual(msg, "Y column number (8) should be 1 <= Y <= (4)")
+
 
 class TestSingleTableColumns(unittest.TestCase):
     @classmethod
@@ -158,6 +187,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
+            xcol = 1,
             ycols=[2]
         )
         tables = builder.build_tables()
@@ -173,6 +203,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
@@ -186,6 +217,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=("Foo", "Bar"),
             markers=None,
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
@@ -199,6 +231,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=("Foo", "Bar", "Baz"),
             markers=None,
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
@@ -214,6 +247,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=None,
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
@@ -227,6 +261,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=("o", "."),
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
@@ -240,6 +275,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Omega Nebula Band Pass Filter",
             labels=None,
             markers=["o", "+", "."],
+            xcol = 1,
             ycols=[1, 2]
         )
         tables = builder.build_tables()
