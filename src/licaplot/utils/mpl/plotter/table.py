@@ -117,13 +117,20 @@ class ITableBuilder(ABC):
 
 
 class TableBase(ITableBuilder):
-    def _check_col_range(self, table: Table, cols: Iterable[ColNum], tag: str) -> None:
+    def _check_col_range(self, table: Table, cols: Iterable[ColNum|ColNums], tag: str) -> None:
         ncols = len(table.columns)
         for col in cols:
-            if not (0 <= col < ncols):
-                raise ValueError(
-                    "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, col + 1, ncols)
-                )
+            if isinstance(col, int):
+                if not (0 <= col < ncols):
+                    raise ValueError(
+                        "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, col + 1, ncols)
+                    )
+            else:
+                for y in col:
+                    if not (0 <= y < ncols):
+                        raise ValueError(
+                        "%s column number (%d) should be 1 <= Y <= (%d)" % (tag, y + 1, ncols)
+                    )
 
     def _build_one_table(self, path) -> Table:
         log.debug("Not resampling table")

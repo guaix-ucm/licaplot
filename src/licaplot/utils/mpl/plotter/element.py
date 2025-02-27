@@ -120,7 +120,11 @@ class ElementsBase(IElementsBuilder):
         return [result]
 
     def _default_tables_title(self) -> Titles:
-        return [" ".join(self._title) if self._title is not None else self._tables[0].meta["title"]]
+        if self._title is not None:
+            result = self._title if isinstance(self._title, str) else " ".join(self._title)
+        else:
+            result = self._tables[0].meta["title"]
+        return [result]
 
     def _check_legends(self) -> None:
         if self._legends is not None and len(self._legends) != self._ncol:
@@ -291,7 +295,6 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._markers = markers
         self._legends = labels
         self._title = title
-        self._ncol = len(ycols)
         self._trim = def_lb_len
 
     def _check_markers(self) -> None:
@@ -333,7 +336,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = [
-            table.meta["label"] + "-" + table.columns[y].name[: self._trim] + "."
+            table.meta["label"] + "-" + table.columns[y].name[0: self._trim] + "."
             for table in self._tables
             for y in self._ycols
         ]

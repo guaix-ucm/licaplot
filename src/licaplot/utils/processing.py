@@ -165,9 +165,11 @@ def photodiode_table(
     else:
         history = None
     name = name_from_file(path)
+    title = title or f"{model} reference measurements"
+    title = " ".join(title) if not isinstance(title, str) else title
     table.meta = {
         "label": model,  # label used for display purposes
-        "title": title or f"{model} reference measurements",
+        "title": title,
         "Processing": {
             "type": PROMETA.PHOTOD.value,
             "model": model,
@@ -177,7 +179,6 @@ def photodiode_table(
         },
         "History": [],
     }
-    log.info(len(table))
     if history:
         log.info("Trinming %s to [%d-%d] nm", name, x_low, x_high)
         table.meta["History"].append(history)
@@ -211,6 +212,8 @@ def photodiode_ecsv(
 def filter_table(path: str, label: str, title: str, tag: str) -> Table:
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
+    title = title or f"{label} filter Measurements"
+    title = " ".join(title) if not isinstance(title, str) else title
     table.meta = {
         "label": label,  # label used for display purposes
         "title": title or f"{label} filter measurements",
@@ -222,6 +225,7 @@ def filter_table(path: str, label: str, title: str, tag: str) -> Table:
         },
         "History": [],
     }
+    
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
     return table

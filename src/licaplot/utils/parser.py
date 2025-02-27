@@ -29,7 +29,7 @@ from lica.lab.ndfilters import NDFilter
 # ------------------------
 
 from .validators import vecsvfile, vfigext
-from .mpl import Markers
+from .mpl.plotter import Markers
 
 # ------------------------
 # Plotting Related parsers

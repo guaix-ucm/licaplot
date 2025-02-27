@@ -163,11 +163,11 @@ eysdon-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-filters --console classif photod --tag X -p ${dir}/photodiode.txt
-    lica-filters --console classif filter --tag X -i ${dir}/green.txt -l Green
-    lica-filters --console classif filter --tag X -i ${dir}/red.txt -l Red
-    lica-filters --console classif filter --tag X -i ${dir}/blue.txt -l Blue
-    lica-filters --console process -d ${dir} --save
+    lica-filters --console --trace  classif photod --tag X -p ${dir}/photodiode.txt
+    lica-filters --console --trace classif filter --tag X -i ${dir}/green.txt -l Green
+    lica-filters --console --trace classif filter --tag X -i ${dir}/red.txt -l Red
+    lica-filters --console --trace classif filter --tag X -i ${dir}/blue.txt -l Blue
+    lica-filters --console --trace process -d ${dir} --save
 
 
 [private]
