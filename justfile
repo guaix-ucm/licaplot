@@ -140,12 +140,20 @@ eclipse-plot:
         lica-plot --console --trace single table columns -yc 4 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --changes --lines 
     done
 
-# reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf]
+# reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf|all]
 reduce what:
     #!/usr/bin/env bash
     set -exuo pipefail
     just {{what}}-reduce
     
+[private]
+all-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    for item in eclipse eysdon omega sp750 ndf tessw
+    do
+        just ${item}-reduce
+    done
 
 [private]
 tessw-reduce:
