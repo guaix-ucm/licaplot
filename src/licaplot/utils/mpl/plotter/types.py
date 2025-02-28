@@ -23,8 +23,10 @@ class Markers(StrEnum):
 ColNum = int
 ColNums = Sequence[int]
 Tables = Sequence[Table]
-Titles = Sequence[str]
-Legends = Sequence[str]
+Title = Union[str, Sequence[str]] # for space separated words from the command line
+Titles = Sequence[Title]
+Legend = str
+Legends = Sequence[Legend]
 MarkerSeq = Sequence[StrEnum]
 LegendsGroup = Sequence[Legends]
 MarkersGroup = Sequence[MarkerSeq]

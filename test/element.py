@@ -367,8 +367,8 @@ class TestSingleTablesColumn(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, self.xcol-1)
-        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
@@ -389,8 +389,8 @@ class TestSingleTablesColumns(unittest.TestCase):
             os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
             os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
         )
-        cls.xcol=1
-        cls.ycol=[2,3]
+        cls.xcol = 1
+        cls.ycol = [2, 3]
         cls.ntab = len(paths)
         cls.tb_builder = TablesFromFiles(
             paths=paths,
@@ -418,8 +418,8 @@ class TestSingleTablesColumns(unittest.TestCase):
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
 
-        self.assertEqual(xc, self.xcol-1)
-        self.assertEqual(yc, [y-1 for y in self.ycol])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         # Table label +  Tablle collumn abbreviatted
@@ -439,13 +439,13 @@ class TestSingleTablesColumns(unittest.TestCase):
             title="Eysdon RGB Filter set",
             labels=None,
             markers=None,
-            label_length=3
+            label_length=3,
         )
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, self.xcol-1)
-        self.assertEqual(yc, [y-1 for y in self.ycol])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
 
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
@@ -460,9 +460,11 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
 
+
 # =============================================================================
 #                                TEST CASE 5
 # =============================================================================
+
 
 class TestMultiTablesColumn(unittest.TestCase):
     @classmethod
@@ -491,7 +493,7 @@ class TestMultiTablesColumn(unittest.TestCase):
             lica_trim=None,
         )
 
-    def test_multi_tables_column_all_1(self):
+    def test_multi_tables_column_title_1(self):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
             titles=None,
@@ -501,33 +503,52 @@ class TestMultiTablesColumn(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, self.xcol-1)
-        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
-        self.assertEqual(titles, [None]*self.ntab)
-        self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
+        self.assertEqual(titles, [t.meta["title"] for t in tables])
+        self.assertEqual(labels_grp, [("Photod.",), ("Photod.",), ("Photod.",)])
         self.assertEqual(markers_grp, [[None], [None], [None]])
 
-    def test_multi_tables_column_all_2(self):
+    def test_multi_tables_column_title_2(self):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
-            titles=["Eysdon RGB Filter set"]*self.ntab,
+            titles=["Eysdon RGB Filter set"] * self.ntab,
             label=None,
             marker=None,
         )
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, self.xcol-1)
-        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
-        self.assertEqual(titles, ["Eysdon RGB Filter set"]*self.ntab)
-        self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
+        self.assertEqual(titles, ["Eysdon RGB Filter set"] * self.ntab)
+        self.assertEqual(labels_grp, [("Photod.",), ("Photod.",), ("Photod.",)])
         self.assertEqual(markers_grp, [[None], [None], [None]])
+
+    def test_multi_tables_column_all_label_1(self):
+        builder = MultiTablesColumnBuilder(
+            builder=self.tb_builder,
+            titles=None,
+            label="Intens.",
+            marker=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, [t.meta["title"] for t in tables])
+        self.assertEqual(labels_grp, [("Intens.",), ("Intens.",), ("Intens.",)])
+        self.assertEqual(markers_grp, [[None], [None], [None]])
+
 
 # =============================================================================
 #                                TEST CASE 6
 # =============================================================================
+
 
 class TestMultiTablesColumns(unittest.TestCase):
     @classmethod
@@ -538,8 +559,8 @@ class TestMultiTablesColumns(unittest.TestCase):
             os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
             os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
         )
-        cls.xcol=1
-        cls.ycol=[2,3]
+        cls.xcol = 1
+        cls.ycol = [2, 3]
         cls.ntab = len(paths)
         cls.tb_builder = TablesFromFiles(
             paths=paths,
@@ -555,6 +576,83 @@ class TestMultiTablesColumns(unittest.TestCase):
             resolution=None,
             lica_trim=None,
         )
+
+    def test_multi_tables_columns_default(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            titles=None,
+            labels=None,
+            markers=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, [t.meta["title"] for t in tables])
+        self.assertEqual(
+            labels_grp, [("Electr.", "Photod."), ("Electr.", "Photod."), ("Electr.", "Photod.")]
+        )
+        self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
+
+    def test_multi_tables_columns_titles(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            titles=["Table 1","Table 2","Table 3"],
+            labels=None,
+            markers=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, ["Table 1","Table 2","Table 3"])
+        self.assertEqual(
+            labels_grp, [("Electr.", "Photod."), ("Electr.", "Photod."), ("Electr.", "Photod.")]
+        )
+        self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
+
+    def test_multi_tables_columns_labels(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            titles=None,
+            labels=["Intens.", "Tran."],
+            markers=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, [t.meta["title"] for t in tables])
+        self.assertEqual(
+            labels_grp, [("Intens.", "Tran."), ("Intens.", "Tran."), ("Intens.", "Tran.")]
+        )
+        self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
+
+    def test_multi_tables_columns_markers(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            titles=None,
+            labels=None,
+            markers=["o","-"],
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, [t.meta["title"] for t in tables])
+        self.assertEqual(
+            labels_grp, [("Electr.", "Photod."), ("Electr.", "Photod."), ("Electr.", "Photod.")]
+        )
+        self.assertEqual(markers_grp, [("o","-"), ("o","-"), ("o","-")])
+
 
 if __name__ == "__main__":
     unittest.main()

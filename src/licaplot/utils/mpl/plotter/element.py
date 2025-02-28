@@ -25,10 +25,13 @@ from typing import Sequence, Any
 # ---------
 
 from .types import (
-    MarkerSeq,
-    Legends,
-    Tables,
+    Title,
     Titles,
+    Legend,
+    Legends,
+    Markers,
+    MarkerSeq,
+    Tables,
     LegendsGroup,
     MarkersGroup,
     Elements,
@@ -178,9 +181,9 @@ class SingleTableColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: str | None,
-        label: str | None,
-        marker: str | None,
+        title: Title | None,
+        label: Legend | None,
+        marker: Markers | None,
     ):
         super().__init__(builder)
         self._marker = marker
@@ -214,7 +217,7 @@ class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: str | None,
+        title: Title | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
         label_length: int = 6,
@@ -251,7 +254,7 @@ class SingleTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: str | None,
+        title: Title | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
     ):
@@ -283,7 +286,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: str | None,
+        title: Title | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
         label_length: int = 6,
@@ -341,9 +344,9 @@ class MultiTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: str | None,
-        label: Legends | None,
-        marker: MarkerSeq | None,
+        titles: Titles | None,
+        label: Legend | None,
+        marker: Markers | None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -371,7 +374,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         flat_legends = (
             [table.columns[self._ycol].name[: self._trim] + "." for table in self._tables]
             if self._legend is None
-            else [self._legend]
+            else [self._legend]*self._ntab
         )
         part = self._grouped(flat_legends)
         self._elements.append(part)
@@ -382,13 +385,13 @@ class MultiTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: str | None,
+        titles: Titles | None,
         labels: Legends | None,
         markers: MarkerSeq | None,
         label_length: int = 6,
     ):
         super().__init__(builder)
-        self._marker = markers
+        self._markers = markers
         self._legends = labels
         self._titles = titles
         self._trim = label_length
@@ -411,8 +414,14 @@ class MultiTablesColumnsBuilder(ElementsBase):
                 for y in self._ycols
             ]
             if self._legends is None
-            else self._legends
+            else self._legends * self._ntab
         )
         part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part
+
+    def build_markers_grp(self) -> MarkersGroup:
+        self._check_markers()
+        part = self._grouped(self._markers)
         self._elements.append(part)
         return part
