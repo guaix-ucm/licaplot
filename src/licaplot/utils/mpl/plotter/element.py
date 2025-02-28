@@ -135,7 +135,11 @@ class ElementsBase(IElementsBuilder):
 
     def _default_tables_titles(self) -> Titles:
         if self._titles is not None:
-            result = [self._titles] * self._ntab if isinstance(self._default_tables_titles, str) else self._titles
+            result = (
+                [self._titles] * self._ntab
+                if isinstance(self._default_tables_titles, str)
+                else self._titles
+            )
         else:
             result = [table.meta["title"] for table in self._tables]
         part = result
@@ -195,12 +199,11 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._table, self._xcol, self._ycol = self._tb_builder.build_tables()
         tables = [self._table]
-        self._elements.extend([self._xcol,  [self._ycol], tables])
+        self._elements.extend([self._xcol, [self._ycol], tables])
         return tables
 
     def build_titles(self) -> Titles:
         return self._default_table_title()
-
 
     def build_markers_grp(self) -> MarkersGroup:
         part = [[self._marker]] if self._marker is not None else [[None]]
@@ -264,6 +267,20 @@ class SingleTablesColumnBuilder(ElementsBase):
         self._title = title
         assert self._ncol == 1
 
+    def _check_markers(self) -> None:
+        if self._markers is not None and len(self._markers) != self._ntab:
+            raise ValueError(
+                "number of markers (%d) should match number of tables (%d)"
+                % (len(self._markers), self._ntab)
+            )
+
+    def _check_legends(self) -> None:
+        if self._legends is not None and len(self._legends) != self._ntab:
+            raise ValueError(
+                "number of labels (%d) should match number of tables (%d)"
+                % (len(self._legends), self._ntab),
+            )
+
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
         self._elements.extend([self._xcol, [self._ycol], self._tables])
@@ -271,12 +288,22 @@ class SingleTablesColumnBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         return self._default_tables_title()
-       
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
-        flat_legends = [table.meta["label"] for table in self._tables]
+        flat_legends = (
+            self._legends
+            if self._legends is not None
+            else [table.meta["label"] for table in self._tables]
+        )
         part = self._grouped(flat_legends)
+        self._elements.append(part)
+        return part
+
+    def build_markers_grp(self) -> MarkersGroup:
+        self._check_markers()
+        flat_markers = self._markers if self._markers is not None else [None] * self._ntab
+        part = self._grouped(flat_markers)
         self._elements.append(part)
         return part
 
@@ -320,7 +347,6 @@ class SingleTablesColumnsBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         return self._default_tables_title()
-
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
@@ -374,7 +400,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         flat_legends = (
             [table.columns[self._ycol].name[: self._trim] + "." for table in self._tables]
             if self._legend is None
-            else [self._legend]*self._ntab
+            else [self._legend] * self._ntab
         )
         part = self._grouped(flat_legends)
         self._elements.append(part)
