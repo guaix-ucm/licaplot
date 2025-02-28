@@ -15,7 +15,7 @@ from typing import Iterable, Tuple, Union
 from abc import ABC, abstractmethod
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import numpy as np
@@ -117,6 +117,19 @@ class ITableBuilder(ABC):
 
 
 class TableBase(ITableBuilder):
+
+    def ncols(self):
+        return len(self._yc) if (isinstance(self._yc, list) or isinstance(self._yc, tuple)) else 1
+
+    def ntab(self):
+        """Ugly code that does the trick because there are no more choices"""
+        if hasattr(self, "_path") or hasattr(self, "_paths"):
+            result = len(self._paths) if hasattr(self, "_paths") else 1
+        else:
+            result = len(self._tables) if hasattr(self, "_tables") else 1
+        return result
+       
+
     def _check_col_range(self, table: Table, cols: Iterable[ColNum|ColNums], tag: str) -> None:
         ncols = len(table.columns)
         for col in cols:
@@ -239,6 +252,7 @@ class TablesFromFiles(TableBase):
 
     def build_tables(self) -> Tuple[Tables, ColNum,  Union[ColNum, ColNums]]:
         tables = list()
+        yc = [self._yc] if isinstance(self._yc, int) else self._yc
         for path in self._paths:
             if self._resol is None:
                 table = self._build_one_table(path)
@@ -246,12 +260,9 @@ class TablesFromFiles(TableBase):
                 assert isinstance(self._yc, int), "Y Column only"
                 table = self._build_one_resampled_table(path, self._yc, self._yu)
             self._check_col_range(table, [self._xc], tag="X")
-            if isinstance(self._yc, int):
-                self._check_col_range(table, [self._yc], tag="Y")
-            else:
-                self._check_col_range(table, self._yc, tag="Y")
+            self._check_col_range(table, yc, tag="Y")
             tables.append(table)
-        return tables, self._xc, self._yc
+        return tables, self._xc, yc
 
 
 class TableWrapper(ITableBuilder):

@@ -14,7 +14,7 @@ import os
 from argparse import ArgumentParser
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import astropy.units as u
@@ -55,6 +55,7 @@ def titles(title: str, purpose: str) -> ArgumentParser:
     parser.add_argument(
         "-t",
         "--title",
+        dest="titles",
         type=str,
         nargs="+",
         default=title,
@@ -81,6 +82,7 @@ def markers() -> ArgumentParser:
     parser.add_argument(
         "-m",
         "--marker",
+        dest="markers",
         type=Markers,
         nargs="+",
         default=None,
@@ -106,6 +108,7 @@ def labels(purpose: str) -> ArgumentParser:
     parser.add_argument(
         "-l",
         "--label",
+        dest="labels",
         type=str,
         nargs="+",
         help=f"One or more labels for {purpose} purposes",
@@ -391,7 +394,7 @@ def odir() -> ArgumentParser:
 def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-t",
+        "-g",
         "--tag",
         type=str,
         metavar="<tag>",

@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Tuple, Iterable, Dict, DefaultDict
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import numpy as np

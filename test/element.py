@@ -338,13 +338,16 @@ class TestSingleTablesColumn(unittest.TestCase):
             os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
             os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
         )
+        cls.xcol = 1
+        cls.ycol = 3
+        cls.ntab = len(paths)
         cls.tb_builder = TablesFromFiles(
             paths=paths,
             delimiter=None,
             columns=None,
-            xcol=1,
+            xcol=cls.xcol,
             xunit=u.nm,
-            ycol=3,
+            ycol=cls.ycol,
             yunit=u.A,
             xlow=None,
             xhigh=None,
@@ -363,9 +366,9 @@ class TestSingleTablesColumn(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, 0)
-        self.assertEqual(yc, [2])
-        self.assertEqual(len(tables), 3)
+        self.assertEqual(xc, self.xcol-1)
+        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(len(tables), self.ntab)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
         self.assertEqual(markers_grp, [[None], [None], [None]])
@@ -385,13 +388,16 @@ class TestSingleTablesColumns(unittest.TestCase):
             os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
             os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
         )
+        cls.xcol=1
+        cls.ycol=[2,3]
+        cls.ntab = len(paths)
         cls.tb_builder = TablesFromFiles(
             paths=paths,
             delimiter=None,
             columns=None,
-            xcol=1,
+            xcol=cls.xcol,
             xunit=u.nm,
-            ycol=[2, 3],
+            ycol=cls.ycol,
             yunit=u.A,
             xlow=None,
             xhigh=None,
@@ -410,9 +416,10 @@ class TestSingleTablesColumns(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, 0)
-        self.assertEqual(yc, [1, 2])
-        self.assertEqual(len(tables), 3)
+
+        self.assertEqual(xc, self.xcol-1)
+        self.assertEqual(yc, [y-1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         # Table label +  Tablle collumn abbreviatted
         self.assertEqual(
@@ -436,9 +443,10 @@ class TestSingleTablesColumns(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        self.assertEqual(xc, 0)
-        self.assertEqual(yc, [1, 2])
-        self.assertEqual(len(tables), 3)
+        self.assertEqual(xc, self.xcol-1)
+        self.assertEqual(yc, [y-1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         # Table label +  Tablle collumn abbreviatted
         self.assertEqual(

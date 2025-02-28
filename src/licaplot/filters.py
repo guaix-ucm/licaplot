@@ -16,7 +16,7 @@ import logging
 from argparse import Namespace
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 from lica.cli import execute

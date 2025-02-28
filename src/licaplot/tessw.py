@@ -17,7 +17,7 @@ import logging
 from argparse import Namespace
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import astropy.units as u

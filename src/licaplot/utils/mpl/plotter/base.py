@@ -17,7 +17,7 @@ from abc import ABC
 from typing import Optional, Tuple
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import astropy.units as u

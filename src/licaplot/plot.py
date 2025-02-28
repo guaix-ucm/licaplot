@@ -19,7 +19,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Optional, Iterable, Sequence
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import numpy as np

@@ -17,7 +17,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Optional, Iterable
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import matplotlib.pyplot as plt

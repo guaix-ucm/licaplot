@@ -14,7 +14,7 @@ import logging
 from typing import Sequence, Optional, Tuple
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 from astropy.table import Table

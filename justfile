@@ -160,21 +160,21 @@ tessw-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/tessw"
-    lica-tessw --console --trace classif photod -p ${dir}/stars1277-photodiode.csv --tag A
-    lica-tessw --console classif sensor -i ${dir}/stars1277-frequencies.csv -l TSL237 --tag A
-    lica-tessw --console classif photod -p ${dir}/stars6502-photodiode.csv --tag B
-    lica-tessw --console classif sensor -i ${dir}/stars6502-frequencies.csv -l OTHER --tag B
-    lica-tessw --console process  -d ${dir} --save
+    lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
+    lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
+    lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
+    lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER 
+    lica-tessw --console --trace process  -d ${dir} --save
 
 [private]
 eysdon-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-filters --console --trace  classif photod --tag X -p ${dir}/photodiode.txt
-    lica-filters --console --trace classif filter --tag X -i ${dir}/green.txt -l Green
-    lica-filters --console --trace classif filter --tag X -i ${dir}/red.txt -l Red
-    lica-filters --console --trace classif filter --tag X -i ${dir}/blue.txt -l Blue
+    lica-filters --console --trace classif photod -g X -p ${dir}/photodiode.txt
+    lica-filters --console --trace classif filter -g X -i ${dir}/green.txt -l Green
+    lica-filters --console --trace classif filter -g X -i ${dir}/red.txt -l Red
+    lica-filters --console --trace classif filter -g X -i ${dir}/blue.txt -l Blue
     lica-filters --console --trace process -d ${dir} --save
 
 
@@ -207,7 +207,7 @@ eclipse-reduce:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10
     do
-        lica-filters --console one -l $i -t $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+        lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
     done
 
 tessw-plot:

@@ -14,7 +14,7 @@ import argparse
 import logging
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import matplotlib.pyplot as plt

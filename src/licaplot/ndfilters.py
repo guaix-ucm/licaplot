@@ -17,7 +17,7 @@ import logging
 from argparse import ArgumentParser, Namespace
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import numpy as np

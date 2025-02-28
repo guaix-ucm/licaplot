@@ -18,7 +18,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Tuple
 
 # ---------------------
-# Thrid-party libraries
+# Third-party libraries
 # ---------------------
 
 import numpy as np
