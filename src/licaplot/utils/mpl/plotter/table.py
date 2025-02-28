@@ -262,7 +262,7 @@ class TablesFromFiles(TableBase):
             self._check_col_range(table, [self._xc], tag="X")
             self._check_col_range(table, yc, tag="Y")
             tables.append(table)
-        return tables, self._xc, yc
+        return tables, self._xc, self._yc
 
 
 class TableWrapper(ITableBuilder):

@@ -25,6 +25,8 @@ from licaplot.utils.mpl.plotter.element import (
     SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
     SingleTablesColumnsBuilder,
+    MultiTablesColumnBuilder,
+    MultiTablesColumnsBuilder,
 )
 
 from licaplot.utils.mpl.plotter.table import (
@@ -173,7 +175,6 @@ class TestSingleTableColumn(unittest.TestCase):
         director = Director()
         director.builder = builder
         xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-        print(labels_grp)
         self.assertEqual(xc, 0)
         self.assertEqual(yc, [1])
         self.assertEqual(len(tables), 1)
@@ -459,6 +460,101 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         self.assertEqual(markers_grp, [[None, None], [None, None], [None, None]])
 
+# =============================================================================
+#                                TEST CASE 5
+# =============================================================================
+
+class TestMultiTablesColumn(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.log = f"{cls.__name__}.log"
+        paths = (
+            os.path.join("data", "filters", "Eysdon_RGB", "blue.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
+        )
+        cls.xcol = 1
+        cls.ycol = 3
+        cls.ntab = len(paths)
+        cls.tb_builder = TablesFromFiles(
+            paths=paths,
+            delimiter=None,
+            columns=None,
+            xcol=cls.xcol,
+            xunit=u.nm,
+            ycol=cls.ycol,
+            yunit=u.A,
+            xlow=None,
+            xhigh=None,
+            lunit=u.nm,
+            resolution=None,
+            lica_trim=None,
+        )
+
+    def test_multi_tables_column_all_1(self):
+        builder = MultiTablesColumnBuilder(
+            builder=self.tb_builder,
+            titles=None,
+            label=None,
+            marker=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol-1)
+        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, [None]*self.ntab)
+        self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
+        self.assertEqual(markers_grp, [[None], [None], [None]])
+
+    def test_multi_tables_column_all_2(self):
+        builder = MultiTablesColumnBuilder(
+            builder=self.tb_builder,
+            titles=["Eysdon RGB Filter set"]*self.ntab,
+            label=None,
+            marker=None,
+        )
+        director = Director()
+        director.builder = builder
+        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol-1)
+        self.assertEqual(yc, [self.ycol-1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(titles, ["Eysdon RGB Filter set"]*self.ntab)
+        self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
+        self.assertEqual(markers_grp, [[None], [None], [None]])
+
+# =============================================================================
+#                                TEST CASE 6
+# =============================================================================
+
+class TestMultiTablesColumns(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.log = f"{cls.__name__}.log"
+        paths = (
+            os.path.join("data", "filters", "Eysdon_RGB", "blue.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
+        )
+        cls.xcol=1
+        cls.ycol=[2,3]
+        cls.ntab = len(paths)
+        cls.tb_builder = TablesFromFiles(
+            paths=paths,
+            delimiter=None,
+            columns=None,
+            xcol=cls.xcol,
+            xunit=u.nm,
+            ycol=cls.ycol,
+            yunit=u.A,
+            xlow=None,
+            xhigh=None,
+            lunit=u.nm,
+            resolution=None,
+            lica_trim=None,
+        )
 
 if __name__ == "__main__":
     unittest.main()

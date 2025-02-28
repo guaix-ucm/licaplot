@@ -132,7 +132,7 @@ class ElementsBase(IElementsBuilder):
 
     def _default_tables_titles(self) -> Titles:
         if self._titles is not None:
-            result = [self._titles] * self._ntab if isinstance(self._title, str) else self._titles
+            result = [self._titles] * self._ntab if isinstance(self._default_tables_titles, str) else self._titles
         else:
             result = [table.meta["title"] for table in self._tables]
         part = result
@@ -263,7 +263,7 @@ class SingleTablesColumnBuilder(ElementsBase):
 
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, self._ycol, self._tables])
+        self._elements.extend([self._xcol, [self._ycol], self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -354,20 +354,24 @@ class MultiTablesColumnBuilder(ElementsBase):
         self._trim = label_length
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, self._ycols, self._tables])
+        self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
+        self._elements.extend([self._xcol, [self._ycol], self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
         self._check_titles()
         return self._default_tables_titles()
 
+    def build_markers_grp(self) -> MarkersGroup:
+        part = self._grouped(self._marker)
+        self._elements.append(part)
+        return part
+
     def build_legends_grp(self) -> LegendsGroup:
-        self._check_legends()
         flat_legends = (
             [table.columns[self._ycol].name[: self._trim] + "." for table in self._tables]
-            if self._legends is None
-            else self._legends
+            if self._legend is None
+            else [self._legend]
         )
         part = self._grouped(flat_legends)
         self._elements.append(part)
