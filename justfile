@@ -246,14 +246,6 @@ plot-s-tt-cc args="":
     lica-plot --console --trace single tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
-# Plot multiple Axes, one table only, one column per axes
-plot-m-t-cc args="":
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir=data/eclipse
-    lica-plot --console --trace multi table columns -i ${dir}/01_eg.ecsv -yc 4 5 --changes --lines {{args}}
-
-
 # Plot multiple Axes, one table per axes, one column per table
 plot-m-tt-c args="":
     #!/usr/bin/env bash
