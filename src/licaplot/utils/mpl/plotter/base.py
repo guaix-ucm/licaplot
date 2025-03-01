@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 import astropy.units as u
 import matplotlib.pyplot as plt
 
-from .types import Markers, ColNum, ColNums, Tables, Titles, MarkersT, LegendsGroup, MarkersGroup
+from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup
 
 
 # ----------------
@@ -54,7 +54,7 @@ class PlotterBase(ABC):
         nrows: int = 1,
         ncols: int = 1,
         save_path: Optional[str] = None,
-        markers_type: EnumType = Markers,
+        markers_type: EnumType = Marker,
     ):
         self.x = x
         self.yy = yy
@@ -156,7 +156,7 @@ class PlotterBase(ABC):
     # Helper methods
     # ==============
 
-    def get_markers(self) -> MarkersT:
+    def get_markers(self) -> EnumType:
         markers = (
             [marker for marker in self.markers_type]
             if all(m is None for m in self.markers)
@@ -190,3 +190,7 @@ class PlotterBase(ABC):
 
     def plot_init_inner_loop_hook(self):
         return zip(self.axes, self.tables, self.titles, self.legends_grp, self.markers_grp)
+
+
+class BasicPlotter(PlotterBase):
+    pass

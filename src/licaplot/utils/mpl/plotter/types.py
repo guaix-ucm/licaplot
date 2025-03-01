@@ -7,7 +7,7 @@ from lica import StrEnum
 # Types and such
 # --------------
 
-class Markers(StrEnum):
+class Marker(StrEnum):
     Circle = "o"
     Square = "s"
     Star = "*"
@@ -27,9 +27,9 @@ Title = Union[str, Sequence[str]] # for space separated words from the command l
 Titles = Sequence[Title]
 Legend = str
 Legends = Sequence[Legend]
-MarkerSeq = Sequence[StrEnum]
+Markers = Sequence[Marker]
 LegendsGroup = Sequence[Legends]
-MarkersGroup = Sequence[MarkerSeq]
+MarkersGroup = Sequence[Markers]
 
 Element = Union[ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup]
 Elements = Sequence[Element]

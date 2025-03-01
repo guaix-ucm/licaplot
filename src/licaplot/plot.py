@@ -28,7 +28,7 @@ from lica.cli import execute
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl.plotter.element import (
+from .utils.mpl.plotter import (
     Director,
     SingleTableColumnBuilder,
     SingleTableColumnsBuilder,
@@ -36,12 +36,10 @@ from .utils.mpl.plotter.element import (
     SingleTablesColumnsBuilder,
     MultiTablesColumnBuilder,
     MultiTablesColumnsBuilder,
-)
-
-from .utils.mpl.plotter.table import (
     TableFromFile,
     TablesFromFiles,
 )
+
 
 from .utils import parser as prs
 

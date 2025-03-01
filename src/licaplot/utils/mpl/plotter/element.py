@@ -29,8 +29,8 @@ from .types import (
     Titles,
     Legend,
     Legends,
+    Marker,
     Markers,
-    MarkerSeq,
     Tables,
     LegendsGroup,
     MarkersGroup,
@@ -176,7 +176,7 @@ class SingleTableColumnBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None,
         label: Legend | None,
-        marker: Markers | None,
+        marker: Marker | None,
     ):
         super().__init__(builder)
         self._marker = marker
@@ -241,7 +241,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None,
         labels: Legends | None,
-        markers: MarkerSeq | None,
+        markers: Markers | None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -324,7 +324,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None,
         labels: Legends | None,
-        markers: MarkerSeq | None,
+        markers: Markers | None,
     ):
         super().__init__(builder)
         self._markers = markers
@@ -420,7 +420,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None,
         labels: Legends | None,
-        markers: MarkerSeq | None,
+        markers: Markers | None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -513,7 +513,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         builder: ITableBuilder,
         titles: Titles | None,
         label: Legend | None,
-        marker: Markers | None,
+        marker: Marker | None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -591,7 +591,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         titles: Titles | None,
         labels: Legends | None,
-        markers: MarkerSeq | None,
+        markers: Markers | None,
         label_length: int = 6,
     ):
         super().__init__(builder)

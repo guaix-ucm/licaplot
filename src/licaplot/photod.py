@@ -31,7 +31,7 @@ import lica
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Markers, set_axes_labels
+from .utils.mpl import Marker, set_axes_labels
 from .utils.validators import vecsv
 
 
@@ -166,9 +166,9 @@ def add_args(parser):
     # ------------------------------------------------------------------------------------
     parser_plot.add_argument(
         "--marker",
-        type=str,
-        choices=[m for m in Markers],
-        default=Markers.Circle,
+        type=Marker,
+        choices=Marker,
+        default=Marker.Circle,
         help="Plot Marker",
     )
     # ------------------------------------------------------------------------------------
