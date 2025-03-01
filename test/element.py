@@ -19,7 +19,7 @@ import unittest
 
 import astropy.units as u
 
-from licaplot.utils.mpl.plotter.element import (
+from licaplot.utils.mpl.plotter import (
     Director,
     SingleTableColumnBuilder,
     SingleTableColumnsBuilder,
@@ -27,12 +27,10 @@ from licaplot.utils.mpl.plotter.element import (
     SingleTablesColumnsBuilder,
     MultiTablesColumnBuilder,
     MultiTablesColumnsBuilder,
-)
-
-from licaplot.utils.mpl.plotter.table import (
     TableFromFile,
     TablesFromFiles,
 )
+
 
 # =============================================================================
 #                                TEST CASE 1

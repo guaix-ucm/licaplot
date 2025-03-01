@@ -18,7 +18,7 @@ import os
 import unittest
 import astropy.units as u
 
-from licaplot.utils.mpl.plotter.table import TableFromFile, TablesFromFiles
+from licaplot.utils.mpl.plotter import TableFromFile, TablesFromFiles
 
 
 class TestTableFromFile(unittest.TestCase):

@@ -68,13 +68,14 @@ class PlotterBase(ABC):
         self.nrows = nrows
         self.ncols = ncols
         self.single = nrows * ncols == 1
+        self.markers_type = markers_type
+        self.save_path = save_path
         # --------------------------------------------------
         # This context is created during the plot outer loop
         # --------------------------------------------------
         self.xcol = None  # Current Column object
         self.ax = None  # Current Axes object
         self.table = None  # Current Table object
-        self.yy = None  # Current column number list
         self.title = None  # Current title
         self.markers = None  # current markers list
         self.legends = None  # current legends list
@@ -84,6 +85,7 @@ class PlotterBase(ABC):
         log.info("markers_grp = %s", markers_grp)
 
     def plot(self):
+        log.info("YY = %s", self.yy)
         self.plot_start_hook()
         self.load_mpl_resources()
         self.configure_axes()
@@ -92,7 +94,6 @@ class PlotterBase(ABC):
             self.fig.suptitle(self.titles[0])
         for t in self.get_outer_iterable_hook():
             self.unpack_outer_tuple_hook(t)
-            self.outer_loop_start()
             self.xcol = self.table.columns[self.x]
             if not self.single:
                 self.ax.set_title(self.title)
@@ -119,7 +120,7 @@ class PlotterBase(ABC):
             self.ax.minorticks_on()
             if self.changes:
                 self.ax.legend()
-        self.outer_loop_end()
+      
         # Do not draw in unusued axes
         N = len(self.tables)
         for ax in self.axes[N:]:
@@ -146,11 +147,16 @@ class PlotterBase(ABC):
     def plot_start_hook(self):
         pass
 
-    def outer_loop_round(self):
+    def plot_end_hook(self):
         pass
 
-    def outer_loop_end(self):
+    def outer_loop_hook(self):
         pass
+
+    def inner_loop_hook(self, legend, marker):
+        pass
+
+ 
 
     # ==============
     # Helper methods

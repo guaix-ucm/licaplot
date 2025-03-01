@@ -38,6 +38,7 @@ from .utils.mpl.plotter import (
     MultiTablesColumnsBuilder,
     TableFromFile,
     TablesFromFiles,
+    BasicPlotter,
 )
 
 
@@ -90,8 +91,25 @@ def cli_single_table_column(args: Namespace):
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
+    log.info("YC = %s", yc)
     with visualization.quantity_support():
-        pass
+        with visualization.quantity_support():
+            plotter = BasicPlotter(
+                x=xc,
+                yy=yc,
+                tables=tables,
+                titles=titles,
+                legends_grp=labels_grp,
+                markers_grp=markers_grp,
+                changes=args.changes,
+                percent=args.percent,
+                linewidth=1 if args.lines else 0,
+                nrows=1,
+                ncols=1,
+                save_path=args.save_figire_path,
+                # markers_type: EnumType = Marker
+            )
+            plotter.plot()
 
 
 def cli_single_table_columns(args: Namespace):
@@ -121,7 +139,22 @@ def cli_single_table_columns(args: Namespace):
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
     with visualization.quantity_support():
-        pass
+        plotter =BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=1,
+            ncols=1,
+            save_path=args.save_figure_path,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
 
 
 def cli_single_tables_column(args: Namespace):
@@ -151,7 +184,22 @@ def cli_single_tables_column(args: Namespace):
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
     with visualization.quantity_support():
-        pass
+        plotter =BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=1,
+            ncols=1,
+            save_path=args.save_figure_path,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
 
 
 def cli_single_tables_columns(args: Namespace):
@@ -171,7 +219,7 @@ def cli_single_tables_columns(args: Namespace):
     )
     builder = SingleTablesColumnsBuilder(
         builder=tb_builder,
-        title=args.title,
+        title=args.titles,
         labels=args.labels,
         markers=args.markers,
     )
@@ -181,7 +229,22 @@ def cli_single_tables_columns(args: Namespace):
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
     with visualization.quantity_support():
-        pass
+        plotter =BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=1,
+            ncols=1,
+            save_path=args.save_figure_path,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
 
 
 def cli_multi_tables_column(args: Namespace):
