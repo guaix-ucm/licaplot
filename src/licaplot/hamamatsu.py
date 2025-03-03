@@ -102,9 +102,6 @@ def plot_single_tables_column(
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
-            changes=True,
-            percent=False,
-            linewidth=1,
             box=box,
         )
         plotter.plot()
@@ -133,9 +130,6 @@ def plot_single_table_column(
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
-            changes=True,
-            percent=False,
-            linewidth=1,
         )
         plotter.plot()
 
