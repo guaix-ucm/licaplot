@@ -11,7 +11,7 @@
 # -------------------
 
 import logging
-
+from math import ceil, sqrt
 # Typing hints
 from argparse import ArgumentParser, Namespace
 
@@ -277,8 +277,26 @@ def cli_multi_tables_column(args: Namespace):
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
+    ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
+    nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
-        pass
+        plotter =BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=nrows,
+            ncols=ncols,
+            save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
 
 
 def cli_multi_tables_columns(args: Namespace):
@@ -307,8 +325,26 @@ def cli_multi_tables_columns(args: Namespace):
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
+    ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
+    nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
-        pass
+        plotter =BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=nrows,
+            ncols=ncols,
+            save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
 
 
 def add_args(parser: ArgumentParser):

@@ -101,7 +101,7 @@ class PlotterBase(ABC):
             if not single:
                 self.ax.set_title(self.title)
             self.set_axes_labels(self.yy[0])
-            if self.changes and single and first_pass:
+            if self.changes and (single and first_pass) or not single:
                 for change in MONOCROMATOR_CHANGES_LABELS:
                     self.ax.axvline(
                         change["wavelength"], linestyle=change["style"], label=change["label"]
@@ -117,7 +117,6 @@ class PlotterBase(ABC):
                 )
                 self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend)
                 self.inner_loop_hook(legend, marker)
-            
             self.outer_loop_hook(single, first_pass)
             self.ax.grid(True, which="major", color="silver", linestyle="solid")
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))

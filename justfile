@@ -221,7 +221,7 @@ plot-s-t-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-plot --console --trace single table column  -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines {{args}}
+    lica-plot --console --trace single table column -% -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines {{args}}
 
 # Plot single axes, table and 2 columns
 plot-s-t-cc args="":
@@ -235,7 +235,7 @@ plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console --trace single tables column -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
+    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table
@@ -243,7 +243,7 @@ plot-s-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace single tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
+    lica-plot --console --trace single tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, one column per table
@@ -251,7 +251,7 @@ plot-m-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables column -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 5 --changes --lines {{args}}
+    lica-plot --console --trace multi tables column -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table
@@ -259,7 +259,7 @@ plot-m-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables columns -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
+    lica-plot --console --trace multi tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
 
 # run unut test on [table|element]
 test what:
