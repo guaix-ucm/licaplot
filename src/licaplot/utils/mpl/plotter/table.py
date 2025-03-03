@@ -265,7 +265,7 @@ class TablesFromFiles(TableBase):
         return tables, self._xc, self._yc
 
 
-class TableWrapper(ITableBuilder):
+class TableWrapper(TableBase):
     def __init__(
         self,
         table: Table,
@@ -285,7 +285,7 @@ class TableWrapper(ITableBuilder):
         return self._table, self._xc, self._yc
 
 
-class TablesWrapper(ITableBuilder):
+class TablesWrapper(TableBase):
     def __init__(
         self,
         tables: Tables,

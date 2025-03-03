@@ -174,9 +174,9 @@ class SingleTableColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None,
-        label: Legend | None,
-        marker: Marker | None,
+        title: Title | None = None,
+        label:Legend | None = None,
+        marker: Marker | None = None,
     ):
         super().__init__(builder)
         self._marker = marker
@@ -239,9 +239,9 @@ class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None,
-        labels: Legends | None,
-        markers: Markers | None,
+        title: Title | None = None,
+        labels: Legends | None = None,
+        markers: Legends | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -322,9 +322,9 @@ class SingleTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None,
-        labels: Legends | None,
-        markers: Markers | None,
+        title: Title | None = None,
+        labels: Legends | None = None,
+        markers: Legends | None = None,
     ):
         super().__init__(builder)
         self._markers = markers
@@ -418,9 +418,9 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None,
-        labels: Legends | None,
-        markers: Markers | None,
+        title: Title | None = None,
+        labels: Legends | None = None,
+        markers: Legends | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -511,9 +511,9 @@ class MultiTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: Titles | None,
-        label: Legend | None,
-        marker: Marker | None,
+        titles: Titles | None = None,
+        label:Legend | None = None,
+        marker: Marker | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
@@ -589,9 +589,9 @@ class MultiTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: Titles | None,
-        labels: Legends | None,
-        markers: Markers | None,
+        titles: Titles | None = None,
+        labels: Legends | None = None,
+        markers: Legends | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
