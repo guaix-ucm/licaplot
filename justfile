@@ -137,7 +137,7 @@ eclipse-plot:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -% -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png -sd 300 --lines 
+        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
 # reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf|all]

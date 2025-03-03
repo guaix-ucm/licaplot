@@ -452,9 +452,8 @@ def dpifig() -> ArgumentParser:
     parser.add_argument(
         "-sd",
         "--save-figure-dpi",
-        type=vfigext,
+        type=int,
         default=None,
-        metavar="<File>",
         help="Saved figure resolution in DPI %(default)s",
     )
     return parser
