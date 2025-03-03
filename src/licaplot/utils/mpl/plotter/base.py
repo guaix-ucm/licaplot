@@ -54,12 +54,13 @@ class PlotterBase(ABC):
         nrows: int = 1,
         ncols: int = 1,
         save_path: Optional[str] = None,
+        save_dpi: Optional[int] = None,
         markers_type: EnumType = Marker,
     ):
         self.x = x
         self.yy = yy
         self.tables = tables
-        self.titles = titles
+        self.titles =  titles
         self.legends_grp = legends_grp
         self.markers_grp = markers_grp
         self.changes = changes
@@ -67,9 +68,9 @@ class PlotterBase(ABC):
         self.linewidth = linewidth
         self.nrows = nrows
         self.ncols = ncols
-        self.single = nrows * ncols == 1
         self.markers_type = markers_type
         self.save_path = save_path
+        self.save_dpi = save_dpi
         # --------------------------------------------------
         # This context is created during the plot outer loop
         # --------------------------------------------------
@@ -90,14 +91,21 @@ class PlotterBase(ABC):
         self.load_mpl_resources()
         self.configure_axes()
         N = len(self.tables)
-        if self.single:
+        single = self.nrows * self.ncols == 1
+        if single:
             self.fig.suptitle(self.titles[0])
-        for t in self.get_outer_iterable_hook():
+        for i, t in enumerate(self.get_outer_iterable_hook()):
+            first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
             self.xcol = self.table.columns[self.x]
-            if not self.single:
+            if not single:
                 self.ax.set_title(self.title)
             self.set_axes_labels(self.yy[0])
+            if self.changes and single and first_pass:
+                for change in MONOCROMATOR_CHANGES_LABELS:
+                    self.ax.axvline(
+                        change["wavelength"], linestyle=change["style"], label=change["label"]
+                    )
             log.info("title = %s", self.title)
             log.info("markers = %s", self.markers)
             log.info("legends = %s", self.legends)
@@ -109,12 +117,8 @@ class PlotterBase(ABC):
                 )
                 self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend)
                 self.inner_loop_hook(legend, marker)
-            if self.changes:
-                for change in MONOCROMATOR_CHANGES_LABELS:
-                    self.ax.axvline(
-                        change["wavelength"], linestyle=change["style"], label=change["label"]
-                    )
-            self.outer_loop_hook()
+            
+            self.outer_loop_hook(single, first_pass)
             self.ax.grid(True, which="major", color="silver", linestyle="solid")
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
             self.ax.minorticks_on()
@@ -128,7 +132,7 @@ class PlotterBase(ABC):
         self.plot_end_hook()
         if self.save_path is not None:
             log.info("Saving to %s", self.save_path)
-            plt.savefig(self.save_path, bbox_inches="tight")
+            plt.savefig(self.save_path, bbox_inches="tight", dpi=self.save_dpi)
         else:
             plt.show()
 
@@ -138,7 +142,11 @@ class PlotterBase(ABC):
 
     def get_outer_iterable_hook(self):
         """Should be overriden if extra arguments are needed. i.e. a box per axes"""
-        return zip(self.axes, self.tables, self.titles, self.legends_grp, self.markers_grp)
+        log.info("configuring the outer loop")
+        log.info("THERE ARE %d AXES, %d TABLES, %d TITLES, %d LEGENDS GRP & %d MARKERS GRP", 
+            len(self.axes), len(self.tables), len(self.titles), len(self.legends_grp), len(self.markers_grp))
+        titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
+        return zip(self.axes, self.tables, titles, self.legends_grp, self.markers_grp)
 
     def unpack_outer_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed. i.e. a box per axes"""
@@ -150,7 +158,12 @@ class PlotterBase(ABC):
     def plot_end_hook(self):
         pass
 
-    def outer_loop_hook(self):
+    def outer_loop_hook(self, single: bool, first_pass: bool):
+        """
+        single : Flag, single Axis only
+        first_pass: First outer loop pass (in case of multiple tables)
+        """
+
         pass
 
     def inner_loop_hook(self, legend, marker):
@@ -186,16 +199,15 @@ class PlotterBase(ABC):
         self.ax.set_ylabel(ylabel)
 
     def load_mpl_resources(self):
-        resource = "licaplot.resources.single" if self.single else "licaplot.resources.multi"
+        single = self.nrows * self.ncols == 1
+        resource = "licaplot.resources.single" if single else "licaplot.resources.multi"
         log.info("Loading Matplotlib resources from %s", resource)
         plt.style.use(resource)
 
     def configure_axes(self):
+        single = self.nrows * self.ncols == 1
         self.fig, axes = plt.subplots(nrows=self.nrows, ncols=self.ncols)
-        self.axes = axes.flatten() if not self.single else [axes] * len(self.tables)
-
-    def plot_init_inner_loop_hook(self):
-        return zip(self.axes, self.tables, self.titles, self.legends_grp, self.markers_grp)
+        self.axes = axes.flatten() if not single else [axes] * len(self.tables)
 
 
 class BasicPlotter(PlotterBase):

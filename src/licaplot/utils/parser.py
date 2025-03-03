@@ -447,6 +447,18 @@ def savefig() -> ArgumentParser:
     )
     return parser
 
+def dpifig() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-sd",
+        "--save-figure-dpi",
+        type=vfigext,
+        default=None,
+        metavar="<File>",
+        help="Saved figure resolution in DPI %(default)s",
+    )
+    return parser
+
 
 def ndf() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

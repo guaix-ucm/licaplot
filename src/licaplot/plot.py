@@ -106,7 +106,8 @@ def cli_single_table_column(args: Namespace):
                 linewidth=1 if args.lines else 0,
                 nrows=1,
                 ncols=1,
-                save_path=args.save_figire_path,
+                save_path=args.save_figure_path,
+                save_dpi=args.save_figure_dpi,
                 # markers_type: EnumType = Marker
             )
             plotter.plot()
@@ -152,6 +153,7 @@ def cli_single_table_columns(args: Namespace):
             nrows=1,
             ncols=1,
             save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -197,6 +199,7 @@ def cli_single_tables_column(args: Namespace):
             nrows=1,
             ncols=1,
             save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -242,6 +245,7 @@ def cli_single_tables_columns(args: Namespace):
             nrows=1,
             ncols=1,
             save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -338,6 +342,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.marker(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Single Axes, single table, single column plot",
     )
@@ -360,6 +365,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.markers(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Single Axes, single table, multiple columns plot",
     )
@@ -386,6 +392,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.markers(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Single Axes, multiple tables, single column plot",
     )
@@ -408,6 +415,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.markers(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Single Axes, multiple tables, multiple columns plot",
     )
@@ -441,6 +449,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.markers(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Mulitple Axes, multiple tables, single column plot",
     )
@@ -464,6 +473,7 @@ def add_args(parser: ArgumentParser):
             prs.percent(),
             prs.markers(),
             prs.savefig(),
+            prs.dpifig(),
         ],
         help="Mulitple Axes, multiple tables, multiple columns plot",
     )

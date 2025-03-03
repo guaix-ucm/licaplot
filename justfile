@@ -135,9 +135,9 @@ eclipse-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/eclipse"
-    for i in 01 02 03 04 05 06 07 08 09 10
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 4 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --changes --lines 
+        lica-plot --console --trace single table columns -% -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png -sd 300 --lines 
     done
 
 # reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf|all]
@@ -205,7 +205,7 @@ eclipse-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/eclipse"
-    for i in 01 02 03 04 05 06 07 08 09 10
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
         lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
     done
