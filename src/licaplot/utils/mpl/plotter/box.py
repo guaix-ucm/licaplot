@@ -19,6 +19,10 @@ from typing import Optional, Tuple
 # Third-party libraries
 # ---------------------
 
+# ------------------------
+# Own modules and packages
+# ------------------------
+
 from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup
 
 from .base import BasicPlotter
@@ -76,7 +80,7 @@ class BoxPlotter(BasicPlotter):
         single : Flag, single Axis only
         first_pass: First outer loop pass (in case of multiple tables)
         """
-        if (single and first_pass) or not single:
+        if self.box is not None and ((single and first_pass) or not single):
             props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
             self.ax.text(
                 x=self.box[1],

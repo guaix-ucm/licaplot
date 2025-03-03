@@ -24,7 +24,7 @@ from typing import Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 
-from astropy import visualization
+
 import astropy.io.ascii
 import astropy.units as u
 from astropy.constants import astropyconst20 as const
@@ -42,19 +42,7 @@ from lica.lab.photodiode import Hamamatsu
 
 from ._version import __version__
 
-from .utils.mpl.plotter import (
-    Tables,
-    ColNum,
-    Title,
-    Legends,
-    Director,
-    SingleTableColumnBuilder,
-    SingleTablesColumnBuilder,
-    TableWrapper,
-    TablesWrapper,
-    BasicPlotter,
-    BoxPlotter,
-)
+from .utils.mpl.helpers import offset_box, plot_single_table_column, plot_single_tables_column
 # -----------------------
 # Module global variables
 # -----------------------
@@ -71,67 +59,6 @@ plt.style.use("licaplot.resources.global")
 # -------------------
 # Auxiliary functions
 # -------------------
-
-
-def offset_box(x_offset: float, y_offset: float, x: float = 0.5, y: float = 0.2):
-    return ("\n".join((f"x offset= {x_offset:.1f}", f"y offset = {y_offset:0.3f}")), x, y)
-
-
-def plot_single_tables_column(
-    tables: Tables,
-    x: ColNum,
-    y: ColNum,
-    title: Title,
-    legends: Legends,
-    box: Tuple[str, float, float],
-) -> None:
-    tb_builder = TablesWrapper(tables=tables, xcol=x, ycol=y)
-    builder = SingleTablesColumnBuilder(
-        builder=tb_builder,
-        title=title,
-        labels=legends,
-    )
-    director = Director()
-    director.builder = builder
-    xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-    with visualization.quantity_support():
-        plotter = BoxPlotter(
-            x=xc,
-            yy=yc,
-            tables=tables,
-            titles=titles,
-            legends_grp=labels_grp,
-            markers_grp=markers_grp,
-            box=box,
-        )
-        plotter.plot()
-
-
-def plot_single_table_column(
-    table: Table,
-    x: ColNum,
-    y: ColNum,
-    title: Title,
-) -> None:
-    tb_builder = TableWrapper(table=table, xcol=x, ycol=y)
-    builder = SingleTableColumnBuilder(
-        builder=tb_builder,
-        title=title,
-        label=None,
-    )
-    director = Director()
-    director.builder = builder
-    xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
-    with visualization.quantity_support():
-        plotter = BasicPlotter(
-            x=xc,
-            yy=yc,
-            tables=tables,
-            titles=titles,
-            legends_grp=labels_grp,
-            markers_grp=markers_grp,
-        )
-        plotter.plot()
 
 
 def quantum_efficiency(wavelength: np.ndarray, responsivity: np.ndarray) -> np.ndarray:
@@ -253,8 +180,8 @@ def cli_stage1(args: Namespace) -> None:
         y = table.colnames.index(COL.RESP)
         plot_single_table_column(
             table=table,
-            x=x+1,
-            y=y+1,
+            x=x + 1,
+            y=y + 1,
             title=f"{args.title} #{table.meta['Serial']}, NPL Calibrated",
         )
 
@@ -274,16 +201,16 @@ def cli_stage2(args: Namespace) -> None:
     )
     plot_single_tables_column(
         tables=[npl_table, datasheet_table],
-        x=x+1,
-        y=y+1,
+        x=x + 1,
+        y=y + 1,
         title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     plot_single_tables_column(
         tables=[npl_table, sliced_table],
-        x=x+1,
-        y=y+1,
+        x=x + 1,
+        y=y + 1,
         title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
