@@ -34,9 +34,8 @@ from lica.lab import COL
 from . import TBCOL, PROCOL
 from ._version import __version__
 from .utils import parser as prs
-from .utils.mpl import plot_single_table_column
 from .filters import one_filter
-from .plot import cli_single_table_column
+
 
 
 # -----------------------
@@ -70,6 +69,7 @@ plt.style.use("licaplot.resources.global")
 
 
 def cli_calibrate(args: Namespace) -> None:
+
     one_filter(
         input_path=args.input_file,
         photod_path=args.photod_file,
@@ -79,7 +79,7 @@ def cli_calibrate(args: Namespace) -> None:
         tag=args.tag,
         x_low=args.x_low,
         x_high=args.x_high,
-        ndf=args.ndf,
+        ndf=None,
     )
     ecsv_path, _ = os.path.splitext(args.input_file)
     ecsv_path += ".ecsv"
@@ -88,7 +88,7 @@ def cli_calibrate(args: Namespace) -> None:
     table.remove_columns([TBCOL.CURRENT, PROCOL.PHOTOD_CURRENT])
     table.meta["History"].append(f"Master {args.ndf} transmission file")
     resolution = np.ediff1d(table[COL.WAVE])[0]
-    name = f"{args.ndf}-Transmission@{int(resolution)}nm.ecsv"
+    name = f"{args.ndf}-{COL.TRANS}@{int(resolution)}nm.ecsv"
     master_path = os.path.join(args.output_dir, name)
     log.info("Producing Master ECSV file %s", master_path)
     table.write(master_path, delimiter=",", overwrite=True)

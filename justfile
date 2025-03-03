@@ -110,14 +110,14 @@ osi-cmp:
 ndf-calib:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i data/ndfilters/osi_nd0.5.txt -p data/ndfilters/osi_clear1.txt -o data/ndfilters 
+    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i data/ndfilters/ndf0.5/osi_nd0.5.txt -p data/ndfilters/ndf0.5/osi_clear1.txt -o data/ndfilters 
 
 
 # Plot NDF calibration curve
 ndf-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmission@5nm.ecsv --changes
+    lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmittance@5nm.ecsv --changes
 
 # Plot lica stored resource: Hamamatsu calibration curve
 hama-plot:
