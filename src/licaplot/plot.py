@@ -86,8 +86,8 @@ def cli_single_table_column(args: Namespace):
         label=args.label,
         marker=args.marker,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
@@ -135,8 +135,8 @@ def cli_single_table_columns(args: Namespace):
         labels=args.labels,
         markers=args.markers,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
@@ -183,8 +183,8 @@ def cli_single_tables_column(args: Namespace):
         markers=args.markers,
 
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
@@ -230,8 +230,8 @@ def cli_single_tables_columns(args: Namespace):
         labels=args.labels,
         markers=args.markers,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
@@ -277,8 +277,8 @@ def cli_multi_tables_column(args: Namespace):
         label=args.labels,
         marker=args.markers,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
@@ -326,8 +326,8 @@ def cli_multi_tables_columns(args: Namespace):
         labels=args.labels,
         markers=args.markers,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements

@@ -30,7 +30,6 @@ from .types import (
     Legend,
     Legends,
     Marker,
-    Markers,
     Tables,
     LegendsGroup,
     MarkersGroup,
@@ -52,15 +51,7 @@ class Director:
     Ensures the differenct elements are constructed in a given order
     """
 
-    def __init__(self) -> None:
-        self._builder = None
-
-    @property
-    def builder(self) -> IElementsBuilder:
-        return self._builder
-
-    @builder.setter
-    def builder(self, builder: IElementsBuilder) -> None:
+    def __init__(self, builder: IElementsBuilder) -> None:
         self._builder = builder
 
     def build_elements(self) -> Elements:

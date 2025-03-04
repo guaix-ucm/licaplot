@@ -53,8 +53,8 @@ def plot_single_table_column(
         title=title,
         label=None,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BasicPlotter(
@@ -82,8 +82,8 @@ def plot_single_tables_column(
         title=title,
         labels=legends,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BoxPlotter(

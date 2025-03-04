@@ -252,8 +252,8 @@ def cli_single_tables_column(args: Namespace):
         labels=args.labels,
         markers=args.markers,
     )
-    director = Director()
-    director.builder = builder
+    director = Director(builder)
+    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp = elements
