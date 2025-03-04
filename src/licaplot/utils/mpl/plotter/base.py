@@ -50,6 +50,9 @@ log = logging.getLogger(__name__)
 
 
 class PlotterBase(ABC):
+    default_markers = [marker for marker in Marker if marker != Marker.Nothing]
+    default_linestyles = [linestyle for linestyle in LineStyle if linestyle != LineStyle.Nothing]
+
     def __init__(
         self,
         x: ColNum,
@@ -67,8 +70,6 @@ class PlotterBase(ABC):
         ncols: int = 1,
         save_path: Optional[str] = None,
         save_dpi: Optional[int] = None,
-        markers_type: EnumType = Marker,
-        linestyles_type: EnumType = LineStyle,
     ):
         self.x = x
         self.yy = yy
@@ -82,8 +83,6 @@ class PlotterBase(ABC):
         self.linewidth = linewidth
         self.nrows = nrows
         self.ncols = ncols
-        self.markers_type = markers_type
-        self.linestyles_type = linestyles_type
         self.save_path = save_path
         self.save_dpi = save_dpi
         self.log_y = log_y
@@ -104,20 +103,20 @@ class PlotterBase(ABC):
         self.load_mpl_resources()
         self.configure_axes()
         N = len(self.tables)
-        single = self.nrows * self.ncols == 1
-        if single:
+        single_plot = self.nrows * self.ncols == 1
+        if single_plot:
             self.fig.suptitle(self.titles[0])
         for i, t in enumerate(self.get_outer_iterable_hook()):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
-            self.outer_loop_hook(single, first_pass)
+            self.outer_loop_hook(single_plot, first_pass)
             self.xcol = self.table.columns[self.x]
-            if not single:
+            if not single_plot:
                 self.ax.set_title(self.title)
             if self.log_y:
                 self.ax.set_yscale("log")
             self.set_axes_labels(self.yy[0])
-            if self.changes and (single and first_pass) or not single:
+            if self.changes and (single_plot and first_pass) or not single_plot:
                 for change in MONOCROMATOR_CHANGES_LABELS:
                     self.ax.axvline(
                         change["wavelength"], linestyle=change["style"], label=change["label"]
@@ -186,9 +185,9 @@ class PlotterBase(ABC):
     def plot_end_hook(self):
         pass
 
-    def outer_loop_hook(self, single: bool, first_pass: bool):
+    def outer_loop_hook(self, single_plot: bool, first_pass: bool):
         """
-        single : Flag, single Axis only
+        single_plot : Flag, single_plot Axis only
         first_pass: First outer loop pass (in case of multiple tables)
         """
         pass
@@ -201,18 +200,12 @@ class PlotterBase(ABC):
     # ==============
 
     def get_markers(self) -> EnumType:
-        markers = (
-            [marker for marker in self.markers_type if marker != Marker.Nothing]
-            if all(m is None for m in self.markers)
-            else self.markers
-        )
+        markers = self.default_markers if all(m is None for m in self.markers) else self.markers
         return itertools.cycle(markers)
 
     def get_linestyles(self) -> EnumType:
         linestyles = (
-            [linestyle for linestyle in self.linestyles_type if linestyle != LineStyle.Nothing]
-            if all(m is None for m in self.linestyles)
-            else self.linestyles
+            self.default_linestyles if all(m is None for m in self.linestyles) else self.linestyles
         )
         return itertools.cycle(linestyles)
 
@@ -232,15 +225,15 @@ class PlotterBase(ABC):
         self.ax.set_ylabel(ylabel)
 
     def load_mpl_resources(self):
-        single = self.nrows * self.ncols == 1
-        resource = "licaplot.resources.single" if single else "licaplot.resources.multi"
+        single_plot = self.nrows * self.ncols == 1
+        resource = "licaplot.resources.single_plot" if single_plot else "licaplot.resources.multi"
         log.info("Loading Matplotlib resources from %s", resource)
         plt.style.use(resource)
 
     def configure_axes(self):
-        single = self.nrows * self.ncols == 1
+        single_plot = self.nrows * self.ncols == 1
         self.fig, axes = plt.subplots(nrows=self.nrows, ncols=self.ncols)
-        self.axes = axes.flatten() if not single else [axes] * len(self.tables)
+        self.axes = axes.flatten() if not single_plot else [axes] * len(self.tables)
 
 
 class BasicPlotter(PlotterBase):

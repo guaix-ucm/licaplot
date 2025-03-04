@@ -74,6 +74,7 @@ class TestSingleTableColumn(unittest.TestCase):
         # Table label +  Tablle collumn abbreviatted
         self.assertEqual(labels_grp, [(None,)])
         self.assertEqual(markers_grp, [(None,)])
+        self.assertEqual(linestyl_grp, [(None,)])
 
     def test_single_table_column_title_1(self):
         builder = SingleTableColumnBuilder(
@@ -116,6 +117,18 @@ class TestSingleTableColumn(unittest.TestCase):
         director = Director(builder)
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(markers_grp, [("o",)])
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
+        self.assertEqual(len(tables), self.ntab)
+
+    def test_single_table_column_linestyle(self):
+        builder = SingleTableColumnBuilder(
+            builder=self.tb_builder,
+            linestyle="-",
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(linestyl_grp, [("-",)])
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -188,6 +201,7 @@ class TestSingleTableColumns(unittest.TestCase):
         self.assertEqual(titles, ["Blue filter Measurements"])
         self.assertEqual(labels_grp, [("Electr.", "Photod.")])
         self.assertEqual(markers_grp, [(None, None)])
+        self.assertEqual(linestyl_grp, [(None, None)])
 
     def test_single_table_columns_title(self):
         builder = SingleTableColumnsBuilder(
@@ -261,6 +275,42 @@ class TestSingleTableColumns(unittest.TestCase):
         msg = cm.exception.args[0]
         self.assertEqual(msg, "number of markers (3) should match number of y-columns (2)")
 
+    def test_single_table_columns_linestyles_1(self):
+        builder = SingleTableColumnsBuilder(
+            builder=self.tb_builder,
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(None, None)])
+
+    def test_single_table_columns_linestyles_2(self):
+        builder = SingleTableColumnsBuilder(
+            builder=self.tb_builder,
+            title="Omega Nebula Band Pass Filter",
+            linestyles=(":", "-"),
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":", "-")])
+
+    def test_single_table_columns_linestyles_3(self):
+        builder = SingleTableColumnsBuilder(
+            builder=self.tb_builder,
+            title="Omega Nebula Band Pass Filter",
+            linestyles=["o", "+", "."],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(msg, "number of linestyles (3) should match number of y-columns (2)")
+
 
 # =============================================================================
 #                                TEST CASE 3
@@ -306,6 +356,7 @@ class TestSingleTablesColumn(unittest.TestCase):
         self.assertEqual(titles, ["Blue filter Measurements"])
         self.assertEqual(labels_grp, [("Blue",), ("Green",), ("Red",)])
         self.assertEqual(markers_grp, [(None,), (None,), (None,)])
+        self.assertEqual(linestyl_grp, [(None,), (None,), (None,)])
 
     def test_single_tables_column_title(self):
         builder = SingleTablesColumnBuilder(
@@ -387,12 +438,48 @@ class TestSingleTablesColumn(unittest.TestCase):
             markers=["*", "+", "-"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(markers_grp, [("*",), ("+",), ("-",)])
+
+    def test_single_tables_column_linestyles_1(self):
+        builder = SingleTablesColumnBuilder(
+            builder=self.tb_builder,
+            linestyles=[":"],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":",), (":",), (":",)])
+
+    def test_single_tables_column_linestyles_2(self):
+        builder = SingleTablesColumnBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg, "number of linestyles (2) should either match number of tables (3) or be 1"
+        )
+
+    def test_single_tables_column_linestyles_3(self):
+        builder = SingleTablesColumnBuilder(
+            builder=self.tb_builder,
+            linestyles=["-", "-.", ":"],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [("-",), ("-.",), (":",)])
 
 
 # =============================================================================
@@ -432,9 +519,7 @@ class TestSingleTablesColumns(unittest.TestCase):
             builder=self.tb_builder,
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
-
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -621,7 +706,6 @@ class TestMultiTablesColumn(unittest.TestCase):
             builder=self.tb_builder,
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
@@ -629,6 +713,7 @@ class TestMultiTablesColumn(unittest.TestCase):
         self.assertEqual(titles, [t.meta["title"] for t in tables])
         self.assertEqual(labels_grp, [("Photod.",), ("Photod.",), ("Photod.",)])
         self.assertEqual(markers_grp, [(None,), (None,), (None,)])
+        self.assertEqual(linestyl_grp, [(None,), (None,), (None,)])
 
     def test_multi_tables_column_title_1(self):
         builder = MultiTablesColumnBuilder(
@@ -733,6 +818,7 @@ class TestMultiTablesColumns(unittest.TestCase):
             labels_grp, [("Electr.", "Photod."), ("Electr.", "Photod."), ("Electr.", "Photod.")]
         )
         self.assertEqual(markers_grp, [(None, None), (None, None), (None, None)])
+        self.assertEqual(linestyl_grp, [(None, None), (None, None), (None, None)])
 
     def test_multi_tables_columns_titles_1(self):
         builder = MultiTablesColumnsBuilder(

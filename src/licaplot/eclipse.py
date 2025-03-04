@@ -106,15 +106,15 @@ class EclipsePlotter(BasicPlotter):
         self.load_mpl_resources()
         self.configure_axes()
         N = len(self.tables)
-        single = self.nrows * self.ncols == 1
-        if single:
+        single_plot = self.nrows * self.ncols == 1
+        if single_plot:
             self.fig.suptitle(self.titles[0])
         for i, t in enumerate(self.get_outer_iterable_hook()):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
-            self.outer_loop_hook(single, first_pass)
+            self.outer_loop_hook(single_plot, first_pass)
             self.xcol = self.table.columns[self.x]
-            if not single:
+            if not single_plot:
                 self.ax.set_title(self.title)
             if self.log_y:
                 self.ax.set_yscale("log")
@@ -142,12 +142,12 @@ class EclipsePlotter(BasicPlotter):
         else:
             plt.show()
 
-    def outer_loop_hook(self, single: bool, first_pass: bool):
+    def outer_loop_hook(self, single_plot: bool, first_pass: bool):
         """
-        single : Flag, single Axis only
+        single_plot : Flag, single_plot Axis only
         first_pass: First outer loop pass (in case of multiple tables)
         """
-        if (single and first_pass) or not single:
+        if (single_plot and first_pass) or not single_plot:
             # Dibujar líneas de referencia
             for ref in REF_LINES:
                 label = ref["label"]
@@ -231,7 +231,7 @@ def cli_inverse(args: Namespace):
         table.write(path, delimiter=",", overwrite=True)
 
 
-def cli_single_tables_column(args: Namespace):
+def cli_single_plot_tables_column(args: Namespace):
     tb_builder = TablesFromFiles(
         paths=args.input_file,
         delimiter=args.delimiter,
@@ -316,7 +316,7 @@ def add_args(parser):
         ],
         help="Plot Eclipse Glasses with limits",
     )
-    parser_plot.set_defaults(func=cli_single_tables_column)
+    parser_plot.set_defaults(func=cli_single_plot_tables_column)
 
 
 # ================
