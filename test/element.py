@@ -65,8 +65,7 @@ class TestSingleTableColumn(unittest.TestCase):
             builder=self.tb_builder,
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -82,8 +81,7 @@ class TestSingleTableColumn(unittest.TestCase):
             title="Eysdon RGB Filter set",
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
 
     def test_single_table_column_title_2(self):
@@ -92,8 +90,7 @@ class TestSingleTableColumn(unittest.TestCase):
             title=["Eysdon", "RGB", "Filter", "set"],
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(titles, ["Eysdon RGB Filter set"])
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
@@ -105,8 +102,7 @@ class TestSingleTableColumn(unittest.TestCase):
             label="label 1",
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(labels_grp, [("label 1",)])
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
@@ -118,8 +114,7 @@ class TestSingleTableColumn(unittest.TestCase):
             marker="o",
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(markers_grp, [("o",)])
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
@@ -145,7 +140,6 @@ class TestSingleTableColumn(unittest.TestCase):
             marker="o",
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -186,8 +180,7 @@ class TestSingleTableColumns(unittest.TestCase):
         )
 
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -202,8 +195,7 @@ class TestSingleTableColumns(unittest.TestCase):
             title="Title 1",
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -215,8 +207,7 @@ class TestSingleTableColumns(unittest.TestCase):
             labels=["label 1", "label 2"],
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -229,7 +220,6 @@ class TestSingleTableColumns(unittest.TestCase):
             labels=("Foo", "Bar", "Baz"),
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -240,8 +230,7 @@ class TestSingleTableColumns(unittest.TestCase):
             builder=self.tb_builder,
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -254,8 +243,7 @@ class TestSingleTableColumns(unittest.TestCase):
             markers=("o", "."),
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -268,7 +256,6 @@ class TestSingleTableColumns(unittest.TestCase):
             markers=["o", "+", "."],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -312,8 +299,7 @@ class TestSingleTablesColumn(unittest.TestCase):
             builder=self.tb_builder,
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -327,8 +313,7 @@ class TestSingleTablesColumn(unittest.TestCase):
             title="Eysdon RGB Filter set",
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -340,8 +325,7 @@ class TestSingleTablesColumn(unittest.TestCase):
             labels=["Verde"],
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -353,7 +337,6 @@ class TestSingleTablesColumn(unittest.TestCase):
             labels=["Azul", "Verde"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -367,8 +350,7 @@ class TestSingleTablesColumn(unittest.TestCase):
             labels=["Azul", "Verde", "Rojo"],
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -380,8 +362,7 @@ class TestSingleTablesColumn(unittest.TestCase):
             markers=["+"],
         )
         director = Director(builder)
-
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -393,7 +374,6 @@ class TestSingleTablesColumn(unittest.TestCase):
             markers=["*", "-"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -408,7 +388,7 @@ class TestSingleTablesColumn(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -453,7 +433,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
 
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -478,7 +458,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
 
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -501,7 +481,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -522,7 +502,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -553,7 +533,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -569,7 +549,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -597,7 +577,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -642,7 +622,7 @@ class TestMultiTablesColumn(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -657,7 +637,7 @@ class TestMultiTablesColumn(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -684,7 +664,7 @@ class TestMultiTablesColumn(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -697,7 +677,7 @@ class TestMultiTablesColumn(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
@@ -744,7 +724,7 @@ class TestMultiTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -761,7 +741,7 @@ class TestMultiTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -786,7 +766,7 @@ class TestMultiTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -813,7 +793,7 @@ class TestMultiTablesColumns(unittest.TestCase):
         )
         director = Director(builder)
 
-        xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)

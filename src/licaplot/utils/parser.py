@@ -29,7 +29,7 @@ from lica.lab.ndfilters import NDFilter
 # ------------------------
 
 from .validators import vecsvfile, vfigext
-from .mpl.plotter import Marker
+from .mpl.plotter import Marker, LineStyle
 
 # ------------------------
 # Plotting Related parsers
@@ -87,6 +87,33 @@ def markers() -> ArgumentParser:
         nargs="+",
         default=None,
         help="Plot line markers, defaults to %(default)s",
+    )
+    return parser
+
+def linstyl() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-ls",
+        "--line-style",
+        type=LineStyle,
+        default=None,
+        help="Plot line style, defaults to %(default)s",
+    )
+    return parser
+
+
+def linstyls() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-ls",
+        "--line-style",
+        dest="line_styles",
+        type=LineStyle,
+        nargs="+",
+        default=None,
+        help="Plot line styles, defaults to %(default)s",
     )
     return parser
 

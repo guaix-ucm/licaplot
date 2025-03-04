@@ -55,7 +55,7 @@ def plot_single_table_column(
     )
     director = Director(builder)
     
-    xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
@@ -84,7 +84,7 @@ def plot_single_tables_column(
     )
     director = Director(builder)
     
-    xc, yc, tables, titles, labels_grp, markers_grp = director.build_elements()
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BoxPlotter(
             x=xc,

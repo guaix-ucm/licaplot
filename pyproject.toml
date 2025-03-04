@@ -28,7 +28,9 @@ dependencies = [
     "pyqt5 >= 5.15",
     "astropy >= 6.0",
     "scipy >= 1.13",
-    "lica[lab]>=1.0.16",
+    "rawpy>=0.24.0",
+    "exifread>=3.0.0",
+    "lica",
 ]
 
 [project.optional-dependencies]
@@ -71,6 +73,9 @@ write_to = "src/licaplot/_version.py"
 dev-dependencies = [
     "pytest>=8.3.3",
 ]
+
+[tool.uv.sources]
+lica = { git = "https://github.com/guaix-ucm/lica", branch = "main" }
 
 [tool.setuptools.packages.find]
 # scanning for namespace packages is true by default in pyproject.toml, so

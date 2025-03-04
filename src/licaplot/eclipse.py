@@ -310,6 +310,7 @@ def add_args(parser):
             prs.auxlines(),
             prs.percent(),
             prs.markers(),
+            prs.linstyls(),
             prs.savefig(),
             prs.dpifig(),
         ],

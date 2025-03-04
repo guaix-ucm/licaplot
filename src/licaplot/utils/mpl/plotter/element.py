@@ -30,9 +30,13 @@ from .types import (
     Legend,
     Legends,
     Marker,
+    Markers,
+    LineStyle,
+    LineStyles,
     Tables,
     LegendsGroup,
     MarkersGroup,
+    LineStylesGroup,
     Elements,
 )
 
@@ -59,6 +63,7 @@ class Director:
         self._builder.build_titles()
         self._builder.build_legends_grp()
         self._builder.build_markers_grp()
+        self._builder.build_linestyles_grp()
         return self._builder.elements
 
 
@@ -73,6 +78,10 @@ class IElementsBuilder(ABC):
 
     @abstractmethod
     def build_markers_grp(self) -> None:
+        pass
+
+    @abstractmethod
+    def build_linestyles_grp(self) -> None:
         pass
 
     @abstractmethod
@@ -166,11 +175,13 @@ class SingleTableColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
-        label:Legend | None = None,
+        label: Legend | None = None,
         marker: Marker | None = None,
+        linestyle: LineStyle | None = None,
     ):
         super().__init__(builder)
         self._marker = marker
+        self._linestyle = linestyle
         self._legend = label
         self._title = title
         assert self._ncol == 1
@@ -183,6 +194,9 @@ class SingleTableColumnBuilder(ElementsBase):
         pass
 
     def _check_markers(self) -> None:
+        pass
+
+    def _check_linestyles(self) -> None:
         pass
 
     def build_tables(self) -> Tables:
@@ -204,6 +218,12 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
         part = [(self._marker,)] if self._marker is not None else [(None,)]
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        part = [(self._linestyle,)] if self._linestyle is not None else [(None,)]
         self._elements.append(part)
         return part
 
@@ -232,11 +252,13 @@ class SingleTableColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None = None,
         labels: Legends | None = None,
-        markers: Legends | None = None,
+        markers: Markers | None = None,
+        linestyles: LineStyles | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
+        self._linestyles = linestyles
         self._legends = labels
         self._title = title
         self._trim = label_length
@@ -257,6 +279,13 @@ class SingleTableColumnsBuilder(ElementsBase):
             raise ValueError(
                 "number of markers (%d) should match number of y-columns (%d)"
                 % (len(self._markers), self._ncol)
+            )
+
+    def _check_linestyles(self) -> None:
+        if self._linestyles is not None and len(self._linestyles) != self._ncol:
+            raise ValueError(
+                "number of linestyles (%d) should match number of y-columns (%d)"
+                % (len(self._linestyles), self._ncol)
             )
 
     def build_tables(self) -> Tables:
@@ -283,6 +312,12 @@ class SingleTableColumnsBuilder(ElementsBase):
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
         part = self._grouped(self._markers)
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        part = self._grouped(self._linestyles)
         self._elements.append(part)
         return part
 
@@ -315,10 +350,12 @@ class SingleTablesColumnBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None = None,
         labels: Legends | None = None,
-        markers: Legends | None = None,
+        markers: Markers | None = None,
+        linestyles: LineStyles | None = None,
     ):
         super().__init__(builder)
         self._markers = markers
+        self._linestyles = linestyles
         self._legends = labels
         self._title = title
         assert self._ncol == 1
@@ -342,6 +379,15 @@ class SingleTablesColumnBuilder(ElementsBase):
             raise ValueError(
                 "number of markers (%d) should either match number of tables (%d) or be 1"
                 % (len(self._markers), self._ntab)
+            )
+
+    def _check_linestyles(self) -> None:
+        if self._linestyles is not None and not (
+            len(self._linestyles) == self._ntab or len(self._linestyles) == 1
+        ):
+            raise ValueError(
+                "number of linestyles (%d) should either match number of tables (%d) or be 1"
+                % (len(self._linestyles), self._ntab)
             )
 
     def build_tables(self) -> Tables:
@@ -372,6 +418,17 @@ class SingleTablesColumnBuilder(ElementsBase):
         else:
             flat_markers = [None] * self._ntab
         part = self._grouped(flat_markers)
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        if self._linestyles is not None:
+            N = len(self._linestyles)
+            flat_linestyles = self._linestyles * self._ntab if N == 1 else self._linestyles
+        else:
+            flat_linestyles = [None] * self._ntab
+        part = self._grouped(flat_linestyles)
         self._elements.append(part)
         return part
 
@@ -411,11 +468,13 @@ class SingleTablesColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         title: Title | None = None,
         labels: Legends | None = None,
-        markers: Legends | None = None,
+        markers: Markers | None = None,
+        linestyles: LineStyles | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
+        self._linestyles = linestyles
         self._legends = labels
         self._title = title
         self._trim = label_length
@@ -438,6 +497,15 @@ class SingleTablesColumnsBuilder(ElementsBase):
             if not ((nargs == self._ncol) or (nargs == self._ntab * self._ncol)):
                 raise ValueError(
                     "number of markers (%d) should match number of tables x Y-columns (%d) or the number of Y-columns (%d)"
+                    % (nargs, self._ncol * self._ntab, self._ncol)
+                )
+
+    def _check_linestyles(self) -> None:
+        if self._linestyles is not None:
+            nargs = len(self._linestyles)
+            if not ((nargs == self._ncol) or (nargs == self._ntab * self._ncol)):
+                raise ValueError(
+                    "number of linestyles (%d) should match number of tables x Y-columns (%d) or the number of Y-columns (%d)"
                     % (nargs, self._ncol * self._ntab, self._ncol)
                 )
 
@@ -476,6 +544,17 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._elements.append(part)
         return part
 
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        if self._linestyles is not None:
+            N = len(self._linestyles)
+            flat_linestyles = self._linestyles * self._ntab if N == self._ncol else self._linestyles
+        else:
+            flat_linestyles = (None,) * (self._ntab * self._ncol)
+        part = self._grouped(flat_linestyles)
+        self._elements.append(part)
+        return part
+
 
 class MultiTablesColumnBuilder(ElementsBase):
     """
@@ -503,13 +582,15 @@ class MultiTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
-        label:Legend | None = None,
+        label: Legend | None = None,
         marker: Marker | None = None,
+        linestyle: LineStyle | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
         self._tb_builder = builder
         self._marker = marker
+        self._linestyle = linestyle
         self._legend = label
         self._titles = titles
         self._trim = label_length
@@ -525,6 +606,9 @@ class MultiTablesColumnBuilder(ElementsBase):
         pass
 
     def _check_markers(self) -> None:
+        pass
+
+    def _check_linestyles(self) -> None:
         pass
 
     def build_tables(self) -> Tables:
@@ -551,6 +635,13 @@ class MultiTablesColumnBuilder(ElementsBase):
         self._check_markers()
         flat_markers = [self._marker] * self._ntab
         part = self._grouped(flat_markers)
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        flat_linestyles = [self._linestyle] * self._ntab
+        part = self._grouped(flat_linestyles)
         self._elements.append(part)
         return part
 
@@ -582,11 +673,13 @@ class MultiTablesColumnsBuilder(ElementsBase):
         builder: ITableBuilder,
         titles: Titles | None = None,
         labels: Legends | None = None,
-        markers: Legends | None = None,
+        markers: Markers | None = None,
+        linestyles: LineStyles | None = None,
         label_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
+        self._linestyles = linestyles
         self._legends = labels
         self._titles = titles
         self._trim = label_length
@@ -610,6 +703,13 @@ class MultiTablesColumnsBuilder(ElementsBase):
             raise ValueError(
                 "number of markers (%d) should match number of y-columns (%d)"
                 % (len(self._markers), self._ncol)
+            )
+
+    def _check_linestyles(self) -> None:
+        if self._linestyles is not None and len(self._linestyles) != self._ncol:
+            raise ValueError(
+                "number of linestyles (%d) should match number of y-columns (%d)"
+                % (len(self._linestyles), self._ncol)
             )
 
     def build_tables(self) -> Tables:
@@ -641,5 +741,13 @@ class MultiTablesColumnsBuilder(ElementsBase):
         flat_markers = [None, None] if self._markers is None else self._markers
         flat_markers = flat_markers * self._ntab
         part = self._grouped(flat_markers)
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        flat_linestyles = [None, None] if self._linestyles is None else self.linestyles
+        flat_linestyles = flat_linestyles * self._ntab
+        part = self._grouped(flat_linestyles)
         self._elements.append(part)
         return part

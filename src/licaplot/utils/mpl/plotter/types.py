@@ -17,7 +17,14 @@ class Marker(StrEnum):
     Point = "."
     X = "x"
     Plus = "+"
-    Nothing = ""
+    Nothing = "None"
+
+class LineStyle(StrEnum):
+    Solid = "-"
+    Dashed = "--"
+    DashDot = "-."
+    Dotted = ":"
+    Nothing = "None"
 
 # Types shorhands
 
@@ -29,8 +36,10 @@ Titles = Sequence[Title]
 Legend = str
 Legends = Sequence[Legend]
 Markers = Sequence[Marker]
+LineStyles = Sequence[LineStyle]
 LegendsGroup = Sequence[Legends]
 MarkersGroup = Sequence[Markers]
+LineStylesGroup = Sequence[LineStyles]
 
-Element = Union[ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup]
+Element = Union[ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup, LineStylesGroup]
 Elements = Sequence[Element]

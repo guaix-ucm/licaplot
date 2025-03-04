@@ -23,7 +23,17 @@ from typing import Optional, Tuple
 import astropy.units as u
 import matplotlib.pyplot as plt
 
-from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup
+from .types import (
+    Marker,
+    LineStyle,
+    ColNum,
+    ColNums,
+    Tables,
+    Titles,
+    LegendsGroup,
+    MarkersGroup,
+    LineStylesGroup,
+)
 
 
 # ----------------
@@ -48,6 +58,7 @@ class PlotterBase(ABC):
         titles: Titles,
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
+        linestyles_grp: LineStylesGroup,
         changes: bool = True,
         percent: bool = False,
         log_y: bool = False,
@@ -57,20 +68,22 @@ class PlotterBase(ABC):
         save_path: Optional[str] = None,
         save_dpi: Optional[int] = None,
         markers_type: EnumType = Marker,
-
+        linestyles_type: EnumType = LineStyle,
     ):
         self.x = x
         self.yy = yy
         self.tables = tables
-        self.titles =  titles
+        self.titles = titles
         self.legends_grp = legends_grp
         self.markers_grp = markers_grp
+        self.linestyles_grp = linestyles_grp
         self.changes = changes
         self.percent = percent
         self.linewidth = linewidth
         self.nrows = nrows
         self.ncols = ncols
         self.markers_type = markers_type
+        self.linestyles_type = linestyles_type
         self.save_path = save_path
         self.save_dpi = save_dpi
         self.log_y = log_y
@@ -82,6 +95,7 @@ class PlotterBase(ABC):
         self.table = None  # Current Table object
         self.title = None  # Current title
         self.markers = None  # current markers list
+        self.linestyles = None  # current linestyles list
         self.legends = None  # current legends list
         self.ycol = None
 
@@ -108,19 +122,28 @@ class PlotterBase(ABC):
                     self.ax.axvline(
                         change["wavelength"], linestyle=change["style"], label=change["label"]
                     )
-            for y, legend, marker in zip(self.yy, self.legends, self.get_markers()):
+            for y, legend, marker, linestyle in zip(
+                self.yy, self.legends, self.get_markers(), self.get_linstyles()
+            ):
                 ycol = (
                     self.table.columns[y] * 100 * u.pct
                     if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
                     else self.table.columns[y]
                 )
-                self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend)
-                self.inner_loop_hook(legend, marker)  
+                self.ax.plot(
+                    self.xcol,
+                    ycol,
+                    marker=marker,
+                    linewidth=self.linewidth,
+                    linestyle=linestyle,
+                    label=legend,
+                )
+                self.inner_loop_hook(legend, marker)
             self.ax.grid(True, which="major", color="silver", linestyle="solid")
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
             self.ax.minorticks_on()
             self.ax.legend()
-      
+
         # Do not draw in unusued axes
         N = len(self.tables)
         for ax in self.axes[N:]:
@@ -139,14 +162,23 @@ class PlotterBase(ABC):
     def get_outer_iterable_hook(self):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
-        log.debug("there are %d axes, %d tables, %d titles, %d legenda groups & %d markers group", 
-            len(self.axes), len(self.tables), len(self.titles), len(self.legends_grp), len(self.markers_grp))
+        log.info(
+            "there are %d axes, %d tables, %d titles, %d legenda groups, %d markers group & %d linestyles group",
+            len(self.axes),
+            len(self.tables),
+            len(self.titles),
+            len(self.legends_grp),
+            len(self.markers_grp),
+            len(self.linestyles_grp),
+        )
         titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
-        return zip(self.axes, self.tables, titles, self.legends_grp, self.markers_grp)
+        return zip(
+            self.axes, self.tables, titles, self.legends_grp, self.markers_grp, self.linestyles_grp
+        )
 
     def unpack_outer_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed."""
-        self.ax, self.table, self.title, self.legends, self.markers = t
+        self.ax, self.table, self.title, self.legends, self.markers, self.linestyles = t
 
     def plot_start_hook(self):
         pass
@@ -164,19 +196,25 @@ class PlotterBase(ABC):
     def inner_loop_hook(self, legend, marker):
         pass
 
- 
-
     # ==============
     # Helper methods
     # ==============
 
     def get_markers(self) -> EnumType:
         markers = (
-            [marker for marker in self.markers_type]
+            [marker for marker in self.markers_type if marker != Marker.Nothing]
             if all(m is None for m in self.markers)
             else self.markers
         )
         return itertools.cycle(markers)
+
+    def get_linestyles(self) -> EnumType:
+        linestyles = (
+            [linestyle for linestyle in self.linestyles_type if linestyle != LineStyle.Nothing]
+            if all(m is None for m in self.linestyles)
+            else self.linestyles
+        )
+        return itertools.cycle(linestyles)
 
     def set_axes_labels(self, y: int) -> None:
         """Get the labels for a table, using units if necessary"""
