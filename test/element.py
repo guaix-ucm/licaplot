@@ -63,9 +63,6 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_table_column_default(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -83,8 +80,6 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             title="Eysdon RGB Filter set",
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -95,8 +90,6 @@ class TestSingleTableColumn(unittest.TestCase):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
             title=["Eysdon", "RGB", "Filter", "set"],
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -109,9 +102,7 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_table_columns_label(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
-            title=None,
             label="label 1",
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -124,8 +115,6 @@ class TestSingleTableColumn(unittest.TestCase):
     def test_single_table_column_marker(self):
         builder = SingleTableColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            label=None,
             marker="o",
         )
         director = Director()
@@ -153,8 +142,6 @@ class TestSingleTableColumn(unittest.TestCase):
         )
         builder = SingleTableColumnBuilder(
             builder=tb_builder,
-            title=None,
-            label=None,
             marker="o",
         )
         director = Director()
@@ -196,9 +183,6 @@ class TestSingleTableColumns(unittest.TestCase):
     def test_single_table_columns_default(self):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=None,
         )
 
         director = Director()
@@ -216,8 +200,6 @@ class TestSingleTableColumns(unittest.TestCase):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
             title="Title 1",
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -230,9 +212,7 @@ class TestSingleTableColumns(unittest.TestCase):
     def test_single_table_columns_labels_1(self):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["label 1", "label 2"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -247,7 +227,6 @@ class TestSingleTableColumns(unittest.TestCase):
             builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
             labels=("Foo", "Bar", "Baz"),
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -259,9 +238,6 @@ class TestSingleTableColumns(unittest.TestCase):
     def test_single_table_columns_markers_1(self):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -275,7 +251,6 @@ class TestSingleTableColumns(unittest.TestCase):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
-            labels=None,
             markers=("o", "."),
         )
         director = Director()
@@ -290,7 +265,6 @@ class TestSingleTableColumns(unittest.TestCase):
         builder = SingleTableColumnsBuilder(
             builder=self.tb_builder,
             title="Omega Nebula Band Pass Filter",
-            labels=None,
             markers=["o", "+", "."],
         )
         director = Director()
@@ -336,9 +310,6 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_default(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -354,8 +325,6 @@ class TestSingleTablesColumn(unittest.TestCase):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
             title="Eysdon RGB Filter set",
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -368,9 +337,7 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_labels_1(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["Verde"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -383,9 +350,7 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_labels_2(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["Azul", "Verde"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -399,9 +364,7 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_labels_3(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["Azul", "Verde", "Rojo"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -414,8 +377,6 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_markers_1(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
             markers=["+"],
         )
         director = Director()
@@ -429,8 +390,6 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_markers_2(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
             markers=["*", "-"],
         )
         director = Director()
@@ -445,8 +404,6 @@ class TestSingleTablesColumn(unittest.TestCase):
     def test_single_tables_column_markers_3(self):
         builder = SingleTablesColumnBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
             markers=["*", "+", "-"],
         )
         director = Director()
@@ -493,9 +450,6 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_default(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -521,8 +475,6 @@ class TestSingleTablesColumns(unittest.TestCase):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
             title="Eysdon RGB Filter set",
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -545,9 +497,6 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_label_trimm(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=None,
             label_length=3,
         )
         director = Director()
@@ -569,9 +518,7 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_labels_1(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["label_1", "label_2"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -587,9 +534,7 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_labels_2(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["label_1", "label_2", "label_3"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -604,9 +549,7 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_labels_3(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
             labels=["label_1", "label_2", "label_3", "label_4", "label_5", "label_6"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -622,12 +565,7 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_markers_1(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
-            markers=[
-                "o",
-                "-",
-            ],
+            markers=["o", "-"],
         )
         director = Director()
         director.builder = builder
@@ -640,8 +578,6 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_markers_2(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
             markers=["o", "+", "."],
         )
         director = Director()
@@ -657,8 +593,6 @@ class TestSingleTablesColumns(unittest.TestCase):
     def test_single_tables_columns_markers_3(self):
         builder = SingleTablesColumnsBuilder(
             builder=self.tb_builder,
-            title=None,
-            labels=None,
             markers=["o", "-", "+", ".", "v", "^"],
         )
         director = Director()
@@ -705,9 +639,6 @@ class TestMultiTablesColumn(unittest.TestCase):
     def test_multi_tables_column_default(self):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
-            titles=None,
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -723,8 +654,6 @@ class TestMultiTablesColumn(unittest.TestCase):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
             titles=["Table 1", "Table 2", "Table 3"],
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -740,8 +669,6 @@ class TestMultiTablesColumn(unittest.TestCase):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
             titles=["Table 1", "Table 2"],
-            label=None,
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -753,9 +680,7 @@ class TestMultiTablesColumn(unittest.TestCase):
     def test_multi_tables_column_label(self):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
-            titles=None,
             label="Intens.",
-            marker=None,
         )
         director = Director()
         director.builder = builder
@@ -768,8 +693,6 @@ class TestMultiTablesColumn(unittest.TestCase):
     def test_multi_tables_column_marker(self):
         builder = MultiTablesColumnBuilder(
             builder=self.tb_builder,
-            titles=None,
-            label=None,
             marker="o",
         )
         director = Director()
@@ -818,9 +741,6 @@ class TestMultiTablesColumns(unittest.TestCase):
     def test_multi_tables_columns_default(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
-            titles=None,
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -838,8 +758,6 @@ class TestMultiTablesColumns(unittest.TestCase):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
             titles=["Table 1", "Table 2", "Table 3"],
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -848,13 +766,11 @@ class TestMultiTablesColumns(unittest.TestCase):
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(titles, ["Table 1", "Table 2", "Table 3"])
-       
+
     def test_multi_tables_columns_titles_2(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
             titles=["Table 1", "Table 2"],
-            labels=None,
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -862,14 +778,11 @@ class TestMultiTablesColumns(unittest.TestCase):
             _ = director.build_elements()
         msg = cm.exception.args[0]
         self.assertEqual(msg, "number of titles (2) should match number of tables (3)")
-       
 
     def test_multi_tables_columns_labels_1(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
-            titles=None,
             labels=["Intens.", "Tran."],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -884,9 +797,7 @@ class TestMultiTablesColumns(unittest.TestCase):
     def test_multi_tables_columns_labels_2(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
-            titles=None,
             labels=["label_1"],
-            markers=None,
         )
         director = Director()
         director.builder = builder
@@ -894,13 +805,10 @@ class TestMultiTablesColumns(unittest.TestCase):
             _ = director.build_elements()
         msg = cm.exception.args[0]
         self.assertEqual(msg, "number of legends (1) should match number of y-columns (2)")
-       
 
     def test_multi_tables_columns_markers_1(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
-            titles=None,
-            labels=None,
             markers=["o", "-"],
         )
         director = Director()
@@ -914,8 +822,6 @@ class TestMultiTablesColumns(unittest.TestCase):
     def test_multi_tables_columns_markers_2(self):
         builder = MultiTablesColumnsBuilder(
             builder=self.tb_builder,
-            titles=None,
-            labels=None,
             markers=["o"],
         )
         director = Director()

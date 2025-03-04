@@ -81,12 +81,8 @@ class PlotterBase(ABC):
         self.markers = None  # current markers list
         self.legends = None  # current legends list
         self.ycol = None
-        log.info("yy = %s", yy)
-        log.info("legends_grp = %s", legends_grp)
-        log.info("markers_grp = %s", markers_grp)
 
     def plot(self):
-        log.info("YY = %s", self.yy)
         self.plot_start_hook()
         self.load_mpl_resources()
         self.configure_axes()
@@ -106,9 +102,6 @@ class PlotterBase(ABC):
                     self.ax.axvline(
                         change["wavelength"], linestyle=change["style"], label=change["label"]
                     )
-            log.info("title = %s", self.title)
-            log.info("markers = %s", self.markers)
-            log.info("legends = %s", self.legends)
             for y, legend, marker in zip(self.yy, self.legends, self.get_markers()):
                 ycol = (
                     self.table.columns[y] * 100 * u.pct
@@ -140,15 +133,15 @@ class PlotterBase(ABC):
     # =====
 
     def get_outer_iterable_hook(self):
-        """Should be overriden if extra arguments are needed. i.e. a box per axes"""
-        log.info("configuring the outer loop")
-        log.info("THERE ARE %d AXES, %d TABLES, %d TITLES, %d LEGENDS GRP & %d MARKERS GRP", 
+        """Should be overriden if extra arguments are needed."""
+        log.debug("configuring the outer loop")
+        log.debug("there are %d axes, %d tables, %d titles, %d legenda groups & %d markers group", 
             len(self.axes), len(self.tables), len(self.titles), len(self.legends_grp), len(self.markers_grp))
         titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
         return zip(self.axes, self.tables, titles, self.legends_grp, self.markers_grp)
 
     def unpack_outer_tuple_hook(self, t: Tuple):
-        """Should be overriden if extra arguments are needed. i.e. a box per axes"""
+        """Should be overriden if extra arguments are needed."""
         self.ax, self.table, self.title, self.legends, self.markers = t
 
     def plot_start_hook(self):
@@ -162,7 +155,6 @@ class PlotterBase(ABC):
         single : Flag, single Axis only
         first_pass: First outer loop pass (in case of multiple tables)
         """
-
         pass
 
     def inner_loop_hook(self, legend, marker):

@@ -462,7 +462,7 @@ def passive_process(
                 ndf_table = lica.lab.ndfilters.load(model=ndf, resolution=int(resolution))
                 log.info("Correcting %s %s by %s spectral response", name, COL.TRANS, ndf)
                 column = f"{ndf} Corrected {COL.TRANS}"
-                filter_table[column] = filter_table[COL.TRANS] / ndf_table[COL.TRANS]
+                filter_table[column] = filter_table[COL.TRANS] * ndf_table[COL.TRANS]
             filter_table.meta["Processing"]["using photodiode"] = model
             filter_table.meta["Processing"]["processed"] = True
             filter_table.meta["History"].append("Scaled readings wrt photodiode readings")
