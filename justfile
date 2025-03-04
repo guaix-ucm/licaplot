@@ -140,6 +140,38 @@ eclipse-plot:
         lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
+eclipse-plot1b:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes
+    done
+
+eclipse-plot2a:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png --lines --changes --log-y
+
+eclipse-plot2b:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png --lines --changes --log-y
+    
+
 # reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf|all]
 reduce what:
     #!/usr/bin/env bash

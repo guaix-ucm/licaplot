@@ -108,6 +108,7 @@ def cli_single_table_column(args: Namespace):
                 ncols=1,
                 save_path=args.save_figure_path,
                 save_dpi=args.save_figure_dpi,
+                log_y=args.log_y,
                 # markers_type: EnumType = Marker
             )
             plotter.plot()
@@ -154,6 +155,7 @@ def cli_single_table_columns(args: Namespace):
             ncols=1,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -179,6 +181,7 @@ def cli_single_tables_column(args: Namespace):
         title=args.title,
         labels=args.labels,
         markers=args.markers,
+
     )
     director = Director()
     director.builder = builder
@@ -200,6 +203,7 @@ def cli_single_tables_column(args: Namespace):
             ncols=1,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -246,6 +250,7 @@ def cli_single_tables_columns(args: Namespace):
             ncols=1,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -294,6 +299,7 @@ def cli_multi_tables_column(args: Namespace):
             ncols=ncols,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -342,6 +348,7 @@ def cli_multi_tables_columns(args: Namespace):
             ncols=ncols,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
             # markers_type: EnumType = Marker
         )
         plotter.plot()
@@ -367,6 +374,7 @@ def add_args(parser: ArgumentParser):
         "column",
         parents=[
             prs.ifile(),
+            prs.logy(),
             prs.xlim(),
             prs.resample(),
             prs.lica(),
@@ -391,6 +399,7 @@ def add_args(parser: ArgumentParser):
         "columns",
         parents=[
             prs.ifile(),
+            prs.logy(),
             prs.xlim(),
             prs.lica(),
             prs.xc(),
@@ -417,6 +426,7 @@ def add_args(parser: ArgumentParser):
         "column",
         parents=[
             prs.ifiles(),
+            prs.logy(),
             prs.xlim(),
             prs.resample(),
             prs.lica(),
@@ -442,6 +452,7 @@ def add_args(parser: ArgumentParser):
         parents=[
             prs.ifiles(),
             prs.xlim(),
+            prs.logy(),
             prs.lica(),
             prs.xc(),
             prs.yycc(),
@@ -474,6 +485,7 @@ def add_args(parser: ArgumentParser):
         parents=[
             prs.ncols(),
             prs.ifiles(),
+            prs.logy(),
             prs.xlim(),
             prs.lica(),
             prs.xc(),
@@ -499,6 +511,7 @@ def add_args(parser: ArgumentParser):
         parents=[
             prs.ncols(),
             prs.ifiles(),
+            prs.logy(),
             prs.xlim(),
             prs.lica(),
             prs.xc(),

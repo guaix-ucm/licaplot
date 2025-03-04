@@ -50,12 +50,14 @@ class PlotterBase(ABC):
         markers_grp: MarkersGroup,
         changes: bool = True,
         percent: bool = False,
+        log_y: bool = False,
         linewidth: int = 1,
         nrows: int = 1,
         ncols: int = 1,
         save_path: Optional[str] = None,
         save_dpi: Optional[int] = None,
         markers_type: EnumType = Marker,
+
     ):
         self.x = x
         self.yy = yy
@@ -71,6 +73,7 @@ class PlotterBase(ABC):
         self.markers_type = markers_type
         self.save_path = save_path
         self.save_dpi = save_dpi
+        self.log_y = log_y
         # --------------------------------------------------
         # This context is created during the plot outer loop
         # --------------------------------------------------
@@ -96,6 +99,8 @@ class PlotterBase(ABC):
             self.xcol = self.table.columns[self.x]
             if not single:
                 self.ax.set_title(self.title)
+            if self.log_y:
+                self.ax.set_yscale("log")
             self.set_axes_labels(self.yy[0])
             if self.changes and (single and first_pass) or not single:
                 for change in MONOCROMATOR_CHANGES_LABELS:

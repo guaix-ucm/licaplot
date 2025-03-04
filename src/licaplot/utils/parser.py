@@ -217,6 +217,16 @@ def percent() -> ArgumentParser:
     )
     return parser
 
+def logy() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--log-y",
+        action="store_true",
+        default=False,
+        help="Y axis in logaritmic scale (default: %(default)s)",
+    )
+    return parser
+
 
 # ----------------------
 # Building Table parsers
