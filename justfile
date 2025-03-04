@@ -149,6 +149,39 @@ eclipse-plot1b:
         lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes
     done
 
+nasa-plota:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in  02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum -sf ${dir}/inv_log_group_a.png --lines
+
+nasa-plotb:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines
+
+nasa-plotall:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength'  -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png --lines --marker "" -sd 300
+
 eclipse-plot2a:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -158,7 +191,7 @@ eclipse-plot2a:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png --lines --changes --log-y
+    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png -m "" --lines --log-y -sd 300
 
 eclipse-plot2b:
     #!/usr/bin/env bash
@@ -169,10 +202,10 @@ eclipse-plot2b:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png --lines --changes --log-y
+    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png -m "" --lines --log-y -sd 300
     
 
-# reduce LICA data [tessw|eclipse|eysdon|omega|sp750|ndf|all]
+# reduce LICA data [tessw|eclipse|nasa|eysdon|omega|sp750|ndf|all]
 reduce what:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -240,6 +273,17 @@ eclipse-reduce:
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
         lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+    done
+
+[private]
+nasa-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-filters --console --trace one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+        lica-eclip --console --trace inverse -yc 5 -i ${dir}/${i}_eg.ecsv --save
     done
 
 tessw-plot:

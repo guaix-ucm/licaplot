@@ -96,6 +96,7 @@ class PlotterBase(ABC):
         for i, t in enumerate(self.get_outer_iterable_hook()):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
+            self.outer_loop_hook(single, first_pass)
             self.xcol = self.table.columns[self.x]
             if not single:
                 self.ax.set_title(self.title)
@@ -114,13 +115,11 @@ class PlotterBase(ABC):
                     else self.table.columns[y]
                 )
                 self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend)
-                self.inner_loop_hook(legend, marker)
-            self.outer_loop_hook(single, first_pass)
+                self.inner_loop_hook(legend, marker)  
             self.ax.grid(True, which="major", color="silver", linestyle="solid")
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
             self.ax.minorticks_on()
-            if self.changes:
-                self.ax.legend()
+            self.ax.legend()
       
         # Do not draw in unusued axes
         N = len(self.tables)

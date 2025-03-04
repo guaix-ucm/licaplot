@@ -400,6 +400,16 @@ def odir() -> ArgumentParser:
     )
     return parser
 
+def glob() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-fp",
+        "--file-pattern",
+        type=str,
+        default="*.ecsv",
+        help="Input files glob pattern (default %(default)s)",
+    )
+    return parser
 
 def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

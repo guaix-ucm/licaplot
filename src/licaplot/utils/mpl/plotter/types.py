@@ -17,6 +17,7 @@ class Marker(StrEnum):
     Point = "."
     X = "x"
     Plus = "+"
+    Nothing = ""
 
 # Types shorhands
 
