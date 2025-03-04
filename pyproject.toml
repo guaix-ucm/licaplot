@@ -50,6 +50,7 @@ lica-tessw = "licaplot.tessw:main"
 lica-hama = "licaplot.hamamatsu:main"
 lica-osi = "licaplot.osi:main"
 lica-ndf = "licaplot.ndfilters:main"
+lica-eclip = "licaplot.eclipse:main"
 
 
 [build-system]
