@@ -251,12 +251,12 @@ def cli_single_plot_tables_column(args: Namespace):
         title=args.title,
         labels=args.labels,
         markers=args.markers,
+        linestyles=args.line_styles
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             x=xc,
@@ -265,6 +265,7 @@ def cli_single_plot_tables_column(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
@@ -272,7 +273,6 @@ def cli_single_plot_tables_column(args: Namespace):
             ncols=1,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
-            # markers_type: EnumType = Marker
         )
         plotter.plot()
 

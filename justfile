@@ -174,7 +174,6 @@ nasa-reduce:
         lica-eclip --console --trace inverse -yc 5 -i ${dir}/${i}_eg.ecsv --save
     done
 
-
 # Single linear graphs for all glasses
 eclipse-plot-all:
     #!/usr/bin/env bash
@@ -182,7 +181,7 @@ eclipse-plot-all:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv  --lines --changes
     done
 
 # Single linear graphs for all glasses with & without ND correction
@@ -192,10 +191,10 @@ eclipse-plot-all-nd:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes
+        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv --lines --changes
     done
 
-# NASA style plotting of glasses for all glasses
+# save NASA style plot of glasses for all glasses
 eclipse-plot-all-nasa:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -205,7 +204,7 @@ eclipse-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength'  -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png --lines --marker "" -sd 300
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' --lines --marker None -i $file_accum 
 
 # logaritmic style plotting for group 1
 eclipse-plot-g1-log:
@@ -217,7 +216,8 @@ eclipse-plot-g1-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png -m "" --lines --log-y -sd 300
+    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -m None --lines --log-y
+
 
 # NASA style plotting of glasses for group 1
 eclipse-plot-g1-nasa:
@@ -229,7 +229,7 @@ eclipse-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum -sf ${dir}/inv_log_group_a.png --lines
+    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum --lines -m None
 
 # logaritmic style plotting for group 1
 eclipse-plot-g2-log:
@@ -241,7 +241,7 @@ eclipse-plot-g2-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png -m "" --lines --log-y -sd 300
+    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum -m None --lines --log-y -sd 300
 
 # NASA style plotting of glasses for group 2
 eclipse-plot-g2-nasa:
@@ -253,7 +253,91 @@ eclipse-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -m None --lines
+
+
+# Save lingle linear plots for all glasses
+eclipse-save-plot-all:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+    done
+
+# Single linear graphs for all glasses with & without ND correction
+eclipse-save-plot-all-nd:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+    done
+
+# save NASA style plot of glasses for all glasses
+eclipse-save-plot-all-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
+
+
+# save logaritmic style plotting for group 1
+eclipse-save-plot-g1-log:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 1 -m None --lines -i $file_accum -sf ${dir}/group1_eg.png  --log-y -sd 300
+
+
+# Save NASA style plotting of glasses for group 1
+eclipse-save-plot-g1-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in  02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 1 --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
+
+# Save logaritmic style plotting for group 1
+eclipse-save-plot-g2-log:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum -m None --lines --log-y  -sf ${dir}/group2_eg.png -sd 300
+
+# Save NASA style plotting of glasses for group 2
+eclipse-save-plot-g2-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
+
 
 # ------------------------------------
 # Neutral Density Filters Transmitance
