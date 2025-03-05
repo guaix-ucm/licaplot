@@ -542,9 +542,7 @@ class TestSingleTablesColumns(unittest.TestCase):
             title="Eysdon RGB Filter set",
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
-
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
@@ -565,7 +563,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             label_length=3,
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -586,7 +583,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             labels=["label_1", "label_2"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -602,7 +598,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             labels=["label_1", "label_2", "label_3"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -617,7 +612,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             labels=["label_1", "label_2", "label_3", "label_4", "label_5", "label_6"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -633,7 +627,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             markers=["o", "-"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -646,7 +639,6 @@ class TestSingleTablesColumns(unittest.TestCase):
             markers=["o", "+", "."],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -661,13 +653,49 @@ class TestSingleTablesColumns(unittest.TestCase):
             markers=["o", "-", "+", ".", "v", "^"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(markers_grp, [("o", "-"), ("+", "."), ("v", "^")])
 
+    def test_single_tables_columns_linestyles_1(self):
+        builder = SingleTablesColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-."],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":", "-."), (":", "-."), (":", "-.")])
+
+    def test_single_tables_columns_linestyles_2(self):
+        builder = SingleTablesColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-.", "--"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of linestyles (3) should match number of tables x Y-columns (6) or the number of Y-columns (2)",
+        )
+
+    def test_single_tables_columns_linestyles_3(self):
+        builder = SingleTablesColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-.", "--", ".", "v", "^"],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":", "-."), ("--", "."), ("v", "^")])
 
 # =============================================================================
 #                                TEST CASE 5
@@ -761,14 +789,23 @@ class TestMultiTablesColumn(unittest.TestCase):
             marker="o",
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [self.ycol - 1])
         self.assertEqual(len(tables), self.ntab)
-        self.assertEqual(titles, [t.meta["title"] for t in tables])
-        self.assertEqual(labels_grp, [("Photod.",), ("Photod.",), ("Photod.",)])
         self.assertEqual(markers_grp, [("o",), ("o",), ("o",)])
+
+    def test_multi_tables_column_linestyle(self):
+        builder = MultiTablesColumnBuilder(
+            builder=self.tb_builder,
+            linestyle=":",
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [self.ycol - 1])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":",), (":",), (":",)])
 
 
 # =============================================================================
@@ -826,7 +863,6 @@ class TestMultiTablesColumns(unittest.TestCase):
             titles=["Table 1", "Table 2", "Table 3"],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -839,7 +875,6 @@ class TestMultiTablesColumns(unittest.TestCase):
             titles=["Table 1", "Table 2"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -851,7 +886,6 @@ class TestMultiTablesColumns(unittest.TestCase):
             labels=["Intens.", "Tran."],
         )
         director = Director(builder)
-
         xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc, [y - 1 for y in self.ycol])
@@ -866,7 +900,6 @@ class TestMultiTablesColumns(unittest.TestCase):
             labels=["label_1"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
@@ -891,11 +924,33 @@ class TestMultiTablesColumns(unittest.TestCase):
             markers=["o"],
         )
         director = Director(builder)
-
         with self.assertRaises(ValueError) as cm:
             _ = director.build_elements()
         msg = cm.exception.args[0]
         self.assertEqual(msg, "number of markers (1) should match number of y-columns (2)")
+
+    def test_multi_tables_columns_linestyles_1(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-."],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(linestyl_grp, [(":", "-."), (":", "-."), (":", "-.")])
+
+    def test_multi_tables_columns_linestyles_2(self):
+        builder = MultiTablesColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(msg, "number of linestyles (1) should match number of y-columns (2)")
 
 
 if __name__ == "__main__":

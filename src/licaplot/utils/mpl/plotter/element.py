@@ -746,7 +746,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
 
     def build_linestyles_grp(self) -> LineStylesGroup:
         self._check_linestyles()
-        flat_linestyles = [None, None] if self._linestyles is None else self.linestyles
+        flat_linestyles = [None, None] if self._linestyles is None else self._linestyles
         flat_linestyles = flat_linestyles * self._ntab
         part = self._grouped(flat_linestyles)
         self._elements.append(part)
