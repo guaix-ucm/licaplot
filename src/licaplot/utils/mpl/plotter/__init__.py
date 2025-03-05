@@ -1,5 +1,6 @@
 from .types import (
     LineStyle as LineStyle,
+    LineStyles as LineStyles,
     Marker as Marker,
     Markers as Markers,
     ColNum as ColNum,

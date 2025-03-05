@@ -221,8 +221,8 @@ def cli_cross_calibration(args: Namespace) -> None:
     if args.plot:
         plot_single_tables_column(
             tables=[osi_reference, hama_reference],
-            x=0,
-            y=1,
+            x=1,
+            y=2,
             title=f"{args.title} #{osi_reference.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["OSI", "Hamamatsu."],
             changes=True,
@@ -241,8 +241,8 @@ def cli_digitized_datasheet(args: Namespace) -> None:
     if args.plot:
         plot_single_tables_column(
             tables=[datasheet_table, interpolated_table],
-            x=0,
-            y=1,
+            x=1,
+            y=2,
             title=f"{args.title} #{datasheet_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["Datasheet", "Interp."],
         )
@@ -264,8 +264,8 @@ def cli_compare(args: Namespace) -> None:
     if args.plot:
         plot_single_tables_column(
             tables=[table1, table2, hama_reference],
-            x=x,
-            y=y,
+            x=x+1,
+            y=y+1,
             title=args.title,
             legends=[f"{osi} Cross Calibrated", f"{osi} From Datasheet", f"{hama} (Ref.)"],
             changes=True,
