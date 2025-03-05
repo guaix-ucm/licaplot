@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 # Own modules and packages
 # ------------------------
 
-from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup, LineStylesGroup
+from .types import ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup, LineStylesGroup
 
 from .base import BasicPlotter
 

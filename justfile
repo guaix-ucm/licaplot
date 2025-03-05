@@ -81,17 +81,20 @@ env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 hama1:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-hama --console --trace stage1 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL.csv
+    dir="data/hamamatsu"
+    lica-hama --console --trace stage1 --plot -i ${dir}/S2281-01-Responsivity-NPL.csv
 
 hama2:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-hama --console --trace stage2 --plot --save -i data/hamamatsu/S2281-01-Responsivity-NPL.ecsv -d data/hamamatsu/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
+    dir="data/hamamatsu"
+    lica-hama --console --trace stage2 --plot --save -i ${dir}/S2281-01-Responsivity-NPL.ecsv -d ${dir}/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
 
 hama3:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-hama --console --trace stage3 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12
+    dir="data/hamamatsu"
+    lica-hama --console --trace stage3 --plot -i ${dir}/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12
 
 # Plot lica stored resource: Hamamatsu calibration curve
 hama-plot:

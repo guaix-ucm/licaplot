@@ -31,7 +31,8 @@ import lica
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl.plotter import Marker, set_axes_labels
+from .utils.mpl import plot_single_table_column
+from .utils.mpl.plotter import Marker
 from .utils.validators import vecsv
 
 
@@ -57,48 +58,33 @@ plt.style.use("licaplot.resources.global")
 # ------------------
 
 
-def plot_photodiode(title: str, table: Table, marker: str):
-    fig, axes = plt.subplots(nrows=1, ncols=1)
-    fig.suptitle(title)
-    plot_single_photodiode(axes, table, marker)
-    plt.show()
-
-
-def plot_single_photodiode(axes: Axes, table: Table, marker: str):
-    x = table.colnames.index(COL.WAVE)
-    y = table.colnames.index(COL.RESP)
-    #axes.set_ylabel(ylabel + " & " + COL.QE)
-    set_axes_labels(axes, table, x, y, percent=False)
-    axes.grid(True, which="major", color="silver", linestyle="solid")
-    axes.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-    axes.plot(table[COL.WAVE], table[COL.RESP], marker=marker, linewidth=0, label=COL.RESP)
-    axes.plot(table[COL.WAVE], table[COL.QE], marker=marker, linewidth=0, label=COL.QE)
-    axes.minorticks_on()
-    axes.legend()
-
-
 # -----------------------
 # AUXILIARY MAIN FUNCTION
 # -----------------------
 
+
 def export(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE EXPORT === ")
-    lica.lab.photodiode.export(args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end)
+    lica.lab.photodiode.export(
+        args.ecsv_file, args.model, args.resolution, args.wave_start, args.wave_end
+    )
 
 
 def plot(args):
     log.info(" === PHOTODIODE RESPONSIVITY & QE PLOT === ")
     table = lica.lab.photodiode.load(args.model, args.resolution, args.wave_start, args.wave_end)
     log.info("Table info is\n%s", table.info)
-    plot_photodiode(
-        title=f"{args.model} characteristics @ {args.resolution} nm",
+    plot_single_table_column(
         table=table,
-        marker=args.marker,
+        x=1,
+        y=2,
+        title=f"{args.model} characteristics @ {args.resolution} nm",
     )
 
 
 def photod(args) -> None:
     args.func(args)
+
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS

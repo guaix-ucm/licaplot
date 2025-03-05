@@ -10,7 +10,7 @@
 # System wide imports
 # -------------------
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 # ---------------------
 # Third-party libraries
@@ -51,7 +51,6 @@ def plot_single_table_column(
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
-        label=None,
     )
     director = Director(builder)
     
@@ -68,14 +67,13 @@ def plot_single_table_column(
         )
         plotter.plot()
 
-
 def plot_single_tables_column(
     tables: Tables,
     x: ColNum,
     y: ColNum,
     title: Title,
     legends: Legends,
-    box: Tuple[str, float, float],
+    box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     tb_builder = TablesWrapper(tables=tables, xcol=x, ycol=y)
     builder = SingleTablesColumnBuilder(
@@ -84,7 +82,6 @@ def plot_single_tables_column(
         labels=legends,
     )
     director = Director(builder)
-    
     xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BoxPlotter(
