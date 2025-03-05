@@ -97,6 +97,14 @@ class PlotterBase(ABC):
         self.linestyles = None  # current linestyles list
         self.legends = None  # current legends list
         self.ycol = None
+        # --------------------------------------------------------
+        # These variables are created during the inner loop unpack
+        # --------------------------------------------------------
+        self.y = None
+        self.legend = None
+        self.marker = None
+        self.linestyle = None
+
         log.info("titles = %s", titles)
         log.info("legends grp = %s", legends_grp)
         log.info("markers grp = %s", markers_grp)
@@ -125,23 +133,22 @@ class PlotterBase(ABC):
                     self.ax.axvline(
                         change["wavelength"], linestyle=change["style"], label=change["label"]
                     )
-            for y, legend, marker, linestyle in zip(
-                self.yy, self.legends, self.get_markers(), self.get_linestyles()
-            ):
+            for t in self.get_inner_iterable_hook():
+                self.unpack_inner_tuple_hook(t)
                 ycol = (
-                    self.table.columns[y] * 100 * u.pct
-                    if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
-                    else self.table.columns[y]
+                    self.table.columns[self.y] * 100 * u.pct
+                    if self.percent and self.table.columns[self.y].unit == u.dimensionless_unscaled
+                    else self.table.columns[self.y]
                 )
                 self.ax.plot(
                     self.xcol,
                     ycol,
-                    marker=marker,
+                    marker=self.marker,
                     linewidth=self.linewidth,
-                    linestyle=linestyle,
-                    label=legend,
+                    linestyle=self.linestyle,
+                    label=self.legend,
                 )
-                self.inner_loop_hook(legend, marker)
+                self.inner_loop_hook()
             self.ax.grid(True, which="major", color="silver", linestyle="solid")
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
             self.ax.minorticks_on()
@@ -184,6 +191,16 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed."""
         self.ax, self.table, self.title, self.legends, self.markers, self.linestyles = t
 
+    def get_inner_iterable_hook(self):
+        return zip(
+           self.yy, self.legends, self.get_markers(), self.get_linestyles()
+        )
+
+    def unpack_inner_tuple_hook(self, t: Tuple):
+        """Should be overriden if extra arguments are needed."""
+        self.y, self.legend, self.marker, self.linestyle = t
+
+
     def plot_start_hook(self):
         pass
 
@@ -204,7 +221,7 @@ class PlotterBase(ABC):
         """
         pass
 
-    def inner_loop_hook(self, legend, marker):
+    def inner_loop_hook(self):
         pass
 
     # ==============
@@ -212,13 +229,11 @@ class PlotterBase(ABC):
     # ==============
 
     def get_markers(self) -> EnumType:
-        log.info("get_markers() %s", self.markers)
         markers = self.default_markers if all(m is None for m in self.markers)  else self.markers
         return itertools.cycle(markers)
 
     def get_linestyles(self) -> EnumType:
-        log.info("get_linestyles() %s", self.linestyles)
-        linestyles = self.default_linestyles if all(ll is None for ll in self.linestyles) else self.default_linestyles
+        linestyles = self.default_linestyles if all(ll is None for ll in self.linestyles) else self.linestyles
         return itertools.cycle(linestyles)
 
     def set_axes_labels(self, y: int) -> None:

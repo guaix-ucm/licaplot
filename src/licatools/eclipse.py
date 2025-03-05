@@ -13,7 +13,6 @@
 import itertools
 import logging
 from argparse import Namespace, ArgumentParser
-from typing import Sequence, Tuple
 
 # ---------------------
 # Third-party libraries
@@ -36,7 +35,6 @@ from ._version import __version__
 from .utils import parser as prs
 from .utils.processing import read_ecsv
 from .utils.mpl.plotter import (
-    Marker,
     ColNum,
     BasicPlotter,
     TablesFromFiles,
@@ -100,49 +98,13 @@ REF_LINES = [
 
 
 class EclipsePlotter(BasicPlotter):
+    default_linestyles = ["-", "--", "-.", ":", (0, (3, 1, 1, 1)), (0, (5, 2))]
 
-    def plot(self):
-        self.plot_start_hook()
-        self.load_mpl_resources()
-        self.configure_axes()
-        N = len(self.tables)
-        single_plot = self.nrows * self.ncols == 1
-        if single_plot:
-            self.fig.suptitle(self.titles[0])
-        for i, t in enumerate(self.get_outer_iterable_hook()):
-            first_pass = i == 0
-            self.unpack_outer_tuple_hook(t)
-            self.outer_loop_hook(single_plot, first_pass)
-            self.xcol = self.table.columns[self.x]
-            if not single_plot:
-                self.ax.set_title(self.title)
-            if self.log_y:
-                self.ax.set_yscale("log")
-            self.set_axes_labels(self.yy[0])
-            for y, legend, marker in zip(self.yy, self.legends, self.get_markers()):
-                ycol = (
-                    self.table.columns[y] * 100 * u.pct
-                    if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
-                    else self.table.columns[y]
-                )
-                self.ax.plot(self.xcol, ycol, marker=marker, linewidth=self.linewidth, label=legend, linestyle=self.linestyle)
-                self.inner_loop_hook(legend, marker)  
-            self.ax.grid(True, which="major", color="silver", linestyle="solid")
-            self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-            self.ax.minorticks_on()
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=5, frameon=True)
-        # Do not draw in unusued axes
-        N = len(self.tables)
-        for ax in self.axes[N:]:
-            ax.set_axis_off()
-        self.plot_end_hook()
-        if self.save_path is not None:
-            log.info("Saving to %s", self.save_path)
-            plt.savefig(self.save_path, bbox_inches="tight", dpi=self.save_dpi)
-        else:
-            plt.show()
+    def plot_start_hook(self):
+        linestyles = itertools.cycle(self.default_linestyles)
+        self.linestyles_grp = list(map(lambda x: (next(linestyles),), self.linestyles_grp))
 
-    def outer_loop_hook(self, single_plot: bool, first_pass: bool):
+    def outer_loop_start_hook(self, single_plot: bool, first_pass: bool):
         """
         single_plot : Flag, single_plot Axis only
         first_pass: First outer loop pass (in case of multiple tables)
@@ -163,31 +125,9 @@ class EclipsePlotter(BasicPlotter):
                     linestyle=ls,
                     label=f"{label}: {y_value:.8f}",
                 )
-        
 
-    def get_outer_iterable_hook(self):
-        """Should be overriden if extra arguments are needed."""
-        log.debug("configuring the outer loop")
-        log.debug("there are %d axes, %d tables, %d titles, %d legenda groups & %d markers group", 
-            len(self.axes), len(self.tables), len(self.titles), len(self.legends_grp), len(self.markers_grp))
-        titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
-        return zip(self.axes, self.tables, titles, self.legends_grp, self.markers_grp, self.get_linestyles())
-
-    def unpack_outer_tuple_hook(self, t: Tuple):
-        """Should be overriden if extra arguments are needed."""
-        self.ax, self.table, self.title, self.legends, self.markers, self.linestyle = t
-
-    def get_markers(self) -> Sequence[str]:
-        markers = (
-            [marker for marker in self.markers_type if marker != Marker.Nothing]
-            if all(m is None for m in self.markers)
-            else self.markers
-        )
-        return itertools.cycle(markers)
-
-    def get_linestyles(self) -> Sequence[str]:
-        linestyles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 2))]
-        return itertools.cycle(linestyles)
+    def outer_loop_end_hook(self, single_plot: bool, first_pass: bool):
+        plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=5, frameon=True)
 
     def set_axes_labels(self, y: int) -> None:
         """Get the labels for a table, using units if necessary"""
@@ -251,7 +191,7 @@ def cli_single_plot_tables_column(args: Namespace):
         title=args.title,
         labels=args.labels,
         markers=args.markers,
-        linestyles=args.line_styles
+        linestyles=args.line_styles,
     )
     director = Director(builder)
     elements = director.build_elements()
