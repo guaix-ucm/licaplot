@@ -45,14 +45,14 @@ Homepage = "https://github.com/guaix-ucm/licaplot"
 Repository = "https://github.com/guaix-ucm/licaplot.git"
 
 [project.scripts]
-lica-plot = "licaplot.plot:main"
-lica-photod = "licaplot.photod:main"
-lica-filters = "licaplot.filters:main"
-lica-tessw = "licaplot.tessw:main"
-lica-hama = "licaplot.hamamatsu:main"
-lica-osi = "licaplot.osi:main"
-lica-ndf = "licaplot.ndfilters:main"
-lica-eclip = "licaplot.eclipse:main"
+lica-plot = "licatools.plot:main"
+lica-photod = "licatools.photod:main"
+lica-filters = "licatools.filters:main"
+lica-tessw = "licatools.tessw:main"
+lica-hama = "licatools.hamamatsu:main"
+lica-osi = "licatools.osi:main"
+lica-ndf = "licatools.ndfilters:main"
+lica-eclip = "licatools.eclipse:main"
 
 
 [build-system]
@@ -67,7 +67,7 @@ line-length = 100
 
 # pyproject.toml
 [tool.setuptools_scm]
-write_to = "src/licaplot/_version.py"
+write_to = "src/licatools/_version.py"
 
 [tool.uv]
 dev-dependencies = [
@@ -84,5 +84,5 @@ namespaces = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"licaplot.resources" = ["*.mplstyle"]
+"licatools.resources" = ["*.mplstyle"]
 

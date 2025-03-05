@@ -54,7 +54,7 @@ log = logging.getLogger(__name__)
 # -----------------
 
 # Load global style sheets
-plt.style.use("licaplot.resources.global")
+plt.style.use("licatools.resources.global")
 
 # -------------------
 # Auxiliary functions

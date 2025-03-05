@@ -230,7 +230,7 @@ class PlotterBase(ABC):
 
     def load_mpl_resources(self):
         single_plot = self.nrows * self.ncols == 1
-        resource = "licaplot.resources.single" if single_plot else "licaplot.resources.multi"
+        resource = "licatools.resources.single" if single_plot else "licatools.resources.multi"
         log.info("Loading Matplotlib resources from %s", resource)
         plt.style.use(resource)
 
