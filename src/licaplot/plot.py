@@ -12,6 +12,7 @@
 
 import logging
 from math import ceil, sqrt
+
 # Typing hints
 from argparse import ArgumentParser, Namespace
 
@@ -85,9 +86,10 @@ def cli_single_table_column(args: Namespace):
         title=args.title,
         label=args.label,
         marker=args.marker,
+        linestyle=args.line_style,
     )
     director = Director(builder)
-    
+
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
@@ -110,7 +112,6 @@ def cli_single_table_column(args: Namespace):
                 save_path=args.save_figure_path,
                 save_dpi=args.save_figure_dpi,
                 log_y=args.log_y,
-                # markers_type: EnumType = Marker
             )
             plotter.plot()
 
@@ -135,14 +136,14 @@ def cli_single_table_columns(args: Namespace):
         title=args.title,
         labels=args.labels,
         markers=args.markers,
+        linestyles=args.line_styles,
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
-        plotter =BasicPlotter(
+        plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
@@ -183,15 +184,14 @@ def cli_single_tables_column(args: Namespace):
         title=args.title,
         labels=args.labels,
         markers=args.markers,
-
+        linestyles=args.line_styles,
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
-        plotter =BasicPlotter(
+        plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
@@ -232,14 +232,14 @@ def cli_single_tables_columns(args: Namespace):
         title=args.titles,
         labels=args.labels,
         markers=args.markers,
+        linestyles=args.line_styles,
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
-        plotter =BasicPlotter(
+        plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
@@ -280,16 +280,16 @@ def cli_multi_tables_column(args: Namespace):
         titles=args.titles,
         label=args.labels,
         marker=args.markers,
+        linestyle=args.line_style,
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
-        plotter =BasicPlotter(
+        plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
@@ -330,16 +330,16 @@ def cli_multi_tables_columns(args: Namespace):
         titles=args.titles,
         labels=args.labels,
         markers=args.markers,
+        linestyles=args.line_styles,
     )
     director = Director(builder)
-    
     elements = director.build_elements()
     log.debug(elements)
     xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
-        plotter =BasicPlotter(
+        plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
