@@ -226,7 +226,7 @@ def cli_inverse(args: Namespace):
     log.info("Processing %s", args.input_file)
     path = args.input_file
     table = read_ecsv(path)
-    inverse(table, args.y_column - 1)
+    inverse(table, args.y_column - 1, args.column_name)
     if args.save:
         table.write(path, delimiter=",", overwrite=True)
 
