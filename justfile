@@ -132,14 +132,16 @@ osi-plot:
 # ---------------------------------------
 # Neutral Density filters utility testing
 # ---------------------------------------
-
+ 
 
 # Calibrates a NDF filter
-ndf-reduce tag="0.5":
+ndf-reduce tag="0.5" i="0":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/ndfilters/ndf{{tag}}"
-    lica-ndf --console --trace calib -n ND-{{tag}} -m PIN-10D -i ${dir}/osi_nd{{tag}}.txt -p ${dir}/osi_clear1.txt -o ${dir} 
+    photodiodes=( $(ls -1 ${dir}/??_osi_clear.txt) )
+    filters=( $(ls -1 ${dir}/??_osi_nd*.txt) )
+    lica-ndf --console --trace calib -n ND-{{tag}} -m PIN-10D -i ${filters[0]} -p ${photodiodes[{{i}}]} -o ${dir} 
 
 
 # Plot NDF calibration curve
@@ -147,7 +149,7 @@ ndf-plot tag="0.5":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/ndfilters/ndf{{tag}}"
-    lica-plot --console --trace single table column -t NDF-{{tag}} -yc 2 -i ${dir}/ND-{{tag}}-Transmittance@5nm.ecsv --changes
+    lica-plot --console --trace single table column -t NDF-{{tag}} -yc 2 -i ${dir}/ND-{{tag}}-Transmittance@1nm.ecsv --changes
 
 # --------------------------
 # Eclipse sunglasses testing
