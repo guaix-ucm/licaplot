@@ -31,7 +31,7 @@ import lica
 # ------------------------
 
 from ._version import __version__
-from .utils.mpl import Marker, set_axes_labels
+from .utils.mpl.plotter import Marker, set_axes_labels
 from .utils.validators import vecsv
 
 

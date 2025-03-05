@@ -74,6 +74,10 @@ env-bak drive=def_drive: (check_mnt drive) (env-backup join(drive, project))
 # Restore .env from storage unit
 env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 
+# -------------------------
+# Hamamatsu utility testing
+# -------------------------
+
 hama1:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -88,6 +92,16 @@ hama3:
     #!/usr/bin/env bash
     set -exuo pipefail
     lica-hama --console --trace stage3 --plot -i data/hamamatsu/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12
+
+# Plot lica stored resource: Hamamatsu calibration curve
+hama-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    lica-photod --console plot -m S2281-01
+
+# -------------------
+# OSI utility testing
+# -------------------
 
 # OSI Pĥotodiode calibration by scanned datasheet
 osi-sheet:
@@ -106,11 +120,23 @@ osi-cmp:
     set -exuo pipefail
     lica-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 
-# Calibrates a NDF filter
-ndf-calib:
+# Plot lica stored resource: OSI calibration curve
+osi-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i data/ndfilters/ndf0.5/osi_nd0.5.txt -p data/ndfilters/ndf0.5/osi_clear1.txt -o data/ndfilters 
+    lica-photod --console plot -m PIN-10D
+
+# ---------------------------------------
+# Neutral Density filters utility testing
+# ---------------------------------------
+
+
+# Calibrates a NDF filter
+ndf-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/ndfilters/ndf0.5"
+    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i ${dir}osi_nd0.5.txt -p ${dir}/osi_clear1.txt -o ${dir} 
 
 
 # Plot NDF calibration curve
@@ -119,151 +145,9 @@ ndf-plot:
     set -exuo pipefail
     lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmittance@5nm.ecsv --changes
 
-# Plot lica stored resource: Hamamatsu calibration curve
-hama-plot:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    lica-photod --console plot -m S2281-01
-
-# Plot lica stored resource: OSI calibration curve
-osi-plot:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    lica-photod --console plot -m PIN-10D
-
-eclipse-plot:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
-    do
-        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
-    done
-
-eclipse-plot1b:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
-    do
-        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes
-    done
-
-nasa-plota:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    file_accum=""
-    for i in  02 03 04 06 10
-    do
-        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
-    done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum -sf ${dir}/inv_log_group_a.png --lines
-
-nasa-plotb:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    file_accum=""
-    for i in 12 13
-    do
-        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
-    done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines
-
-nasa-plotall:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    file_accum=""
-    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
-    do
-        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
-    done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength'  -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png --lines --marker "" -sd 300
-
-eclipse-plot2a:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    file_accum=""
-    for i in 02 03 04 06 10
-    do
-        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
-    done
-    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png -m "" --lines --log-y -sd 300
-
-eclipse-plot2b:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/eclipse"
-    file_accum=""
-    for i in 12 13
-    do
-        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
-    done
-    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png -m "" --lines --log-y -sd 300
-    
-
-# reduce LICA data [tessw|eclipse|nasa|eysdon|omega|sp750|ndf|all]
-reduce what:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    just {{what}}-reduce
-    
-[private]
-all-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    for item in eclipse eysdon omega sp750 ndf tessw
-    do
-        just ${item}-reduce
-    done
-
-[private]
-tessw-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/tessw"
-    lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
-    lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
-    lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
-    lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER 
-    lica-tessw --console --trace process  -d ${dir} --save
-
-[private]
-eysdon-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/filters/Eysdon_RGB"
-    lica-filters --console --trace classif photod -g X -p ${dir}/photodiode.txt
-    lica-filters --console --trace classif filter -g X -i ${dir}/green.txt -l Green
-    lica-filters --console --trace classif filter -g X -i ${dir}/red.txt -l Red
-    lica-filters --console --trace classif filter -g X -i ${dir}/blue.txt -l Blue
-    lica-filters --console --trace process -d ${dir} --save
-
-
-[private]
-omega-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/filters/Omega_NPB"
-    lica-filters --console --trace one -l OMEGA NPB -p ${dir}/QEdata_diode_2nm.txt -m PIN-10D -i ${dir}/QEdata_filter_2nm.txt
-
-[private]
-sp750-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/filters/IR_cut"
-    lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
-
-[private]
-ndf-reduce:
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    dir="data/ndfilters/ndf0.5"
-    lica-filters --console --trace one -l ND 0.5 -p ${dir}/osi_clear1.txt -m PIN-10D -i ${dir}/osi_nd0.5.txt
-
+# --------------------------
+# Eclipse sunglasses testing
+# --------------------------
 
 [private]
 eclipse-reduce:
@@ -286,11 +170,186 @@ nasa-reduce:
         lica-eclip --console --trace inverse -yc 5 -i ${dir}/${i}_eg.ecsv --save
     done
 
+
+# Single linear graphs for all glasses
+eclipse-plot-all:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+    done
+
+# Single linear graphs for all glasses with & without ND correction
+eclipse-plot-all-nd:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes
+    done
+
+# NASA style plotting of glasses for all glasses
+eclipse-plot-all-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength'  -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png --lines --marker "" -sd 300
+
+# logaritmic style plotting for group 1
+eclipse-plot-g1-log:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -sf ${dir}/group1_eg.png -m "" --lines --log-y -sd 300
+
+# NASA style plotting of glasses for group 1
+eclipse-plot-g1-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in  02 03 04 06 10
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum -sf ${dir}/inv_log_group_a.png --lines
+
+# logaritmic style plotting for group 1
+eclipse-plot-g2-log:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "
+    done
+    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum  -sf ${dir}/group2_eg.png -m "" --lines --log-y -sd 300
+
+# NASA style plotting of glasses for group 2
+eclipse-plot-g2-nasa:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines
+
+# ------------------------------------
+# Neutral Density Filters Transmitance
+# ------------------------------------
+
+
+# ----------------------------------
+# Omega Nebular Filter Transmittance
+# ----------------------------------
+
+[private]
+omega-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Omega_NPB"
+    lica-filters --console --trace one -l OMEGA NPB -p ${dir}/QEdata_diode_2nm.txt -m PIN-10D -i ${dir}/QEdata_filter_2nm.txt
+
+# Plot single axes, 3 table, 1 column each
+omega-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Omega_NPB"
+    lica-plot --console --trace single table column -% -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines
+
+
+# --------------
+# Eysdon Filters
+# --------------
+
+[private]
+eysdon-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Eysdon_RGB"
+    lica-filters --console --trace classif photod -g X -p ${dir}/photodiode.txt
+    lica-filters --console --trace classif filter -g X -i ${dir}/green.txt -l Green
+    lica-filters --console --trace classif filter -g X -i ${dir}/red.txt -l Red
+    lica-filters --console --trace classif filter -g X -i ${dir}/blue.txt -l Blue
+    lica-filters --console --trace process -d ${dir} --save
+
+
+# Plot Eysdon Filter set
+eysdon-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/Eysdon_RGB"
+    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines
+
+
+# --------------------------------
+# TESS W spectral response utility
+# --------------------------------
+
+# TESS-W sensor spectral response reduction
+tessw-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw"
+    lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
+    lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
+    lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
+    lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER
+    lica-tessw --console --trace process  -d ${dir} --save
+
 tessw-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
     lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
+
+# TESS-W IV/IR-cut filter data reduction
+sp750-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/IR_cut"
+    lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
+
+
+# =============================
+# Generic data reduction recipe
+# =============================
+
+# reduce LICA data [tessw|eclipse|nasa|eysdon|omega|sp750|ndf|all]
+reduce what:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    just {{what}}-reduce
+    
+[private]
+all-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    for item in eclipse eysdon omega sp750 ndf tessw
+    do
+        just ${item}-reduce
+    done
+
+# -----------------------------
+# Plotting utility test drivers
+# -----------------------------
 
 # Plot single axes, table and column
 plot-s-t-c args="":
@@ -342,7 +401,10 @@ test what:
     #!/usr/bin/env bash
     set -exuo pipefail
     uv run python -m unittest -v test.{{what}}
-   
+
+# ===================
+# OTHER PRIVATE STUFF
+# ===================
 
 [private]
 check_mnt mnt:

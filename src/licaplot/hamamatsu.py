@@ -414,6 +414,13 @@ def add_args(parser: ArgumentParser) -> None:
         metavar="<NPL ECSV>",
         help="ECSV with NPL + Datasheet calibration",
     )
+    parser_stage3.add_argument(
+        "--revision",
+        type=vmonth,
+        required=True,
+        metavar="<YYYY-MM>",
+        help="ECSV File Revison string",
+    )
     # ------------------------------------------------------------------------
     parser_pipe.add_argument(
         "--revision",

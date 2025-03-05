@@ -64,6 +64,7 @@ def plot_single_table_column(
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyl_grp,
         )
         plotter.plot()
 
@@ -93,6 +94,7 @@ def plot_single_tables_column(
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyl_grp,
             box=box,
         )
         plotter.plot()

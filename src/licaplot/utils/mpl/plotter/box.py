@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 # Own modules and packages
 # ------------------------
 
-from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup
+from .types import Marker, ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup, LineStylesGroup
 
 from .base import BasicPlotter
 
@@ -43,6 +43,7 @@ class BoxPlotter(BasicPlotter):
         titles: Titles,
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
+        linestyles_grp: LineStylesGroup,
         box: Tuple[str, float, float],
         changes: bool = True,
         percent: bool = False,
@@ -51,7 +52,6 @@ class BoxPlotter(BasicPlotter):
         ncols: int = 1,
         save_path: Optional[str] = None,
         save_dpi: Optional[int] = None,
-        markers_type: EnumType = Marker,
     ):
         super().__init__(
             x=x,
@@ -60,6 +60,7 @@ class BoxPlotter(BasicPlotter):
             titles=titles,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=changes,
             percent=percent,
             linewidth=linewidth,
@@ -67,7 +68,6 @@ class BoxPlotter(BasicPlotter):
             ncols=ncols,
             save_path=save_path,
             save_dpi=save_dpi,
-            markers_type=markers_type,
         )
         self.box = box
 

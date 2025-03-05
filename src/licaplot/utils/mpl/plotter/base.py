@@ -97,6 +97,10 @@ class PlotterBase(ABC):
         self.linestyles = None  # current linestyles list
         self.legends = None  # current legends list
         self.ycol = None
+        log.info("titles = %s", titles)
+        log.info("legends grp = %s", legends_grp)
+        log.info("markers grp = %s", markers_grp)
+        log.info("linestyles grp = %s", linestyles_grp)
 
     def plot(self):
         self.plot_start_hook()
@@ -122,7 +126,7 @@ class PlotterBase(ABC):
                         change["wavelength"], linestyle=change["style"], label=change["label"]
                     )
             for y, legend, marker, linestyle in zip(
-                self.yy, self.legends, self.get_markers(), self.get_linstyles()
+                self.yy, self.legends, self.get_markers(), self.get_linestyles()
             ):
                 ycol = (
                     self.table.columns[y] * 100 * u.pct
@@ -226,7 +230,7 @@ class PlotterBase(ABC):
 
     def load_mpl_resources(self):
         single_plot = self.nrows * self.ncols == 1
-        resource = "licaplot.resources.single_plot" if single_plot else "licaplot.resources.multi"
+        resource = "licaplot.resources.single" if single_plot else "licaplot.resources.multi"
         log.info("Loading Matplotlib resources from %s", resource)
         plt.style.use(resource)
 

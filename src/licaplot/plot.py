@@ -90,7 +90,7 @@ def cli_single_table_column(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     log.info("YC = %s", yc)
     with visualization.quantity_support():
         with visualization.quantity_support():
@@ -101,6 +101,7 @@ def cli_single_table_column(args: Namespace):
                 titles=titles,
                 legends_grp=labels_grp,
                 markers_grp=markers_grp,
+                linestyles_grp=linestyles_grp,
                 changes=args.changes,
                 percent=args.percent,
                 linewidth=1 if args.lines else 0,
@@ -139,7 +140,7 @@ def cli_single_table_columns(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter =BasicPlotter(
             x=xc,
@@ -148,6 +149,7 @@ def cli_single_table_columns(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
@@ -187,7 +189,7 @@ def cli_single_tables_column(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter =BasicPlotter(
             x=xc,
@@ -196,6 +198,7 @@ def cli_single_tables_column(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
@@ -234,7 +237,7 @@ def cli_single_tables_columns(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter =BasicPlotter(
             x=xc,
@@ -243,6 +246,7 @@ def cli_single_tables_columns(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
@@ -281,7 +285,7 @@ def cli_multi_tables_column(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -292,6 +296,7 @@ def cli_multi_tables_column(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
@@ -330,7 +335,7 @@ def cli_multi_tables_columns(args: Namespace):
     
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp = elements
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -341,6 +346,7 @@ def cli_multi_tables_columns(args: Namespace):
             titles=titles,
             legends_grp=labels_grp,
             markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
             changes=args.changes,
             percent=args.percent,
             linewidth=1 if args.lines else 0,
