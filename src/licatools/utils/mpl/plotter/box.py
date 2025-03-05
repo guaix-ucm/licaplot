@@ -75,7 +75,7 @@ class BoxPlotter(BasicPlotter):
     # Hooks
     # =====
 
-    def outer_loop_hook(self, single: bool, first_pass: bool):
+    def outer_loop_start_hook(self, single: bool, first_pass: bool):
         """
         single : Flag, single Axis only
         first_pass: First outer loop pass (in case of multiple tables)

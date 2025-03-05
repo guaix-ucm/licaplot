@@ -113,7 +113,7 @@ class PlotterBase(ABC):
         for i, t in enumerate(self.get_outer_iterable_hook()):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
-            self.outer_loop_hook(single_plot, first_pass)
+            self.outer_loop_start_hook(single_plot, first_pass)
             self.xcol = self.table.columns[self.x]
             if not single_plot:
                 self.ax.set_title(self.title)
@@ -146,6 +146,7 @@ class PlotterBase(ABC):
             self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
             self.ax.minorticks_on()
             self.ax.legend()
+            self.outer_loop_end_hook(single_plot, first_pass)
 
         # Do not draw in unusued axes
         N = len(self.tables)
@@ -189,7 +190,14 @@ class PlotterBase(ABC):
     def plot_end_hook(self):
         pass
 
-    def outer_loop_hook(self, single_plot: bool, first_pass: bool):
+    def outer_loop_start_hook(self, single_plot: bool, first_pass: bool):
+        """
+        single_plot : Flag, single_plot Axis only
+        first_pass: First outer loop pass (in case of multiple tables)
+        """
+        pass
+
+    def outer_loop_end_hook(self, single_plot: bool, first_pass: bool):
         """
         single_plot : Flag, single_plot Axis only
         first_pass: First outer loop pass (in case of multiple tables)
@@ -204,13 +212,13 @@ class PlotterBase(ABC):
     # ==============
 
     def get_markers(self) -> EnumType:
-        markers = self.default_markers if all(m is None for m in self.markers) else self.markers
+        log.info("get_markers() %s", self.markers)
+        markers = self.default_markers if all(m is None for m in self.markers)  else self.markers
         return itertools.cycle(markers)
 
     def get_linestyles(self) -> EnumType:
-        linestyles = (
-            self.default_linestyles if all(m is None for m in self.linestyles) else self.linestyles
-        )
+        log.info("get_linestyles() %s", self.linestyles)
+        linestyles = self.default_linestyles if all(ll is None for ll in self.linestyles) else self.default_linestyles
         return itertools.cycle(linestyles)
 
     def set_axes_labels(self, y: int) -> None:
