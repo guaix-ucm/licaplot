@@ -161,7 +161,7 @@ def xc() -> ArgumentParser:
         type=vnat,
         metavar="<N>",
         default=1,
-        help="Abcissa axes column (1,2..) in CSV/ECSV, defaults to %(default)d",
+        help="1-based abcissa column number, defaults to %(default)d",
     )
     parser.add_argument(
         "-xu",
@@ -169,7 +169,7 @@ def xc() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
-        help="Abcissa axes units string (ie. nm, AA), defaults to %(default)s",
+        help="Abcissa units string (ie. nm, AA), defaults to %(default)s",
     )
     return parser
 
@@ -182,7 +182,7 @@ def yc() -> ArgumentParser:
         type=vnat,
         metavar="<N>",
         default=2,
-        help="Ordinate axis column (1,2..) in CSV/ECSV, defaults to %(default)d",
+        help="1-based ordinate column number, defaults to %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -203,7 +203,7 @@ def yycc() -> ArgumentParser:
         type=vnat,
         nargs="+",
         metavar="<N>",
-        help="Ordinate axes columns (1,2..) in CSV/ECSV, defaults to %(default)d",
+        help="1-based ordinate axes column numbers in CSV/ECSV, defaults to %(default)d",
     )
     parser.add_argument(
         "-yu",
@@ -240,7 +240,7 @@ def percent() -> ArgumentParser:
         "--percent",
         action="store_true",
         default=False,
-        help="Display adimensional Y as a percent (default: %(default)s)",
+        help="Y axis as a percentage (default: %(default)s)",
     )
     return parser
 
