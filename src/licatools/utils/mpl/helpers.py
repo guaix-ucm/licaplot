@@ -32,9 +32,11 @@ from .plotter import (
     LineStyles,
     Tables,
     ColNum,
+    ColNums,
     Title,
     Director,
     SingleTableColumnBuilder,
+    SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
     TableWrapper,
     TablesWrapper,
@@ -64,7 +66,6 @@ def plot_single_table_column(
         linestyle=linestyle,
     )
     director = Director(builder)
-    
     xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BasicPlotter(
@@ -78,6 +79,40 @@ def plot_single_table_column(
             changes=changes,
         )
         plotter.plot()
+
+def plot_single_table_columns(
+    table: Table,
+    x: ColNum,
+    yy: ColNums,
+    title: Title,
+    markers: Optional[Markers] = None,
+    legends: Optional[Legends] = None,
+    linestyles: Optional[LineStyles] = None,
+    changes: bool = False
+) -> None:
+    tb_builder = TableWrapper(table=table, xcol=x, ycol=yy)
+    builder = SingleTableColumnsBuilder(
+        builder=tb_builder,
+        title=title,
+        labels=legends,
+        linestyles=linestyles,
+    )
+    director = Director(builder)
+    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+    with visualization.quantity_support():
+        plotter = BasicPlotter(
+            x=xc,
+            yy=yc,
+            tables=tables,
+            titles=titles,
+            legends_grp=labels_grp,
+            markers_grp=markers_grp,
+            linestyles_grp=linestyl_grp,
+            changes=changes,
+        )
+        plotter.plot()
+
+
 
 def plot_single_tables_column(
     tables: Tables,
