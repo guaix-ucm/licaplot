@@ -265,7 +265,7 @@ def tessw_table(path: str, label: str, title: str = None, tag: str = "") -> Tabl
 
 
 def tessw_ecsv(path: str, label: str, title: str = None, tag: str = "") -> str:
-    table = tessw_table(path, label, title, tag)
+    table = tessw_table(path=path, label=label, title=title, tag=tag)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)

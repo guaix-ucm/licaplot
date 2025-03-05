@@ -135,18 +135,19 @@ osi-plot:
 
 
 # Calibrates a NDF filter
-ndf-reduce:
+ndf-reduce tag="0.5":
     #!/usr/bin/env bash
     set -exuo pipefail
-    dir="data/ndfilters/ndf0.5"
-    lica-ndf --console --trace calib -n ND-0.5 -m PIN-10D -i ${dir}osi_nd0.5.txt -p ${dir}/osi_clear1.txt -o ${dir} 
+    dir="data/ndfilters/ndf{{tag}}"
+    lica-ndf --console --trace calib -n ND-{{tag}} -m PIN-10D -i ${dir}/osi_nd{{tag}}.txt -p ${dir}/osi_clear1.txt -o ${dir} 
 
 
 # Plot NDF calibration curve
-ndf-plot:
+ndf-plot tag="0.5":
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-plot --console --trace single table column -t NDF-0.5 -yc 2 -i data/ndfilters/ND-0.5-Transmittance@5nm.ecsv --changes
+    dir="data/ndfilters/ndf{{tag}}"
+    lica-plot --console --trace single table column -t NDF-{{tag}} -yc 2 -i ${dir}/ND-{{tag}}-Transmittance@5nm.ecsv --changes
 
 # --------------------------
 # Eclipse sunglasses testing
@@ -317,11 +318,18 @@ tessw-reduce:
     lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER
     lica-tessw --console --trace process  -d ${dir} --save
 
-tessw-plot:
+tessw-plot-raw:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
     lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
+
+tessw-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir=data/tessw
+    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 5  --changes --lines
+
 
 # TESS-W IV/IR-cut filter data reduction
 sp750-reduce:
@@ -330,6 +338,11 @@ sp750-reduce:
     dir="data/filters/IR_cut"
     lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
 
+sp750-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/IR_cut"
+    lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -yc 4 --changes --lines
 
 # =============================
 # Generic data reduction recipe
@@ -340,6 +353,12 @@ reduce what:
     #!/usr/bin/env bash
     set -exuo pipefail
     just {{what}}-reduce
+
+# reduce LICA data [tessw|eclipse|nasa|eysdon|omega|sp750|ndf|all]
+plot what:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    just {{what}}-plot
     
 [private]
 all-reduce:

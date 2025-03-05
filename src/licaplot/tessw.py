@@ -95,7 +95,7 @@ def photodiode(
 def sensor(input_path: str, label: str, tag: str = "") -> None:
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
-    return processing.tessw_ecsv(input_path, label, tag)
+    return processing.tessw_ecsv(path=input_path, label=label, tag=tag)
 
 
 def one_tessw(
