@@ -1,8 +1,8 @@
 
 [project]
-name = "licaplot"
+name = "licatools"
 dynamic = ["version"]
-description = "Plotting tools to analyze sensors and filters from LICA Optical Bench"
+description = "Tools to reduce and plot data from LICA Optical Bench"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "GPL-3.0 license"}
@@ -30,7 +30,7 @@ dependencies = [
     "scipy >= 1.13",
     "rawpy>=0.24.0",
     "exifread>=3.0.0",
-    "lica",
+    "lica[lab]",
 ]
 
 [project.optional-dependencies]

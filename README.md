@@ -1,13 +1,15 @@
-# licaplot
+# licatools
  
- Collection of processing and plotting commands to analyze sensors and filters using the LICA Optical Test Bench.
+ (formerly known as licaplot)
+
+ Collection of processing and plotting commands to analyze data gathered by the LICA Optical Test Bench.
 
  This is a counterpart for sensors of [rawplot](https://guaix.ucm.es/rawplot).
 
  # Installation
 
 ```bash
-pip install licaplot
+pip install licatools
 ```
 
 # Available utilities
@@ -121,13 +123,13 @@ lica-tessw --console classif review  -d data/tessw/
 ```
 
 ```bash
-2024-12-08 13:07:23,214 [INFO] [root] ============== licaplot.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
-2024-12-08 13:07:23,214 [INFO] [licaplot.tessw] Reviewing files in directory data/tessw/
-2024-12-08 13:07:23,270 [INFO] [licaplot.utils.processing] Returning stars6502-frequencies
-2024-12-08 13:07:23,270 [INFO] [licaplot.utils.processing] Returning stars1277-frequencies
-2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] [tag=B] (PIN-10D) stars6502-photodiode, used by ['stars6502-frequencies']
-2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] [tag=A] (PIN-10D) stars1277-photodiode, used by ['stars1277-frequencies']
-2024-12-08 13:07:23,271 [INFO] [licaplot.utils.processing] Review step ok.
+2024-12-08 13:07:23,214 [INFO] [root] ============== licatools.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
+2024-12-08 13:07:23,214 [INFO] [licatools.tessw] Reviewing files in directory data/tessw/
+2024-12-08 13:07:23,270 [INFO] [licatools.utils.processing] Returning stars6502-frequencies
+2024-12-08 13:07:23,270 [INFO] [licatools.utils.processing] Returning stars1277-frequencies
+2024-12-08 13:07:23,271 [INFO] [licatools.utils.processing] [tag=B] (PIN-10D) stars6502-photodiode, used by ['stars6502-frequencies']
+2024-12-08 13:07:23,271 [INFO] [licatools.utils.processing] [tag=A] (PIN-10D) stars1277-photodiode, used by ['stars1277-frequencies']
+2024-12-08 13:07:23,271 [INFO] [licatools.utils.processing] Review step ok.
 ```
 
 3. Data reduction
@@ -137,16 +139,16 @@ lica-tessw --console process  -d data/tessw/ --save
 ```
 
 ```bash
-2024-12-08 13:10:08,476 [INFO] [root] ============== licaplot.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
-2024-12-08 13:10:08,476 [INFO] [licaplot.tessw] Classifying files in directory data/tessw/
-2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars6502-frequencies
-2024-12-08 13:10:08,534 [INFO] [licaplot.utils.processing] Returning stars1277-frequencies
+2024-12-08 13:10:08,476 [INFO] [root] ============== licatools.tessw 0.1.dev100+g51c6aa2.d20241208 ==============
+2024-12-08 13:10:08,476 [INFO] [licatools.tessw] Classifying files in directory data/tessw/
+2024-12-08 13:10:08,534 [INFO] [licatools.utils.processing] Returning stars6502-frequencies
+2024-12-08 13:10:08,534 [INFO] [licatools.utils.processing] Returning stars1277-frequencies
 2024-12-08 13:10:08,534 [INFO] [lica.lab.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
-2024-12-08 13:10:08,546 [INFO] [licaplot.utils.processing] Processing stars6502-frequencies with photodidode PIN-10D
+2024-12-08 13:10:08,546 [INFO] [licatools.utils.processing] Processing stars6502-frequencies with photodidode PIN-10D
 2024-12-08 13:10:08,546 [INFO] [lica.lab.photodiode] Loading Responsivity & QE data from PIN-10D-Responsivity-Cross-Calibrated@1nm.ecsv
-2024-12-08 13:10:08,557 [INFO] [licaplot.utils.processing] Processing stars1277-frequencies with photodidode PIN-10D
-2024-12-08 13:10:08,558 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars6502-frequencies.ecsv
-2024-12-08 13:10:08,562 [INFO] [licaplot.utils.processing] Updating ECSV file data/tessw/stars1277-frequencies.ecsv
+2024-12-08 13:10:08,557 [INFO] [licatools.utils.processing] Processing stars1277-frequencies with photodidode PIN-10D
+2024-12-08 13:10:08,558 [INFO] [licatools.utils.processing] Updating ECSV file data/tessw/stars6502-frequencies.ecsv
+2024-12-08 13:10:08,562 [INFO] [licatools.utils.processing] Updating ECSV file data/tessw/stars1277-frequencies.ecsv
 ```
 
 4. Plot the result
