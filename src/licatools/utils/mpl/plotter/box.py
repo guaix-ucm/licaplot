@@ -12,7 +12,6 @@
 
 
 import logging
-from enum import EnumType
 from typing import Optional, Tuple
 
 # ---------------------
