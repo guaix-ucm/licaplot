@@ -164,19 +164,8 @@ class ElementsBase(IElementsBuilder):
         self._elements.append(part)
         return part
 
-    def _grouped(self, sequence: Sequence[Any]) -> Sequence[Sequence[Any]]:
-        return (
-            list(batched(sequence, self._ncol))
-            if sequence is not None
-            else [(None,) * self._ncol] * self._ntab
-        )
-
-    def _grouped1(self, sequence: Sequence[Any]) -> Sequence[Sequence[Any]]:
-        return (
-            list(batched(sequence,1))
-            if sequence is not None
-            else [(None,)] * self._ntab
-        )
+    def _grouped(self, sequence: Sequence[Any], n: int) -> Sequence[Sequence[Any]]:
+        return list(batched(sequence, n)) if sequence is not None else [(None,) * n] * self._ntab
 
 
 class SingleTableColumnBuilder(ElementsBase):
@@ -365,19 +354,19 @@ class SingleTableColumnsBuilder(ElementsBase):
             if self._legends is not None
             else [self._table.columns[y].name[: self._trim] + "." for y in self._ycols]
         )
-        part = self._grouped(flat_legends)
+        part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
         return part
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
-        part = self._grouped(self._markers)
+        part = self._grouped(self._markers, n=self._ncol)
         self._elements.append(part)
         return part
 
     def build_linestyles_grp(self) -> LineStylesGroup:
         self._check_linestyles()
-        part = self._grouped(self._linestyles)
+        part = self._grouped(self._linestyles, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -479,7 +468,7 @@ class SingleTablesColumnBuilder(ElementsBase):
             flat_legends = self._legends * self._ntab if N == 1 else self._legends
         else:
             flat_legends = [table.meta["label"] for table in self._tables]
-        part = self._grouped(flat_legends)
+        part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -490,7 +479,7 @@ class SingleTablesColumnBuilder(ElementsBase):
             flat_markers = self._markers * self._ntab if N == 1 else self._markers
         else:
             flat_markers = [None] * self._ntab
-        part = self._grouped(flat_markers)
+        part = self._grouped(flat_markers, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -501,7 +490,7 @@ class SingleTablesColumnBuilder(ElementsBase):
             flat_linestyles = self._linestyles * self._ntab if N == 1 else self._linestyles
         else:
             flat_linestyles = [None] * self._ntab
-        part = self._grouped(flat_linestyles)
+        part = self._grouped(flat_linestyles, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -615,7 +604,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
                 for table in self._tables
                 for y in self._ycols
             ]
-        part = self._grouped(flat_legends)
+        part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -626,7 +615,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
             flat_markers = self._markers * self._ntab if N == self._ncol else self._markers
         else:
             flat_markers = (None,) * (self._ntab * self._ncol)
-        part = self._grouped(flat_markers)
+        part = self._grouped(flat_markers, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -637,7 +626,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
             flat_linestyles = self._linestyles * self._ntab if N == self._ncol else self._linestyles
         else:
             flat_linestyles = (None,) * (self._ntab * self._ncol)
-        part = self._grouped(flat_linestyles)
+        part = self._grouped(flat_linestyles, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -720,26 +709,27 @@ class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
             flat_legends = self._legends
         else:
             flat_legends = [
-                f"{table.meta['label']}-{table.columns[yc].name[:self._trim]}."
+                f"{table.meta['label']}-{table.columns[yc].name[: self._trim]}."
                 for table, yc in zip(self._tables, self._ycols)
             ]
-        part = self._grouped1(flat_legends)
+        part = self._grouped(flat_legends, n=1)
         self._elements.append(part)
         return part
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
-        flat_markers = self._markers if self._markers is not None else  (None,) * self._ntab 
-        part = self._grouped1(flat_markers)
+        flat_markers = self._markers if self._markers is not None else (None,) * self._ntab
+        part = self._grouped(flat_markers, n=1)
         self._elements.append(part)
         return part
 
     def build_linestyles_grp(self) -> LineStylesGroup:
         self._check_linestyles()
         flat_linestyles = self._linestyles if self._linestyles is not None else (None,) * self._ntab
-        part = self._grouped1(flat_linestyles)
+        part = self._grouped(flat_linestyles, n=1)
         self._elements.append(part)
         return part
+
 
 class MultiTablesColumnBuilder(ElementsBase):
     """
@@ -828,21 +818,21 @@ class MultiTablesColumnBuilder(ElementsBase):
             if self._legend is None
             else [self._legend] * self._ntab
         )
-        part = self._grouped(flat_legends)
+        part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
         return part
 
     def build_markers_grp(self) -> MarkersGroup:
         self._check_markers()
         flat_markers = [self._marker] * self._ntab
-        part = self._grouped(flat_markers)
+        part = self._grouped(flat_markers, n=self._ncol)
         self._elements.append(part)
         return part
 
     def build_linestyles_grp(self) -> LineStylesGroup:
         self._check_linestyles()
         flat_linestyles = [self._linestyle] * self._ntab
-        part = self._grouped(flat_linestyles)
+        part = self._grouped(flat_linestyles, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -946,7 +936,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
             if self._legends is None
             else self._legends * self._ntab
         )
-        part = self._grouped(flat_legends)
+        part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -954,7 +944,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self._check_markers()
         flat_markers = [None, None] if self._markers is None else self._markers
         flat_markers = flat_markers * self._ntab
-        part = self._grouped(flat_markers)
+        part = self._grouped(flat_markers, n=self._ncol)
         self._elements.append(part)
         return part
 
@@ -962,6 +952,6 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self._check_linestyles()
         flat_linestyles = [None, None] if self._linestyles is None else self._linestyles
         flat_linestyles = flat_linestyles * self._ntab
-        part = self._grouped(flat_linestyles)
+        part = self._grouped(flat_linestyles, n=self._ncol)
         self._elements.append(part)
         return part
