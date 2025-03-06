@@ -36,40 +36,10 @@ log = logging.getLogger(__name__)
 class BoxPlotter(BasicPlotter):
     def __init__(
         self,
-        x: ColNum,
-        yc_grp: ColNums,
-        tables: Tables,
-        titles: Titles,
-        ylabels: Labels,
-        legends_grp: LegendsGroup,
-        markers_grp: MarkersGroup,
-        linestyles_grp: LineStylesGroup,
         box: Tuple[str, float, float],
-        changes: bool = True,
-        percent: bool = False,
-        linewidth: int = 1,
-        nrows: int = 1,
-        ncols: int = 1,
-        save_path: Optional[str] = None,
-        save_dpi: Optional[int] = None,
+        *args, **kwargs
     ):
-        super().__init__(
-            x=x,
-            yc_grp=yc_grp,
-            tables=tables,
-            titles=titles,
-            ylabels=ylabels,
-            legends_grp=legends_grp,
-            markers_grp=markers_grp,
-            linestyles_grp=linestyles_grp,
-            changes=changes,
-            percent=percent,
-            linewidth=linewidth,
-            nrows=nrows,
-            ncols=ncols,
-            save_path=save_path,
-            save_dpi=save_dpi,
-        )
+        super().__init__(*args, **kwargs)
         self.box = box
 
     # =====

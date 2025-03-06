@@ -184,11 +184,11 @@ def cli_single_plot_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
