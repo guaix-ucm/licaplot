@@ -126,17 +126,13 @@ class PlotterBase(ABC):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
             self.outer_loop_start_hook(single_plot, first_pass)
+            self.plot_monochromator_filter_changes(single_plot, first_pass)
             self.xcol = self.table.columns[self.x]
             if not single_plot:
                 self.ax.set_title(self.title)
             if self.log_y:
                 self.ax.set_yscale("log")
             self.set_axes_labels(self.yy[0])
-            if self.changes and (single_plot and first_pass) or not single_plot:
-                for change in MONOCROMATOR_CHANGES_LABELS:
-                    self.ax.axvline(
-                        change["wavelength"], linestyle=change["style"], label=change["legend"]
-                    )
             for t in self.get_inner_iterable_hook():
                 self.unpack_inner_tuple_hook(t)
                 ycol = (
@@ -174,6 +170,13 @@ class PlotterBase(ABC):
     # Hooks
     # =====
 
+    def plot_monochromator_filter_changes(self, single_plot: bool, first_pass: bool):
+        if self.changes and (single_plot and first_pass) or not single_plot:
+            for change in MONOCROMATOR_CHANGES_LABELS:
+                self.ax.axvline(
+                    change["wavelength"], linestyle=change["style"], label=change["legend"]
+                )
+
     def get_outer_iterable_hook(self):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
@@ -191,22 +194,33 @@ class PlotterBase(ABC):
         titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
         ylabels = self.ylabels * len(self.tables) if len(self.ylabels) == 1 else self.ylabels
         return zip(
-            self.axes, self.tables, titles, ylabels, self.legends_grp, self.markers_grp, self.linestyles_grp
+            self.axes,
+            self.tables,
+            titles,
+            ylabels,
+            self.legends_grp,
+            self.markers_grp,
+            self.linestyles_grp,
         )
 
     def unpack_outer_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed."""
-        self.ax, self.table, self.title, self.ylabel, self.legends, self.markers, self.linestyles = t
+        (
+            self.ax,
+            self.table,
+            self.title,
+            self.ylabel,
+            self.legends,
+            self.markers,
+            self.linestyles,
+        ) = t
 
     def get_inner_iterable_hook(self):
-        return zip(
-           self.yy, self.legends, self.get_markers(), self.get_linestyles()
-        )
+        return zip(self.yy, self.legends, self.get_markers(), self.get_linestyles())
 
     def unpack_inner_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed."""
         self.y, self.legend, self.marker, self.linestyle = t
-
 
     def plot_start_hook(self):
         pass
@@ -236,11 +250,15 @@ class PlotterBase(ABC):
     # ==============
 
     def get_markers(self) -> EnumType:
-        markers = self.default_markers if all(m is None for m in self.markers)  else self.markers
+        markers = self.default_markers if all(m is None for m in self.markers) else self.markers
         return itertools.cycle(markers)
 
     def get_linestyles(self) -> EnumType:
-        linestyles = self.default_linestyles if all(ll is None for ll in self.linestyles) else self.linestyles
+        linestyles = (
+            self.default_linestyles
+            if all(ll is None for ll in self.linestyles)
+            else self.linestyles
+        )
         return itertools.cycle(linestyles)
 
     def set_axes_labels(self, y: int) -> None:
@@ -248,7 +266,7 @@ class PlotterBase(ABC):
         xlabel = self.table.columns[self.x].name
         xunit = self.table.columns[self.x].unit
         xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
-        #ylabel = self.table.columns[y].name
+        # ylabel = self.table.columns[y].name
         yunit = (
             u.pct
             if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
