@@ -171,6 +171,13 @@ class ElementsBase(IElementsBuilder):
             else [(None,) * self._ncol] * self._ntab
         )
 
+    def _grouped1(self, sequence: Sequence[Any]) -> Sequence[Sequence[Any]]:
+        return (
+            list(batched(sequence,1))
+            if sequence is not None
+            else [(None,)] * self._ntab
+        )
+
 
 class SingleTableColumnBuilder(ElementsBase):
     """
@@ -634,6 +641,105 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._elements.append(part)
         return part
 
+
+class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
+    """
+    Produces plotting elements to plot several Tables in a single Axes.
+    One X, several Y columns (one Y columns pe table) to plot.
+
+    TABLES & COLUMNS
+    A spe cial check is made to ensure that the numbr of columns passed
+    equals the number of tables
+
+    TITLE
+    Optional title can be specified and will be shown as the Figure title.
+    If title is not specified, it is taken from the first table "title" metadata.
+
+    Y-LABEL
+    Optional Y label can be specified and will be shown as the Figure Y axes.
+    If Y label is not specified, it is taken from the first Y column name of the first table.
+
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from each table "label" metadata and Y column names.
+    The number of passed legends must match:
+        - the number of tables
+    On output, they:
+        - will passed back grouped by tables, one element each
+
+    MARKERS
+    Optional markers can be passed.
+    The number of passed markers must match:
+        - the number of tables
+    On output, they:
+        - will passed back grouped by tables, one element each
+    """
+
+    pass
+
+    def _check_legends(self) -> None:
+        if self._legends is not None:
+            nargs = len(self._legends)
+            if not (nargs == self._ntab):
+                raise ValueError(
+                    "number of legends (%d) should match number of tables (%d)"
+                    % (nargs, self._ntab)
+                )
+
+    def _check_markers(self) -> None:
+        if self._markers is not None:
+            nargs = len(self._markers)
+            if not (nargs == self._ntab):
+                raise ValueError(
+                    "number of markers (%d) should match number of tables (%d)"
+                    % (nargs, self._ntab)
+                )
+
+    def _check_linestyles(self) -> None:
+        if self._linestyles is not None:
+            nargs = len(self._linestyles)
+            if not (nargs == self._ntab):
+                raise ValueError(
+                    "number of linestyles (%d) should match number of tables (%d)"
+                    % (nargs, self._ntab)
+                )
+
+    def build_tables(self) -> Tables:
+        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
+        if self._ntab != self._ncol:
+            raise ValueError(
+                "number of Y columns (%d) should match number of tables (%d)"
+                % (self._ncol, self._ntab)
+            )
+        self._elements.extend([self._xcol, self._ycols, self._tables])
+        return self._tables
+
+    def build_legends_grp(self) -> LegendsGroup:
+        self._check_legends()
+        if self._legends is not None:
+            flat_legends = self._legends
+        else:
+            flat_legends = [
+                f"{table.meta['label']}-{table.columns[yc].name[:self._trim]}."
+                for table, yc in zip(self._tables, self._ycols)
+            ]
+        part = self._grouped1(flat_legends)
+        self._elements.append(part)
+        return part
+
+    def build_markers_grp(self) -> MarkersGroup:
+        self._check_markers()
+        flat_markers = self._markers if self._markers is not None else  (None,) * self._ntab 
+        part = self._grouped1(flat_markers)
+        self._elements.append(part)
+        return part
+
+    def build_linestyles_grp(self) -> LineStylesGroup:
+        self._check_linestyles()
+        flat_linestyles = self._linestyles if self._linestyles is not None else (None,) * self._ntab
+        part = self._grouped1(flat_linestyles)
+        self._elements.append(part)
+        return part
 
 class MultiTablesColumnBuilder(ElementsBase):
     """

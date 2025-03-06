@@ -14,9 +14,12 @@ from .types import (
     Legends as Legends,
 )
 
-
-from .base import BasicPlotter as BasicPlotter 
-from .box import BoxPlotter as BoxPlotter
+from .table import (
+    TableFromFile as TableFromFile,
+    TablesFromFiles as TablesFromFiles,
+    TableWrapper as TableWrapper,
+    TablesWrapper as TablesWrapper,
+)
 
 from .element import (
     Director as Director,
@@ -24,13 +27,12 @@ from .element import (
     SingleTableColumnsBuilder as SingleTableColumnsBuilder,
     SingleTablesColumnBuilder as SingleTablesColumnBuilder,
     SingleTablesColumnsBuilder as SingleTablesColumnsBuilder,
+    SingleTablesMixedColumnsBuilder as SingleTablesMixedColumnsBuilder,
     MultiTablesColumnBuilder as MultiTablesColumnBuilder,
     MultiTablesColumnsBuilder as MultiTablesColumnsBuilder,
 )
 
-from .table import (
-    TableFromFile as TableFromFile,
-    TablesFromFiles as TablesFromFiles,
-    TableWrapper as TableWrapper,
-    TablesWrapper as TablesWrapper,
-)
+
+from .base import BasicPlotter as BasicPlotter 
+from .box import BoxPlotter as BoxPlotter
+from .mixed import MixedColumnsPlotter as MixedColumnsPlotter

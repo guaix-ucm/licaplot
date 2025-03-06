@@ -25,6 +25,7 @@ from licatools.utils.mpl.plotter import (
     SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
     SingleTablesColumnsBuilder,
+    SingleTablesMixedColumnsBuilder,
     MultiTablesColumnBuilder,
     MultiTablesColumnsBuilder,
     TableFromFile,
@@ -1039,6 +1040,255 @@ class TestMultiTablesColumns(unittest.TestCase):
             _ = director.build_elements()
         msg = cm.exception.args[0]
         self.assertEqual(msg, "number of linestyles (1) should match number of y-columns (2)")
+
+
+# =============================================================================
+#                                TEST CASE 7
+# =============================================================================
+
+
+class TestSingleTablesMixedColumns1(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.log = f"{cls.__name__}.log"
+        paths = (
+            os.path.join("data", "filters", "Eysdon_RGB", "blue.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
+        )
+        cls.xcol = 1
+        cls.ycol = [2, 3]
+        cls.ntab = len(paths)
+        cls.tb_builder = TablesFromFiles(
+            paths=paths,
+            delimiter=None,
+            columns=None,
+            xcol=cls.xcol,
+            ycol=cls.ycol,
+            xlow=None,
+            xhigh=None,
+            xlunit=u.nm,
+            resolution=None,
+            lica_trim=None,
+        )
+
+    def test_single_tables_mixed_columns_default(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of Y columns (2) should match number of tables (3)",
+        )
+
+
+# =============================================================================
+#                                TEST CASE 8
+# =============================================================================
+
+
+class TestSingleTablesMixedColumns2(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.log = f"{cls.__name__}.log"
+        paths = (
+            os.path.join("data", "filters", "Eysdon_RGB", "blue.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "green.ecsv"),
+            os.path.join("data", "filters", "Eysdon_RGB", "red.ecsv"),
+        )
+        cls.xcol = 1
+        cls.ycol = [2, 2, 2]
+        cls.ntab = len(paths)
+        cls.tb_builder = TablesFromFiles(
+            paths=paths,
+            delimiter=None,
+            columns=None,
+            xcol=cls.xcol,
+            ycol=cls.ycol,
+            xlow=None,
+            xhigh=None,
+            xlunit=u.nm,
+            resolution=None,
+            lica_trim=None,
+        )
+
+    def test_single_tables_mixed_columns_default(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        self.assertEqual(len(tables), len(yc))
+        # Chooses the first title in the sequence of tables.
+        self.assertEqual(titles, ["Blue filter Measurements"])
+        self.assertEqual(ylabels, ["Electrical Current"])
+        # Table label +  Table column abbreviatted
+        self.assertEqual(legends_grp, [("Blue-Electr.",), ("Green-Electr.",), ("Red-Electr.",)])
+        self.assertEqual(markers_grp, [(None,), (None,), (None,)])
+        self.assertEqual(linestyl_grp, [(None,), (None,), (None,)])
+
+    def test_single_tables_mixed_columns_title(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            title="Eysdon RGB Filter set",
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(titles, ["Eysdon RGB Filter set"])
+
+    def test_single_tables_mixed_columns_ylabel(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            ylabel="Y-Label 1",
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(ylabels, ["Y-Label 1"])
+
+    def test_single_tables_mixed_columns_label_trimm(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            legend_length=3,
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(xc, self.xcol - 1)
+        self.assertEqual(yc, [y - 1 for y in self.ycol])
+        self.assertEqual(len(tables), self.ntab)
+        # Table label +  Table column abbreviatted
+        self.assertEqual(legends_grp, [("Blue-Ele.",), ("Green-Ele.",), ("Red-Ele.",)])
+
+    def test_single_tables_mixed_columns_legends_1(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            legends=["label_1", "label_2"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of legends (2) should match number of tables (3)",
+        )
+
+    def test_single_tables_mixed_columns_legends_2(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            legends=["label_1", "label_2", "label_3"],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(legends_grp, [("label_1",), ("label_2",), ("label_3",)])
+
+    def test_single_tables_mixed_columns_legends_3(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            legends=["label_1", "label_2", "label_3", "label_4", "label_5", "label_6"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of legends (6) should match number of tables (3)",
+        )
+
+    def test_single_tables_mixed_columns_markers_1(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            markers=["o", "-"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of markers (2) should match number of tables (3)",
+        )
+
+    def test_single_tables_mixed_columns_markers_2(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            markers=["o", "+", "."],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(markers_grp, [("o",), ("+",), (".",)])
+
+    def test_single_tables_mixed_columns_markers_3(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            markers=["o", "-", "+", ".", "v", "^"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of markers (6) should match number of tables (3)",
+        )
+
+    def test_single_tables_mixed_columns_linestyles_1(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-."],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of linestyles (2) should match number of tables (3)",
+        )
+
+    def test_single_tables_mixed_columns_linestyles_2(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-.", "--"],
+        )
+        director = Director(builder)
+        xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+            director.build_elements()
+        )
+        self.assertEqual(linestyl_grp, [(":",), ("-.",), ("--",)])
+
+    def test_single_tables_mixed_columns_linestyles_3(self):
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=self.tb_builder,
+            linestyles=[":", "-.", "--", ".", "v", "^"],
+        )
+        director = Director(builder)
+        with self.assertRaises(ValueError) as cm:
+            _ = director.build_elements()
+        msg = cm.exception.args[0]
+        self.assertEqual(
+            msg,
+            "number of linestyles (6) should match number of tables (3)",
+        )
 
 
 if __name__ == "__main__":
