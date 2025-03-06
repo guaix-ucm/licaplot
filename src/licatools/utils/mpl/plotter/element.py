@@ -234,7 +234,7 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._table, self._xcol, self._ycol = self._tb_builder.build_tables()
         tables = [self._table]
-        self._elements.extend([self._xcol, [self._ycol], tables])
+        self._elements.extend([self._xcol, [(self._ycol,)], tables])
         return tables
 
     def build_titles(self) -> Titles:
@@ -336,7 +336,8 @@ class SingleTableColumnsBuilder(ElementsBase):
     def build_tables(self) -> Tables:
         self._table, self._xcol, self._ycols = self._tb_builder.build_tables()
         tables = [self._table]
-        self._elements.extend([self._xcol, self._ycols, tables])
+        ycol_group = [tuple(y for y in self._ycols)]
+        self._elements.extend([self._xcol, ycol_group, tables])
         return tables
 
     def build_titles(self) -> Titles:
@@ -450,7 +451,8 @@ class SingleTablesColumnBuilder(ElementsBase):
 
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, [self._ycol], self._tables])
+        ycol_group = [(self._ycol,) for t in self._tables]
+        self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -582,7 +584,8 @@ class SingleTablesColumnsBuilder(ElementsBase):
 
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, self._ycols, self._tables])
+        ycol_group = [tuple(self._ycols) for t in self._tables]
+        self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -700,7 +703,8 @@ class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
                 "number of Y columns (%d) should match number of tables (%d)"
                 % (self._ncol, self._ntab)
             )
-        self._elements.extend([self._xcol, self._ycols, self._tables])
+        ycol_group = [(y,) for y in self._ycols]
+        self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
 
     def build_legends_grp(self) -> LegendsGroup:
@@ -800,7 +804,8 @@ class MultiTablesColumnBuilder(ElementsBase):
 
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, [self._ycol], self._tables])
+        ycol_group = [(self._ycol,) for t in self._tables]
+        self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -914,7 +919,8 @@ class MultiTablesColumnsBuilder(ElementsBase):
 
     def build_tables(self) -> Tables:
         self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
-        self._elements.extend([self._xcol, self._ycols, self._tables])
+        ycol_group = [tuple(self._ycols) for t in self._tables]
+        self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
