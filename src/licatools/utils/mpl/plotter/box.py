@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 # Own modules and packages
 # ------------------------
 
-from .types import ColNum, ColNums, Tables, Titles, LegendsGroup, MarkersGroup, LineStylesGroup
+from .types import ColNum, ColNums, Tables, Titles, Labels, LegendsGroup, MarkersGroup, LineStylesGroup
 
 from .base import BasicPlotter
 
@@ -41,6 +41,7 @@ class BoxPlotter(BasicPlotter):
         yy: ColNums,
         tables: Tables,
         titles: Titles,
+        ylabels: Labels,
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
         linestyles_grp: LineStylesGroup,
@@ -58,6 +59,7 @@ class BoxPlotter(BasicPlotter):
             yy=yy,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,

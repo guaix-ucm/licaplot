@@ -8,6 +8,8 @@ from .types import (
     Tables as Tables,
     Title as Title,
     Titles as Titles,
+    Label as Label,
+    Labels as Labels,
     Legend as Legend,
     Legends as Legends,
 )

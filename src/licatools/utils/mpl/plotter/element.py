@@ -20,13 +20,18 @@ from typing import Sequence, Any
 # Third-party libraries
 # ---------------------
 
+from astropy.table import Table
+
 # ---------
 # Own stuff
 # ---------
 
 from .types import (
+    ColNum,
     Title,
     Titles,
+    Label,
+    Labels,
     Legend,
     Legends,
     Marker,
@@ -61,6 +66,7 @@ class Director:
     def build_elements(self) -> Elements:
         self._builder.build_tables()
         self._builder.build_titles()
+        self._builder.build_ylabels()
         self._builder.build_legends_grp()
         self._builder.build_markers_grp()
         self._builder.build_linestyles_grp()
@@ -70,6 +76,10 @@ class Director:
 class IElementsBuilder(ABC):
     @abstractmethod
     def build_titles(self) -> None:
+        pass
+
+    @abstractmethod
+    def build_ylabels(self) -> None:
         pass
 
     @abstractmethod
@@ -115,33 +125,40 @@ class ElementsBase(IElementsBuilder):
     def _reset(self) -> None:
         self._elements = list()
 
-    def _default_table_title(self) -> Titles:
+    def _default_title(self, table: Table) -> Titles:
         if self._title is not None:
             result = self._title if isinstance(self._title, str) else " ".join(self._title)
         else:
-            result = self._table.meta["title"]
+            result = table.meta["title"]
         part = [result]
         self._elements.append(part)
         return part
 
-    def _default_tables_title(self) -> Titles:
-        if self._title is not None:
-            result = self._title if isinstance(self._title, str) else " ".join(self._title)
+    def _default_ylabel(self, table: Table, y: ColNum) -> Labels:
+        if self._ylabel is not None:
+            result = self._ylabel if isinstance(self._ylabel, str) else " ".join(self._ylabel)
         else:
-            result = self._tables[0].meta["title"]
+            result = table.columns[y].name
         part = [result]
         self._elements.append(part)
         return part
 
     def _default_tables_titles(self) -> Titles:
         if self._titles is not None:
-            result = (
-                [self._titles] * self._ntab
-                if isinstance(self._default_tables_titles, str)
-                else self._titles
-            )
+            result = [self._titles] * self._ntab if isinstance(self._titles, str) else self._titles
         else:
             result = [table.meta["title"] for table in self._tables]
+        part = result
+        self._elements.append(part)
+        return part
+
+    def _default_tables_ylabels(self, y: ColNum) -> Titles:
+        if self._ylabels is not None:
+            result = (
+                [self._ylabels] * self._ntab if isinstance(self._ylabels, str) else self._ylabels
+            )
+        else:
+            result = [table.columns[y].name for table in self._tables]
         part = result
         self._elements.append(part)
         return part
@@ -175,6 +192,7 @@ class SingleTableColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        ylabel: Label | None = None,
         legend: Legend | None = None,
         marker: Marker | None = None,
         linestyle: LineStyle | None = None,
@@ -184,31 +202,32 @@ class SingleTableColumnBuilder(ElementsBase):
         self._linestyle = linestyle
         self._legend = legend
         self._title = title
+        self._ylabel = ylabel
         assert self._ncol == 1
         assert self._ntab == 1
 
     def _check_title(self) -> None:
         pass
 
+    def _check_ylabel(self) -> None:
+        pass
+
     def _check_legends(self) -> None:
         if self._legend is not None and not isinstance(self._legend, str):
             raise ValueError(
-                "legends be a simple string instead of %s"
-                % type(self._legend),
+                "legends be a simple string instead of %s" % type(self._legend),
             )
 
     def _check_markers(self) -> None:
         if self._marker is not None and not isinstance(self._marker, str):
             raise ValueError(
-                "legends be a simple string instead of %s"
-                % type(self._marker),
+                "legends be a simple string instead of %s" % type(self._marker),
             )
 
     def _check_linestyles(self) -> None:
         if self._linestyle is not None and not isinstance(self._linestyle, str):
             raise ValueError(
-                "legends be a simple string instead of %s"
-                % type(self._linestyle),
+                "legends be a simple string instead of %s" % type(self._linestyle),
             )
 
     def build_tables(self) -> Tables:
@@ -219,7 +238,11 @@ class SingleTableColumnBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         self._check_title()
-        return self._default_table_title()
+        return self._default_title(self._table)
+
+    def build_ylabels(self) -> Labels:
+        self._check_ylabel()
+        return self._default_ylabel(self._table, self._ycol)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -263,6 +286,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
@@ -273,10 +297,14 @@ class SingleTableColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._ylabel = ylabel
         self._trim = legend_length
         assert self._ntab == 1
 
     def _check_title(self) -> None:
+        pass
+
+    def _check_ylabel(self) -> None:
         pass
 
     def _check_legends(self) -> None:
@@ -308,7 +336,11 @@ class SingleTableColumnsBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         self._check_title()
-        return self._default_table_title()
+        return self._default_title(self._table)
+
+    def build_ylabels(self) -> Labels:
+        self._check_ylabel()
+        return self._default_ylabel(self._table, self._ycols[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -361,6 +393,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
@@ -370,9 +403,13 @@ class SingleTablesColumnBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._ylabel = ylabel
         assert self._ncol == 1
 
     def _check_title(self) -> None:
+        pass
+
+    def _check_ylabel(self) -> None:
         pass
 
     def _check_legends(self) -> None:
@@ -409,7 +446,11 @@ class SingleTablesColumnBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         self._check_title()
-        return self._default_tables_title()
+        return self._default_title(self._tables[0])
+
+    def build_ylabels(self) -> Labels:
+        self._check_ylabel()
+        return self._default_ylabel(self._tables[0], self._ycol)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -479,6 +520,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
@@ -489,9 +531,13 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._ylabel = ylabel
         self._trim = legend_length
 
     def _check_title(self) -> None:
+        pass
+
+    def _check_ylabel(self) -> None:
         pass
 
     def _check_legends(self) -> None:
@@ -528,7 +574,11 @@ class SingleTablesColumnsBuilder(ElementsBase):
 
     def build_titles(self) -> Titles:
         self._check_title()
-        return self._default_tables_title()
+        return self._default_title(self._tables[0])
+
+    def build_ylabels(self) -> Labels:
+        self._check_ylabel()
+        return self._default_ylabel(self._tables[0], self._ycols[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -594,6 +644,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
+        ylabels: Labels | None = None,
         legend: Legend | None = None,
         marker: Marker | None = None,
         linestyle: LineStyle | None = None,
@@ -605,6 +656,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         self._linestyle = linestyle
         self._legend = legend
         self._titles = titles
+        self._ylabels = ylabels
         self._trim = legend_length
 
     def _check_titles(self) -> None:
@@ -614,11 +666,17 @@ class MultiTablesColumnBuilder(ElementsBase):
                 % (len(self._titles), self._ntab),
             )
 
+    def _check_ylabels(self) -> None:
+        if self._ylabels is not None and len(self._ylabels) != self._ntab:
+            raise ValueError(
+                "number of Y labels (%d) should match number of tables (%d)"
+                % (len(self._ylabels), self._ntab),
+            )
+
     def _check_legends(self) -> None:
         if self._legend is not None and not isinstance(self._legend, str):
             raise ValueError(
-                "legends be a simple string instead of %s"
-                % type(self._legend),
+                "legends be a simple string instead of %s" % type(self._legend),
             )
 
     def _check_markers(self) -> None:
@@ -635,6 +693,10 @@ class MultiTablesColumnBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_titles()
         return self._default_tables_titles()
+
+    def build_ylabels(self) -> Titles:
+        self._check_ylabels()
+        return self._default_tables_ylabels(self._ycol)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -688,6 +750,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
+        ylabels: Labels | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
@@ -698,6 +761,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._titles = titles
+        self._ylabels = ylabels
         self._trim = legend_length
 
     def _check_titles(self) -> None:
@@ -705,6 +769,13 @@ class MultiTablesColumnsBuilder(ElementsBase):
             raise ValueError(
                 "number of titles (%d) should match number of tables (%d)"
                 % (len(self._titles), self._ntab),
+            )
+
+    def _check_ylabels(self) -> None:
+        if self._ylabels is not None and len(self._ylabels) != self._ntab:
+            raise ValueError(
+                "number of Y labels (%d) should match number of tables (%d)"
+                % (len(self._ylabels), self._ntab),
             )
 
     def _check_legends(self) -> None:
@@ -736,6 +807,10 @@ class MultiTablesColumnsBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_titles()
         return self._default_tables_titles()
+
+    def build_ylabels(self) -> Titles:
+        self._check_ylabels()
+        return self._default_tables_ylabels(self._ycols[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()

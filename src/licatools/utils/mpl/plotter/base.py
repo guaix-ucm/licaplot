@@ -30,6 +30,7 @@ from .types import (
     ColNums,
     Tables,
     Titles,
+    Labels,
     LegendsGroup,
     MarkersGroup,
     LineStylesGroup,
@@ -59,6 +60,7 @@ class PlotterBase(ABC):
         yy: ColNums,
         tables: Tables,
         titles: Titles,
+        ylabels: Labels,
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
         linestyles_grp: LineStylesGroup,
@@ -75,6 +77,7 @@ class PlotterBase(ABC):
         self.yy = yy
         self.tables = tables
         self.titles = titles
+        self.ylabels = ylabels
         self.legends_grp = legends_grp
         self.markers_grp = markers_grp
         self.linestyles_grp = linestyles_grp
@@ -182,14 +185,16 @@ class PlotterBase(ABC):
             len(self.markers_grp),
             len(self.linestyles_grp),
         )
+        # This is not to exhaust the zip iterator
         titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
+        ylabels = self.ylabels * len(self.tables) if len(self.ylabels) == 1 else self.ylabels
         return zip(
-            self.axes, self.tables, titles, self.legends_grp, self.markers_grp, self.linestyles_grp
+            self.axes, self.tables, titles, ylabels, self.legends_grp, self.markers_grp, self.linestyles_grp
         )
 
     def unpack_outer_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed."""
-        self.ax, self.table, self.title, self.legends, self.markers, self.linestyles = t
+        self.ax, self.table, self.title, self.ylabel, self.legends, self.markers, self.linestyles = t
 
     def get_inner_iterable_hook(self):
         return zip(
@@ -241,13 +246,13 @@ class PlotterBase(ABC):
         xlabel = self.table.columns[self.x].name
         xunit = self.table.columns[self.x].unit
         xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
-        ylabel = self.table.columns[y].name
+        #ylabel = self.table.columns[y].name
         yunit = (
             u.pct
             if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
             else self.table.columns[y].unit
         )
-        ylabel = ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else ylabel
+        ylabel = self.ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else self.ylabel
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
 
