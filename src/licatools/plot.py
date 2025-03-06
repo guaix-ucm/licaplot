@@ -84,6 +84,7 @@ def cli_single_table_column(args: Namespace):
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        ylabel=args.y_label,
         legend=args.label,
         marker=args.marker,
         linestyle=args.line_style,
@@ -92,7 +93,7 @@ def cli_single_table_column(args: Namespace):
 
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     log.info("YC = %s", yc)
     with visualization.quantity_support():
         with visualization.quantity_support():
@@ -101,6 +102,7 @@ def cli_single_table_column(args: Namespace):
                 yy=yc,
                 tables=tables,
                 titles=titles,
+                ylabels=ylabels,
                 legends_grp=legends_grp,
                 markers_grp=markers_grp,
                 linestyles_grp=linestyles_grp,
@@ -134,6 +136,7 @@ def cli_single_table_columns(args: Namespace):
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
         title=args.title,
+        ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
@@ -141,13 +144,14 @@ def cli_single_table_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -182,6 +186,7 @@ def cli_single_tables_column(args: Namespace):
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
@@ -189,13 +194,14 @@ def cli_single_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -229,7 +235,8 @@ def cli_single_tables_columns(args: Namespace):
     )
     builder = SingleTablesColumnsBuilder(
         builder=tb_builder,
-        title=args.titles,
+        title=args.title,
+        ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
@@ -237,13 +244,14 @@ def cli_single_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -278,6 +286,7 @@ def cli_multi_tables_column(args: Namespace):
     builder = MultiTablesColumnBuilder(
         builder=tb_builder,
         titles=args.titles,
+        ylabel=args.y_labels,
         legend=args.labels,
         marker=args.markers,
         linestyle=args.line_styles,
@@ -285,7 +294,7 @@ def cli_multi_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -294,6 +303,7 @@ def cli_multi_tables_column(args: Namespace):
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -328,6 +338,7 @@ def cli_multi_tables_columns(args: Namespace):
     builder = MultiTablesColumnsBuilder(
         builder=tb_builder,
         titles=args.titles,
+        ylabel=args.y_labels,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
@@ -335,7 +346,7 @@ def cli_multi_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -344,6 +355,7 @@ def cli_multi_tables_columns(args: Namespace):
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -412,6 +424,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.title(None, "Plotting"),
+            prs.ylabel(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
             prs.percent(),
@@ -441,6 +454,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.ylabel(),
             prs.labels("plotting"),
             prs.auxlines(),
             prs.percent(),
@@ -465,7 +479,8 @@ def add_args(parser: ArgumentParser):
             prs.lica(),
             prs.xc(),
             prs.yycc(),
-            prs.titles(None, "Plotting"),
+            prs.title(None, "Plotting"),
+            prs.ylabel(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
             prs.percent(),
@@ -501,6 +516,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.titles(None, "Plotting"),
+            prs.ylabels(),
             prs.labels("plotting"),
             prs.resample(),
             prs.auxlines(),
@@ -528,6 +544,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.titles(None, "Plotting"),
+            prs.ylabels(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
             prs.percent(),

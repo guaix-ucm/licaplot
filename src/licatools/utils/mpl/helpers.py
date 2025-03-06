@@ -26,6 +26,8 @@ from astropy.table import Table
 from .plotter import (
     Marker,
     Markers,
+    Label,
+    Labels,
     Legend,
     Legends,
     LineStyle,
@@ -44,6 +46,7 @@ from .plotter import (
     BoxPlotter,
 )
 
+
 def offset_box(x_offset: float, y_offset: float, x: float = 0.5, y: float = 0.2):
     return ("\n".join((f"x offset= {x_offset:.1f}", f"y offset = {y_offset:0.3f}")), x, y)
 
@@ -53,65 +56,75 @@ def plot_single_table_column(
     x: ColNum,
     y: ColNum,
     title: Title,
+    ylabel: Optional[Label] = None,
     marker: Optional[Marker] = None,
     legend: Optional[Legend] = None,
     linestyle: Optional[LineStyle] = None,
-    changes: bool = False
+    changes: bool = False,
 ) -> None:
     tb_builder = TableWrapper(table=table, xcol=x, ycol=y)
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
+        ylabel=ylabel,
         legend=legend,
         linestyle=linestyle,
     )
     director = Director(builder)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+        director.build_elements()
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             changes=changes,
         )
         plotter.plot()
+
 
 def plot_single_table_columns(
     table: Table,
     x: ColNum,
     yy: ColNums,
     title: Title,
+    ylabel: Optional[Label] = None,
     markers: Optional[Markers] = None,
     legends: Optional[Legends] = None,
     linestyles: Optional[LineStyles] = None,
-    changes: bool = False
+    changes: bool = False,
 ) -> None:
     tb_builder = TableWrapper(table=table, xcol=x, ycol=yy)
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
         title=title,
+        ylabel=ylabel,
         legends=legends,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+        director.build_elements()
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             changes=changes,
         )
         plotter.plot()
-
 
 
 def plot_single_tables_column(
@@ -120,6 +133,7 @@ def plot_single_tables_column(
     y: ColNum,
     title: Title,
     legends: Legends,
+    ylabel: Optional[Label] = None,
     markers: Optional[Markers] = None,
     linestyles: Optional[LineStyle] = None,
     changes: bool = False,
@@ -129,22 +143,25 @@ def plot_single_tables_column(
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=title,
+        ylabel=ylabel,
         legends=legends,
         markers=markers,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+        director.build_elements()
+    )
     with visualization.quantity_support():
         plotter = BoxPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             box=box,
         )
         plotter.plot()
-

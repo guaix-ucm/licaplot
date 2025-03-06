@@ -206,7 +206,7 @@ eclipse-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' --lines --marker None -i $file_accum 
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
 
 # logaritmic style plotting for group 1
 eclipse-plot-g1-log:
@@ -231,7 +231,7 @@ eclipse-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 -i $file_accum --lines -m None
+    lica-eclip --console --trace plot -yc 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum --lines -m None
 
 # logaritmic style plotting for group 1
 eclipse-plot-g2-log:
@@ -255,7 +255,7 @@ eclipse-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -m None --lines
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -m None --lines
 
 
 # Save lingle linear plots for all glasses
@@ -288,7 +288,7 @@ eclipse-save-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
+    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
 
 
 # save logaritmic style plotting for group 1
@@ -314,7 +314,7 @@ eclipse-save-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
+    lica-eclip --console --trace plot -yc 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
 
 # Save logaritmic style plotting for group 1
 eclipse-save-plot-g2-log:
@@ -338,7 +338,7 @@ eclipse-save-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
+    lica-eclip --console --trace plot -yc 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
 
 
 # ------------------------------------

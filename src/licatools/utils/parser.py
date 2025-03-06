@@ -63,6 +63,34 @@ def titles(title: str, purpose: str) -> ArgumentParser:
     )
     return parser
 
+def ylabel() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-yl",
+        "--y-label",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Plot Y label",
+    )
+    return parser
+
+
+def ylabels() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-yl",
+        "--y-label",
+        dest="ylabels",
+        type=str,
+        nargs="+",
+        default=title,
+        help="Plot Y labels",
+    )
+    return parser
+
 def marker() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)

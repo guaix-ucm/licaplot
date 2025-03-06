@@ -109,6 +109,7 @@ class PlotterBase(ABC):
         self.linestyle = None
 
         log.info("titles = %s", titles)
+        log.info("ylabels = %s", ylabels)
         log.info("legends grp = %s", legends_grp)
         log.info("markers grp = %s", markers_grp)
         log.info("linestyles grp = %s", linestyles_grp)
@@ -177,10 +178,11 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
         log.info(
-            "there are %d axes, %d tables, %d titles, %d legenda groups, %d markers group & %d linestyles group",
+            "there are %d axes, %d tables, %d titles, %d y-labels, %d legenda groups, %d markers group & %d linestyles group",
             len(self.axes),
             len(self.tables),
             len(self.titles),
+            len(self.ylabels),
             len(self.legends_grp),
             len(self.markers_grp),
             len(self.linestyles_grp),

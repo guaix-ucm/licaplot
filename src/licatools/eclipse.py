@@ -21,7 +21,6 @@ from argparse import Namespace, ArgumentParser
 import numpy as np
 import matplotlib.pyplot as plt
 
-import astropy.units as u
 from astropy.table import Table
 from astropy import visualization
 from lica.cli import execute
@@ -60,7 +59,6 @@ UVA_RANGE = (430, 400)
 VIS_RANGE = (380, 780)
 IR_RANGE = (780, 1040)
 
-Y_LABEL = r"$log_{10}(\frac{1}{Transmittance})$"
 REF_LINES = [
     {
         "label": "Max. luminous trans. (τv)",
@@ -129,15 +127,6 @@ class EclipsePlotter(BasicPlotter):
     def outer_loop_end_hook(self, single_plot: bool, first_pass: bool):
         plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=5, frameon=True)
 
-    def set_axes_labels(self, y: int) -> None:
-        """Get the labels for a table, using units if necessary"""
-        xlabel = self.table.columns[self.x].name
-        xunit = self.table.columns[self.x].unit
-        xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
-        self.ax.set_xlabel(xlabel)
-        self.ax.set_ylabel(Y_LABEL)
-
-
 # -------------------
 # Auxiliary functions
 # -------------------
@@ -189,6 +178,7 @@ def cli_single_plot_tables_column(args: Namespace):
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
@@ -196,13 +186,14 @@ def cli_single_plot_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
+            ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
@@ -246,6 +237,7 @@ def add_args(parser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.ylabel(),
             prs.labels("plotting"),
             prs.auxlines(),
             prs.percent(),
