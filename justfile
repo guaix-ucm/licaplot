@@ -74,6 +74,10 @@ env-bak drive=def_drive: (check_mnt drive) (env-backup join(drive, project))
 # Restore .env from storage unit
 env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 
+# Launches Jupyter notebook
+notebook:
+    uv run jupyter notebook
+
 # -------------------------
 # Hamamatsu utility testing
 # -------------------------
