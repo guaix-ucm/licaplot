@@ -91,13 +91,13 @@ def cli_single_table_column(args: Namespace):
 
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
-    log.info("YC = %s", yc)
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    log.info("YC = %s", yc_grp)
     with visualization.quantity_support():
         with visualization.quantity_support():
             plotter = BasicPlotter(
                 x=xc,
-                yy=yc,
+                yc_grp=yc_grp,
                 tables=tables,
                 titles=titles,
                 ylabels=ylabels,
@@ -140,11 +140,11 @@ def cli_single_table_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -188,11 +188,11 @@ def cli_single_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -236,11 +236,11 @@ def cli_single_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -284,13 +284,13 @@ def cli_multi_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -334,13 +334,13 @@ def cli_multi_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,

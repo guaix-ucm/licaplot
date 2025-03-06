@@ -57,7 +57,7 @@ class PlotterBase(ABC):
     def __init__(
         self,
         x: ColNum,
-        yy: ColNums,
+        yc_grp: ColNums,
         tables: Tables,
         titles: Titles,
         ylabels: Labels,
@@ -74,7 +74,7 @@ class PlotterBase(ABC):
         save_dpi: Optional[int] = None,
     ):
         self.x = x
-        self.yy = yy
+        self.yc_grp = yc_grp
         self.tables = tables
         self.titles = titles
         self.ylabels = ylabels
@@ -96,6 +96,7 @@ class PlotterBase(ABC):
         self.ax = None  # Current Axes object
         self.table = None  # Current Table object
         self.title = None  # Current title
+        self.yy = None # Current Y column list
         self.markers = None  # current markers list
         self.linestyles = None  # current linestyles list
         self.legends = None  # current legends list
@@ -110,6 +111,7 @@ class PlotterBase(ABC):
 
         log.info("titles = %s", titles)
         log.info("ylabels = %s", ylabels)
+        log.info("yc grp = %s", yc_grp)
         log.info("legends grp = %s", legends_grp)
         log.info("markers grp = %s", markers_grp)
         log.info("linestyles grp = %s", linestyles_grp)
@@ -159,11 +161,12 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
         log.info(
-            "there are %d axes, %d tables, %d titles, %d y-labels, %d legenda groups, %d markers group & %d linestyles group",
+            "there are %d axes, %d tables, %d titles, %d y-labels, %d yc groups, %d legenda groups, %d markers group & %d linestyles group",
             len(self.axes),
             len(self.tables),
             len(self.titles),
             len(self.ylabels),
+            len(self.yc_grp),
             len(self.legends_grp),
             len(self.markers_grp),
             len(self.linestyles_grp),
@@ -176,6 +179,7 @@ class PlotterBase(ABC):
             self.tables,
             titles,
             ylabels,
+            self.yc_grp,
             self.legends_grp,
             self.markers_grp,
             self.linestyles_grp,
@@ -188,6 +192,7 @@ class PlotterBase(ABC):
             self.table,
             self.title,
             self.ylabel,
+            self.yy,
             self.legends,
             self.markers,
             self.linestyles,
