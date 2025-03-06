@@ -118,21 +118,16 @@ class PlotterBase(ABC):
         self.plot_start_hook()
         self.load_mpl_resources()
         self.configure_axes()
-        N = len(self.tables)
         single_plot = self.nrows * self.ncols == 1
-        if single_plot:
-            self.fig.suptitle(self.titles[0])
         for i, t in enumerate(self.get_outer_iterable_hook()):
             first_pass = i == 0
             self.unpack_outer_tuple_hook(t)
             self.outer_loop_start_hook(single_plot, first_pass)
             self.plot_monochromator_filter_changes(single_plot, first_pass)
-            self.xcol = self.table.columns[self.x]
-            if not single_plot:
-                self.ax.set_title(self.title)
-            if self.log_y:
-                self.ax.set_yscale("log")
+            self.set_title(single_plot)
+            self.set_log_scales()
             self.set_axes_labels(self.yy[0])
+            self.xcol = self.table.columns[self.x]
             for t in self.get_inner_iterable_hook():
                 self.unpack_inner_tuple_hook(t)
                 ycol = (
@@ -149,33 +144,16 @@ class PlotterBase(ABC):
                     label=self.legend,
                 )
                 self.inner_loop_hook()
-            self.ax.grid(True, which="major", color="silver", linestyle="solid")
-            self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
-            self.ax.minorticks_on()
-            self.ax.legend()
+            self.set_grid()
+            self.set_legends()
             self.outer_loop_end_hook(single_plot, first_pass)
-
-        # Do not draw in unusued axes
-        N = len(self.tables)
-        for ax in self.axes[N:]:
-            ax.set_axis_off()
+        self.clear_unusued_axes()
         self.plot_end_hook()
-        if self.save_path is not None:
-            log.info("Saving to %s", self.save_path)
-            plt.savefig(self.save_path, bbox_inches="tight", dpi=self.save_dpi)
-        else:
-            plt.show()
+        self.save_or_show()
 
     # =====
     # Hooks
     # =====
-
-    def plot_monochromator_filter_changes(self, single_plot: bool, first_pass: bool):
-        if self.changes and (single_plot and first_pass) or not single_plot:
-            for change in MONOCROMATOR_CHANGES_LABELS:
-                self.ax.axvline(
-                    change["wavelength"], linestyle=change["style"], label=change["legend"]
-                )
 
     def get_outer_iterable_hook(self):
         """Should be overriden if extra arguments are needed."""
@@ -248,6 +226,44 @@ class PlotterBase(ABC):
     # ==============
     # Helper methods
     # ==============
+
+    def save_or_show(self):
+        if self.save_path is not None:
+            log.info("Saving to %s", self.save_path)
+            plt.savefig(self.save_path, bbox_inches="tight", dpi=self.save_dpi)
+        else:
+            plt.show()
+
+    def clear_unusued_axes(self):
+        N = len(self.tables)
+        for ax in self.axes[N:]:
+            ax.set_axis_off()
+
+    def set_log_scales(self):
+        if self.log_y:
+            self.ax.set_yscale("log")
+
+    def set_title(self, single_plot: bool):
+        if single_plot:
+            self.fig.suptitle(self.titles[0])
+        else:
+            self.ax.set_title(self.title)
+
+    def set_legends(self):
+        self.ax.legend()
+
+    def set_grid(self):
+        self.ax.grid(True, which="major", color="silver", linestyle="solid")
+        self.ax.grid(True, which="minor", color="silver", linestyle=(0, (1, 10)))
+        self.ax.minorticks_on()
+
+    def plot_monochromator_filter_changes(self, single_plot: bool, first_pass: bool):
+        if self.changes and (single_plot and first_pass) or not single_plot:
+            for change in MONOCROMATOR_CHANGES_LABELS:
+                self.ax.axvline(
+                    change["wavelength"], linestyle=change["style"], label=change["legend"]
+                )
+
 
     def get_markers(self) -> EnumType:
         markers = self.default_markers if all(m is None for m in self.markers) else self.markers

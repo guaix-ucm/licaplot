@@ -86,7 +86,7 @@ def ylabels() -> ArgumentParser:
         dest="y_labels",
         type=str,
         nargs="+",
-        default=title,
+        default=None,
         help="Plot Y labels",
     )
     return parser

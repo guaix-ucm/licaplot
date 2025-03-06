@@ -276,7 +276,7 @@ def cli_multi_tables_column(args: Namespace):
     builder = MultiTablesColumnBuilder(
         builder=tb_builder,
         titles=args.titles,
-        ylabel=args.y_labels,
+        ylabels=args.y_labels,
         legend=args.labels,
         marker=args.markers,
         linestyle=args.line_styles,
@@ -326,7 +326,7 @@ def cli_multi_tables_columns(args: Namespace):
     builder = MultiTablesColumnsBuilder(
         builder=tb_builder,
         titles=args.titles,
-        ylabel=args.y_labels,
+        ylabels=args.y_labels,
         legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
