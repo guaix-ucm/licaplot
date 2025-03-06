@@ -40,6 +40,7 @@ from .plotter import (
     SingleTableColumnBuilder,
     SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
+    SingleTablesMixedColumnsBuilder,
     TableWrapper,
     TablesWrapper,
     BasicPlotter,
@@ -55,7 +56,7 @@ def plot_single_table_column(
     table: Table,
     x: ColNum,
     y: ColNum,
-    title: Title,
+    title: Optional[Title] = None,
     ylabel: Optional[Label] = None,
     marker: Optional[Marker] = None,
     legend: Optional[Legend] = None,
@@ -71,13 +72,13 @@ def plot_single_table_column(
         linestyle=linestyle,
     )
     director = Director(builder)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -93,7 +94,7 @@ def plot_single_table_columns(
     table: Table,
     x: ColNum,
     yy: ColNums,
-    title: Title,
+    title: Optional[Title] = None,
     ylabel: Optional[Label] = None,
     markers: Optional[Markers] = None,
     legends: Optional[Legends] = None,
@@ -109,13 +110,13 @@ def plot_single_table_columns(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -131,9 +132,9 @@ def plot_single_tables_column(
     tables: Tables,
     x: ColNum,
     y: ColNum,
-    title: Title,
-    legends: Legends,
+    title: Optional[Title] = None,
     ylabel: Optional[Label] = None,
+    legends: Optional[Legends] = None,
     markers: Optional[Markers] = None,
     linestyles: Optional[LineStyle] = None,
     changes: bool = False,
@@ -149,13 +150,13 @@ def plot_single_tables_column(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BoxPlotter(
             x=xc,
-            yy=yc,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,
@@ -163,5 +164,42 @@ def plot_single_tables_column(
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             box=box,
+        )
+        plotter.plot()
+
+def plot_single_tables_mixed_columns(
+    tables: Tables,
+    x: ColNum,
+    yy: ColNums,
+    title: Optional[Title] = None,
+    ylabel: Optional[Label] = None,
+    legends: Optional[Legends] = None,
+    markers: Optional[Markers] = None,
+    linestyles: Optional[LineStyle] = None,
+    changes: bool = False,
+) -> None:
+    tb_builder = TablesWrapper(tables=tables, xcol=x, ycol=yy)
+    builder = SingleTablesMixedColumnsBuilder(
+        builder=tb_builder,
+        title=title,
+        ylabel=ylabel,
+        legends=legends,
+        markers=markers,
+        linestyles=linestyles,
+    )
+    director = Director(builder)
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+        director.build_elements()
+    )
+    with visualization.quantity_support():
+        plotter = BasicPlotter(
+            x=xc,
+            yc_grp=yc_grp,
+            tables=tables,
+            titles=titles,
+            ylabels=ylabels,
+            legends_grp=legends_grp,
+            markers_grp=markers_grp,
+            linestyles_grp=linestyl_grp,
         )
         plotter.plot()

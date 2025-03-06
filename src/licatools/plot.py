@@ -35,6 +35,7 @@ from .utils.mpl.plotter import (
     SingleTableColumnsBuilder,
     SingleTablesColumnBuilder,
     SingleTablesColumnsBuilder,
+    SingleTablesMixedColumnsBuilder,
     MultiTablesColumnBuilder,
     MultiTablesColumnsBuilder,
     TableFromFile,
@@ -226,6 +227,54 @@ def cli_single_tables_columns(args: Namespace):
         lica_trim=args.lica,
     )
     builder = SingleTablesColumnsBuilder(
+        builder=tb_builder,
+        title=args.title,
+        ylabel=args.y_label,
+        legends=args.labels,
+        markers=args.markers,
+        linestyles=args.line_styles,
+    )
+    director = Director(builder)
+    elements = director.build_elements()
+    log.debug(elements)
+    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    with visualization.quantity_support():
+        plotter = BasicPlotter(
+            x=xc,
+            yc_grp=yc_grp,
+            tables=tables,
+            titles=titles,
+            ylabels=ylabels,
+            legends_grp=legends_grp,
+            markers_grp=markers_grp,
+            linestyles_grp=linestyles_grp,
+            changes=args.changes,
+            percent=args.percent,
+            linewidth=1 if args.lines else 0,
+            nrows=1,
+            ncols=1,
+            save_path=args.save_figure_path,
+            save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
+            # markers_type: EnumType = Marker
+        )
+        plotter.plot()
+
+
+def cli_single_tables_mixed(args: Namespace):
+    tb_builder = TablesFromFiles(
+        paths=args.input_file,
+        delimiter=args.delimiter,
+        columns=args.columns,
+        xcol=args.x_column,
+        ycol=args.y_column,
+        xlow=args.x_low,
+        xhigh=args.x_high,
+        xlunit=args.x_limits_unit,
+        resolution=None,
+        lica_trim=args.lica,
+    )
+    builder = SingleTablesMixedColumnsBuilder(
         builder=tb_builder,
         title=args.title,
         ylabel=args.y_label,
@@ -481,6 +530,39 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, multiple columns plot",
     )
     par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
+
+
+
+    # ---------------------------------------------------
+    # Single Axes, Multiple Tables, Multiple Columns case
+    # ---------------------------------------------------
+    par_s_tt_cx = sub_s_tt.add_parser(
+        "mixed",
+        parents=[
+            prs.ifiles(),
+            prs.xlim(),
+            prs.logy(),
+            prs.lica(),
+            prs.xc(),
+            prs.yycc(),
+            prs.title(None, "Plotting"),
+            prs.ylabel(),
+            prs.labels("plotting"),  # Column labels
+            prs.auxlines(),
+            prs.percent(),
+            prs.markers(),
+            prs.linstyls(),
+            prs.savefig(),
+            prs.dpifig(),
+        ],
+        help="Single Axes, multiple tables, mixed 1 column/table  plot",
+    )
+    par_s_tt_cx.set_defaults(func=cli_single_tables_mixed)
+
+
+
+
+
 
     # =============
     # Multiple Axes

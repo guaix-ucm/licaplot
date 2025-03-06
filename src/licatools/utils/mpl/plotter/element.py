@@ -634,7 +634,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         return part
 
 
-class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
+class SingleTablesMixedColumnsBuilder(ElementsBase):
     """
     Produces plotting elements to plot several Tables in a single Axes.
     One X, several Y columns (one Y columns pe table) to plot.
@@ -667,7 +667,29 @@ class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
         - will passed back grouped by tables, one element each
     """
 
-    pass
+    def __init__(
+        self,
+        builder: ITableBuilder,
+        title: Title | None = None,
+        ylabel: Label | None = None,
+        legends: Legends | None = None,
+        markers: Markers | None = None,
+        linestyles: LineStyles | None = None,
+        legend_length: int = 6,
+    ):
+        super().__init__(builder)
+        self._markers = markers
+        self._linestyles = linestyles
+        self._legends = legends
+        self._title = title
+        self._ylabel = ylabel
+        self._trim = legend_length
+
+    def _check_title(self) -> None:
+        pass
+
+    def _check_ylabel(self) -> None:
+        pass
 
     def _check_legends(self) -> None:
         if self._legends is not None:
@@ -706,6 +728,14 @@ class SingleTablesMixedColumnsBuilder(SingleTablesColumnsBuilder):
         ycol_group = [(y,) for y in self._ycols]
         self._elements.extend([self._xcol, ycol_group, self._tables])
         return self._tables
+
+    def build_titles(self) -> Titles:
+        self._check_title()
+        return self._default_title(self._tables[0])
+
+    def build_ylabels(self) -> Labels:
+        self._check_ylabel()
+        return self._default_ylabel(self._tables[0], self._ycols[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()

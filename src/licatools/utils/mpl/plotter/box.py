@@ -37,7 +37,7 @@ class BoxPlotter(BasicPlotter):
     def __init__(
         self,
         x: ColNum,
-        yy: ColNums,
+        yc_grp: ColNums,
         tables: Tables,
         titles: Titles,
         ylabels: Labels,
@@ -55,7 +55,7 @@ class BoxPlotter(BasicPlotter):
     ):
         super().__init__(
             x=x,
-            yy=yy,
+            yc_grp=yc_grp,
             tables=tables,
             titles=titles,
             ylabels=ylabels,

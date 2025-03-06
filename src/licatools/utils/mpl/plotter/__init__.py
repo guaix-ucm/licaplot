@@ -35,4 +35,3 @@ from .element import (
 
 from .base import BasicPlotter as BasicPlotter 
 from .box import BoxPlotter as BoxPlotter
-from .mixed import MixedColumnsPlotter as MixedColumnsPlotter
