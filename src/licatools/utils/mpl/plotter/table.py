@@ -148,7 +148,7 @@ class TableBase(ITableBuilder):
     def _build_one_table(self, path) -> Table:
         log.debug("Not resampling table")
         table = read_csv(path, self._columns, self._delim)
-        table = trim_table(table, self._xc, self._xl, self._xh, self._lu, self._lica_trim)
+        table = trim_table(table, self._xc, self._xl, self._xh, self._xu, self._lica_trim)
         log.debug(table.info)
         log.debug(table.meta)
         return table
@@ -167,7 +167,7 @@ class TableBase(ITableBuilder):
         new_table = Table(data=values, names=names)
         new_table.meta = table.meta
         new_table = trim_table(
-            new_table, self._xc, self._xl, self._xh, self._lu, self._lica_trim
+            new_table, self._xc, self._xl, self._xh, self._xu, self._lica_trim
         )
         table = new_table
         col_x = table.columns[self._xc]
@@ -191,16 +191,16 @@ class TableFromFile(TableBase):
         ycol: Union[ColNum,ColNums],
         xlow: float | None,
         xhigh: float | None,
-        xlunit: u.Unit,
         resolution: int | None,
         lica_trim: bool | None,
+        xlunit: u.Unit = u.dimensionless_unscaled,
     ):
         self._path = path
         self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._xc = xcol - 1
         self._xl = xlow
         self._xh = xhigh
-        self._lu = xlunit
+        self._xu = xlunit
         self._columns = columns
         self._delim = delimiter
         self._resol = resolution
@@ -236,7 +236,7 @@ class TablesFromFiles(TableBase):
         self._xc = xcol - 1
         self._xl = xlow
         self._xh = xhigh
-        self._lu = xlunit
+        self._xu = xlunit
         self._columns = columns
         self._delim = delimiter
         self._resol = resolution

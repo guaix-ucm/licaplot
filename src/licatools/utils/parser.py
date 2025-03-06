@@ -342,7 +342,7 @@ def xlim() -> ArgumentParser:
         help="Abcissa axes upper limit, defaults to %(default)s",
     )
     parser.add_argument(
-        "-lu",
+        "-xu",
         "--x-limits-unit",
         type=u.Unit,
         metavar="<Unit>",
