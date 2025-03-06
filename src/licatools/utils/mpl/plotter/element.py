@@ -181,6 +181,10 @@ class SingleTableColumnBuilder(ElementsBase):
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the "title" Table metadata.
 
+    Y-LABEL
+    Optional Y label can be specified and will be shown as the Figure Y axes.
+    If Y label is not specified, it is taken from the Y column name.
+
     LEGEND
     An optional legend can be specified and will be shown as legend in the plot.
     If a legend is not specified, it is is taken from the Y column name.
@@ -272,6 +276,10 @@ class SingleTableColumnsBuilder(ElementsBase):
     TITLE
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the "title" Table metadata.
+
+    Y-LABEL
+    Optional Y label can be specified and will be shown as the Figure Y axes.
+    If Y label is not specified, it is taken from the first Y column name.
 
     LEGENDS
     Optional legends can be specified and will be shown as legends in the plot.
@@ -375,6 +383,10 @@ class SingleTablesColumnBuilder(ElementsBase):
     TITLE
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the first table "title" metadata.
+
+    Y-LABEL
+    Optional Y label can be specified and will be shown as the Figure Y axes.
+    If Y label is not specified, it is taken from the Y column name of the first table.
 
     LEGENDS
     Optional legends can be specified and will be shown as legends in the plot.
@@ -496,6 +508,10 @@ class SingleTablesColumnsBuilder(ElementsBase):
     TITLE
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the first table "title" metadata.
+
+    Y-LABEL
+    Optional Y label can be specified and will be shown as the Figure Y axes.
+    If Y label is not specified, it is taken from the firs tY column name of the first table.
 
     LEGENDS
     Optional legends can be specified and will be shown as legends in the plot.
