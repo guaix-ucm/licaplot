@@ -42,8 +42,8 @@ from .types import (
 
 
 MONOCROMATOR_CHANGES_LABELS = (
-    {"label": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
-    {"label": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
+    {"legend": r"$BG38 \Rightarrow OG570$", "wavelength": 570, "style": "--"},
+    {"legend": r"$OG570\Rightarrow RG830$", "wavelength": 860, "style": "-."},
 )
 
 log = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class PlotterBase(ABC):
             if self.changes and (single_plot and first_pass) or not single_plot:
                 for change in MONOCROMATOR_CHANGES_LABELS:
                     self.ax.axvline(
-                        change["wavelength"], linestyle=change["style"], label=change["label"]
+                        change["wavelength"], linestyle=change["style"], label=change["legend"]
                     )
             for t in self.get_inner_iterable_hook():
                 self.unpack_inner_tuple_hook(t)

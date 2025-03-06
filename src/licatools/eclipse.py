@@ -189,21 +189,21 @@ def cli_single_plot_tables_column(args: Namespace):
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=args.title,
-        labels=args.labels,
+        legends=args.labels,
         markers=args.markers,
         linestyles=args.line_styles,
     )
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc, tables, titles, labels_grp, markers_grp, linestyles_grp = elements
+    xc, yc, tables, titles, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
-            legends_grp=labels_grp,
+            legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
             changes=args.changes,

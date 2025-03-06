@@ -163,9 +163,9 @@ class SingleTableColumnBuilder(ElementsBase):
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the "title" Table metadata.
 
-    LABEL
-    An optional label can be specified and will be shown as legend in the plot.
-    If a label is not specified, it is is taken from the Y column name.
+    LEGEND
+    An optional legend can be specified and will be shown as legend in the plot.
+    If a legend is not specified, it is is taken from the Y column name.
 
     MARKER
     An optional marker can be passed.
@@ -175,14 +175,14 @@ class SingleTableColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
-        label: Legend | None = None,
+        legend: Legend | None = None,
         marker: Marker | None = None,
         linestyle: LineStyle | None = None,
     ):
         super().__init__(builder)
         self._marker = marker
         self._linestyle = linestyle
-        self._legend = label
+        self._legend = legend
         self._title = title
         assert self._ncol == 1
         assert self._ntab == 1
@@ -191,13 +191,25 @@ class SingleTableColumnBuilder(ElementsBase):
         pass
 
     def _check_legends(self) -> None:
-        pass
+        if self._legend is not None and not isinstance(self._legend, str):
+            raise ValueError(
+                "legends be a simple string instead of %s"
+                % type(self._legend),
+            )
 
     def _check_markers(self) -> None:
-        pass
+        if self._marker is not None and not isinstance(self._marker, str):
+            raise ValueError(
+                "legends be a simple string instead of %s"
+                % type(self._marker),
+            )
 
     def _check_linestyles(self) -> None:
-        pass
+        if self._linestyle is not None and not isinstance(self._linestyle, str):
+            raise ValueError(
+                "legends be a simple string instead of %s"
+                % type(self._linestyle),
+            )
 
     def build_tables(self) -> Tables:
         self._table, self._xcol, self._ycol = self._tb_builder.build_tables()
@@ -237,10 +249,10 @@ class SingleTableColumnsBuilder(ElementsBase):
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the "title" Table metadata.
 
-    LABELS
-    Optional labels can be specified and will be shown as legends in the plot.
-    If labels are not specified, they are taken from the Y column names.
-    The number of labels must match the number of Y columns.
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from the Y column names.
+    The number of legends must match the number of Y columns.
 
     MARKERS
     Optional markers can be passed.
@@ -251,17 +263,17 @@ class SingleTableColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
-        labels: Legends | None = None,
+        legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
-        label_length: int = 6,
+        legend_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
         self._linestyles = linestyles
-        self._legends = labels
+        self._legends = legends
         self._title = title
-        self._trim = label_length
+        self._trim = legend_length
         assert self._ntab == 1
 
     def _check_title(self) -> None:
@@ -270,7 +282,7 @@ class SingleTableColumnsBuilder(ElementsBase):
     def _check_legends(self) -> None:
         if self._legends is not None and len(self._legends) != self._ncol:
             raise ValueError(
-                "number of labels (%d) should match number of y-columns (%d)"
+                "number of legends (%d) should match number of y-columns (%d)"
                 % (len(self._legends), self._ncol),
             )
 
@@ -331,32 +343,32 @@ class SingleTablesColumnBuilder(ElementsBase):
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the first table "title" metadata.
 
-    LABELS
-    Optional labels can be specified and will be shown as legends in the plot.
-    If labels are not specified, they are taken from each table "label" metadata and Y column name.
-    The number of passed labels must match:
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from each table "label" metadata and Y column name.
+    The number of passed legends must match:
         - either the number the number of tables
-        - or simply the number of columns (=1). In this case, the labels will be replicated across tables.
+        - or simply the number of columns (=1). In this case, the legends will be replicated across tables.
 
     MARKERS
     Optional markers can be passed.
     The number of passed markers must match:
         - either the number of Y columns (=1) times the number of tables
-        - or simply the number of columns. In this case, the labels will be replicated across tables.
+        - or simply the number of columns. In this case, the legends will be replicated across tables.
     """
 
     def __init__(
         self,
         builder: ITableBuilder,
         title: Title | None = None,
-        labels: Legends | None = None,
+        legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
     ):
         super().__init__(builder)
         self._markers = markers
         self._linestyles = linestyles
-        self._legends = labels
+        self._legends = legends
         self._title = title
         assert self._ncol == 1
 
@@ -368,7 +380,7 @@ class SingleTablesColumnBuilder(ElementsBase):
             len(self._legends) == self._ntab or len(self._legends) == 1
         ):
             raise ValueError(
-                "number of labels (%d) should either match number of tables (%d) or be 1"
+                "number of legends (%d) should either match number of tables (%d) or be 1"
                 % (len(self._legends), self._ntab),
             )
 
@@ -443,12 +455,12 @@ class SingleTablesColumnsBuilder(ElementsBase):
     Optional title can be specified and will be shown as the Figure title.
     If title is not specified, it is taken from the first table "title" metadata.
 
-    LABELS
-    Optional labels can be specified and will be shown as legends in the plot.
-    If labels are not specified, they are taken from each table "label" metadata and Y column names.
-    The number of passed labels must match:
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from each table "label" metadata and Y column names.
+    The number of passed legends must match:
         - either the number of Y columns times the number of tables
-        - or simply the number of columns. In this case, the labels will be replicated across tables.
+        - or simply the number of columns. In this case, the legends will be replicated across tables.
     On output, they:
         - will passed back grouped by tables if they are NTAB x NCOL
         - Will be replicated across tables
@@ -457,7 +469,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
     Optional markers can be passed.
     The number of passed markers must match:
         - either the number of Y columns times the number of tables
-        - or simply the number of columns. In this case, the labels will be replicated across tables.
+        - or simply the number of columns. In this case, the legends will be replicated across tables.
     On output, they:
         - will passed back grouped by tables if they are NTAB x NCOL
         - Will be replicated across tables
@@ -467,17 +479,17 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
-        labels: Legends | None = None,
+        legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
-        label_length: int = 6,
+        legend_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
         self._linestyles = linestyles
-        self._legends = labels
+        self._legends = legends
         self._title = title
-        self._trim = label_length
+        self._trim = legend_length
 
     def _check_title(self) -> None:
         pass
@@ -566,10 +578,10 @@ class MultiTablesColumnBuilder(ElementsBase):
     If titles are not specified, they are taken from the each table "title" metadata.
     If titles are specified, they must match the number of tables.
 
-    LABELS
-    Optional labels can be specified and will be shown as legends in the plot.
-    If labels are not specified, they are taken from each table Y column names.
-    The number of passed labels must match the number of Y columns.
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from each table Y column names.
+    The number of passed legends must match the number of Y columns.
     On output, they will be replicated for each table
 
     MARKERS
@@ -582,18 +594,18 @@ class MultiTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
-        label: Legend | None = None,
+        legend: Legend | None = None,
         marker: Marker | None = None,
         linestyle: LineStyle | None = None,
-        label_length: int = 6,
+        legend_length: int = 6,
     ):
         super().__init__(builder)
         self._tb_builder = builder
         self._marker = marker
         self._linestyle = linestyle
-        self._legend = label
+        self._legend = legend
         self._titles = titles
-        self._trim = label_length
+        self._trim = legend_length
 
     def _check_titles(self) -> None:
         if self._titles is not None and len(self._titles) != self._ntab:
@@ -603,7 +615,11 @@ class MultiTablesColumnBuilder(ElementsBase):
             )
 
     def _check_legends(self) -> None:
-        pass
+        if self._legend is not None and not isinstance(self._legend, str):
+            raise ValueError(
+                "legends be a simple string instead of %s"
+                % type(self._legend),
+            )
 
     def _check_markers(self) -> None:
         pass
@@ -656,10 +672,10 @@ class MultiTablesColumnsBuilder(ElementsBase):
     If titles are not specified, they are taken from the each table "title" metadata.
     If titles are specified, they must match the number of tables.
 
-    LABELS
-    Optional labels can be specified and will be shown as legends in the plot.
-    If labels are not specified, they are taken from each table Y column names.
-    The number of passed labels must match the number of tables.
+    LEGENDS
+    Optional legends can be specified and will be shown as legends in the plot.
+    If legends are not specified, they are taken from each table Y column names.
+    The number of passed legends must match the number of tables.
     On output, they will be replicated for each table
 
     MARKERS
@@ -672,17 +688,17 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
-        labels: Legends | None = None,
+        legends: Legends | None = None,
         markers: Markers | None = None,
         linestyles: LineStyles | None = None,
-        label_length: int = 6,
+        legend_length: int = 6,
     ):
         super().__init__(builder)
         self._markers = markers
         self._linestyles = linestyles
-        self._legends = labels
+        self._legends = legends
         self._titles = titles
-        self._trim = label_length
+        self._trim = legend_length
 
     def _check_titles(self) -> None:
         if self._titles is not None and len(self._titles) != self._ntab:

@@ -62,18 +62,18 @@ def plot_single_table_column(
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
-        label=legend,
+        legend=legend,
         linestyle=linestyle,
     )
     director = Director(builder)
-    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
-            legends_grp=labels_grp,
+            legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             changes=changes,
@@ -94,18 +94,18 @@ def plot_single_table_columns(
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
         title=title,
-        labels=legends,
+        legends=legends,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
-            legends_grp=labels_grp,
+            legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             changes=changes,
@@ -129,19 +129,19 @@ def plot_single_tables_column(
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=title,
-        labels=legends,
+        legends=legends,
         markers=markers,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc, tables, titles, labels_grp, markers_grp, linestyl_grp = director.build_elements()
+    xc, yc, tables, titles, legends_grp, markers_grp, linestyl_grp = director.build_elements()
     with visualization.quantity_support():
         plotter = BoxPlotter(
             x=xc,
             yy=yc,
             tables=tables,
             titles=titles,
-            legends_grp=labels_grp,
+            legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyl_grp,
             box=box,
