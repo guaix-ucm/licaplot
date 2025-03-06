@@ -114,6 +114,7 @@ class ElementsBase(IElementsBuilder):
         self._tb_builder = builder
         self._ncol = self._tb_builder.ncols()
         self._ntab = self._tb_builder.ntab()
+        log.info("Using %s", self.__class__.__name__)
 
     @property
     def elements(self) -> Elements:
