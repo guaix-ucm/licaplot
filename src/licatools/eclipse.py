@@ -166,12 +166,10 @@ def cli_single_plot_tables_column(args: Namespace):
         delimiter=args.delimiter,
         columns=args.columns,
         xcol=args.x_column,
-        xunit=args.x_unit,
         ycol=args.y_column,
-        yunit=args.y_unit,
         xlow=args.x_low,
         xhigh=args.x_high,
-        lunit=args.limits_unit,
+        xlunit=args.x_limits_unit,
         resolution=args.resample,
         lica_trim=args.lica,
     )

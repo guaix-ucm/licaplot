@@ -66,15 +66,15 @@ def read_csv(path: str, columns: Iterable[str] | None, delimiter: str | None) ->
 def trim_table(
     table: Table,
     xcol: int,
-    xunit: u.Unit,
     xlow: float | None,
     xhigh: float | None,
-    lunit: u.Unit,
+    xlunit: u.Unit,
     lica: bool,
 ) -> None:
     x = table.columns[xcol]
-    xmax = np.max(x) * xunit if xhigh is None else xhigh * lunit
-    xmin = np.min(x) * xunit if xlow is None else xlow * lunit
+    xunit = x.unit
+    xmax = np.max(x) * xunit if xhigh is None else xhigh * xlunit
+    xmin = np.min(x) * xunit if xlow is None else xlow * xlunit
     if lica:
         xmax, xmin = (
             min(xmax, BENCH.WAVE_END.value * u.nm),
@@ -148,17 +148,17 @@ class TableBase(ITableBuilder):
     def _build_one_table(self, path) -> Table:
         log.debug("Not resampling table")
         table = read_csv(path, self._columns, self._delim)
-        table = trim_table(table, self._xc, self._xu, self._xl, self._xh, self._lu, self._lica_trim)
+        table = trim_table(table, self._xc, self._xl, self._xh, self._lu, self._lica_trim)
         log.debug(table.info)
         log.debug(table.meta)
         return table
 
-    def _build_one_resampled_table(self, path: str, yc: ColNum, yu: u.Unit) -> Table:
+    def _build_one_resampled_table(self, path: str, yc: ColNum) -> Table:
         log.debug("resampling table to %s", self._resol)
         table = read_csv(path, self._columns, self._delim)
         # Prefer resample before trimming to avoid generating extrapolation NaNs
         wavelength, resampled_col = resample_column(
-            table, self._resol, self._xc, self._xu, yc, self._lica_trim
+            table, self._resol, self._xc, yc, self._lica_trim
         )
         names = [c for c in table.columns]
         values = [None, None]
@@ -167,15 +167,15 @@ class TableBase(ITableBuilder):
         new_table = Table(data=values, names=names)
         new_table.meta = table.meta
         new_table = trim_table(
-            new_table, self._xc, self._xu, self._xl, self._xh, self._lu, self._lica_trim
+            new_table, self._xc, self._xl, self._xh, self._lu, self._lica_trim
         )
         table = new_table
         col_x = table.columns[self._xc]
         col_y = table.columns[yc]
         if col_y.unit is None:
-            table[col_y.name] = table[col_y.name] * yu
+            table[col_y.name] = table[col_y.name] * u.dimensionless_unscaled
         if col_x.unit is None:
-            table[col_x.name] = table[col_x.name] * self._xu
+            table[col_x.name] = table[col_x.name] * u.dimensionless_unscaled
         log.debug(table.info)
         log.debug(table.meta)
         return table
@@ -189,22 +189,18 @@ class TableFromFile(TableBase):
         delimiter: str | None,
         xcol: ColNum,
         ycol: Union[ColNum,ColNums],
-        xunit: u.Unit,
-        yunit: u.Unit,
         xlow: float | None,
         xhigh: float | None,
-        lunit: u.Unit,
+        xlunit: u.Unit,
         resolution: int | None,
         lica_trim: bool | None,
     ):
         self._path = path
         self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._xc = xcol - 1
-        self._xu = xunit
-        self._yu = yunit
         self._xl = xlow
         self._xh = xhigh
-        self._lu = lunit
+        self._lu = xlunit
         self._columns = columns
         self._delim = delimiter
         self._resol = resolution
@@ -214,7 +210,7 @@ class TableFromFile(TableBase):
         table = (
             self._build_one_table(self._path)
             if self._resol is None
-            else self._build_one_resampled_table(self._path, self._yc, self._yu)
+            else self._build_one_resampled_table(self._path, self._yc)
         )
         self._check_col_range(table, [self._xc], tag="X")
         self._check_col_range(table, [self._yc], tag="Y")
@@ -229,22 +225,18 @@ class TablesFromFiles(TableBase):
         delimiter: str | None,
         xcol: ColNum,
         ycol: Union[ColNum,ColNums],
-        xunit: u.Unit,
-        yunit: u.Unit,
         xlow: float | None,
         xhigh: float | None,
-        lunit: u.Unit,
+        xlunit: u.Unit,
         resolution: int | None,
         lica_trim: bool | None,
     ):
         self._paths = paths
         self._yc = ycol - 1 if isinstance(ycol, int) else [y - 1 for y in ycol]
         self._xc = xcol - 1
-        self._xu = xunit
-        self._yu = yunit
         self._xl = xlow
         self._xh = xhigh
-        self._lu = lunit
+        self._lu = xlunit
         self._columns = columns
         self._delim = delimiter
         self._resol = resolution
@@ -258,7 +250,7 @@ class TablesFromFiles(TableBase):
                 table = self._build_one_table(path)
             else:
                 assert isinstance(self._yc, int), "Y Column only"
-                table = self._build_one_resampled_table(path, self._yc, self._yu)
+                table = self._build_one_resampled_table(path, self._yc)
             self._check_col_range(table, [self._xc], tag="X")
             self._check_col_range(table, yc, tag="Y")
             tables.append(table)

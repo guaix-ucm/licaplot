@@ -83,7 +83,7 @@ def ylabels() -> ArgumentParser:
     parser.add_argument(
         "-yl",
         "--y-label",
-        dest="ylabels",
+        dest="y_labels",
         type=str,
         nargs="+",
         default=title,
@@ -191,14 +191,6 @@ def xc() -> ArgumentParser:
         default=1,
         help="1-based abcissa column number, defaults to %(default)d",
     )
-    parser.add_argument(
-        "-xu",
-        "--x-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Abcissa units string (ie. nm, AA), defaults to %(default)s",
-    )
     return parser
 
 
@@ -212,14 +204,6 @@ def yc() -> ArgumentParser:
         default=2,
         help="1-based ordinate column number, defaults to %(default)d",
     )
-    parser.add_argument(
-        "-yu",
-        "--y-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.dimensionless_unscaled,
-        help="Ordinate axis string (ie. nm, A/W, etc.), defaults to %(default)s",
-    )
     return parser
 
 
@@ -232,14 +216,6 @@ def yycc() -> ArgumentParser:
         nargs="+",
         metavar="<N>",
         help="1-based ordinate axes column numbers in CSV/ECSV, defaults to %(default)d",
-    )
-    parser.add_argument(
-        "-yu",
-        "--y-unit",
-        type=u.Unit,
-        metavar="<Unit>",
-        default=u.nm,
-        help="Ordinate axis units string (ie. nm, AA) %(default)s",
     )
     return parser
 
@@ -352,7 +328,7 @@ def xlim() -> ArgumentParser:
     parser.add_argument(
         "-xl",
         "--x-low",
-        type=vnat,
+        type=float,
         metavar="<LOW>",
         default=BENCH.WAVE_START.value,
         help="Abcissa axes lower limit, defaults to %(default)s",
@@ -360,14 +336,14 @@ def xlim() -> ArgumentParser:
     parser.add_argument(
         "-xh",
         "--x-high",
-        type=vnat,
+        type=float,
         metavar="<HIGH>",
         default=BENCH.WAVE_END.value,
         help="Abcissa axes upper limit, defaults to %(default)s",
     )
     parser.add_argument(
         "-lu",
-        "--limits-unit",
+        "--x-limits-unit",
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,

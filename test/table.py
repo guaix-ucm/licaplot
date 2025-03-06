@@ -38,7 +38,7 @@ class TestTableFromFile(unittest.TestCase):
             yunit=u.dimensionless_unscaled,
             xlow=None,
             xhigh=None,
-            lunit=u.nm,
+            xlunit=u.nm,
             resolution=5,
             lica_trim=None,
         )
@@ -66,7 +66,7 @@ class TestTablesFromFiles(unittest.TestCase):
             yunit=u.dimensionless_unscaled,
             xlow=None,
             xhigh=None,
-            lunit=u.nm,
+            xlunit=u.nm,
             resolution=None,
             lica_trim=None,
         )
