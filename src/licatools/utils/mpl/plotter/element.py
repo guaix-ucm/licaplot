@@ -66,6 +66,7 @@ class Director:
     def build_elements(self) -> Elements:
         self._builder.build_tables()
         self._builder.build_titles()
+        self._builder.build_xlabel()
         self._builder.build_ylabels()
         self._builder.build_legends_grp()
         self._builder.build_markers_grp()
@@ -76,6 +77,10 @@ class Director:
 class IElementsBuilder(ABC):
     @abstractmethod
     def build_titles(self) -> None:
+        pass
+
+    @abstractmethod
+    def build_xlabel(self) -> None:
         pass
 
     @abstractmethod
@@ -131,7 +136,16 @@ class ElementsBase(IElementsBuilder):
             result = self._title if isinstance(self._title, str) else " ".join(self._title)
         else:
             result = table.meta["title"]
-        part = [result]*self._ntab
+        part = [result] * self._ntab
+        self._elements.append(part)
+        return part
+
+    def _default_xlabel(self, table: Table) -> Labels:
+        if self._xlabel is not None:
+            result = self._xlabel if isinstance(self._xlabel, str) else " ".join(self._xlabel)
+        else:
+            result = table.columns[self._xcol].name
+        part = result
         self._elements.append(part)
         return part
 
@@ -140,7 +154,7 @@ class ElementsBase(IElementsBuilder):
             result = self._ylabel if isinstance(self._ylabel, str) else " ".join(self._ylabel)
         else:
             result = table.columns[y].name
-        part = [result]*self._ntab
+        part = [result] * self._ntab
         self._elements.append(part)
         return part
 
@@ -153,7 +167,7 @@ class ElementsBase(IElementsBuilder):
         self._elements.append(part)
         return part
 
-    def _default_tables_ylabels(self, y: ColNum) -> Titles:
+    def _default_tables_ylabels(self, y: ColNum) -> Labels:
         if self._ylabels is not None:
             result = (
                 [self._ylabels] * self._ntab if isinstance(self._ylabels, str) else self._ylabels
@@ -193,6 +207,7 @@ class SingleTableColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        xlabel: Label | None = None,
         ylabel: Label | None = None,
         legend: Legend | None = None,
         marker: Marker | None = None,
@@ -203,6 +218,7 @@ class SingleTableColumnBuilder(ElementsBase):
         self._linestyle = linestyle
         self._legend = legend
         self._title = title
+        self._xlabel = xlabel
         self._ylabel = ylabel
         assert self._ncol == 1
         assert self._ntab == 1
@@ -240,6 +256,9 @@ class SingleTableColumnBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_title()
         return self._default_title(self._table)
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._table)
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
@@ -291,6 +310,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        xlabel: Label | None = None,
         ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
@@ -302,6 +322,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._xlabel = xlabel
         self._ylabel = ylabel
         self._trim = legend_length
         assert self._ntab == 1
@@ -343,6 +364,9 @@ class SingleTableColumnsBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_title()
         return self._default_title(self._table)
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._table)
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
@@ -403,6 +427,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        xlabel: Label | None = None,
         ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
@@ -413,6 +438,7 @@ class SingleTablesColumnBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._xlabel = xlabel
         self._ylabel = ylabel
         assert self._ncol == 1
 
@@ -458,6 +484,9 @@ class SingleTablesColumnBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_title()
         return self._default_title(self._tables[0])
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._tables[0])
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
@@ -535,6 +564,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        xlabel: Label | None = None,
         ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
@@ -546,6 +576,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._xlabel = xlabel
         self._ylabel = ylabel
         self._trim = legend_length
 
@@ -591,6 +622,9 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_title()
         return self._default_title(self._tables[0])
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._tables[0])
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
@@ -671,6 +705,7 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         title: Title | None = None,
+        xlabel: Label | None = None,
         ylabel: Label | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
@@ -682,6 +717,7 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._title = title
+        self._xlabel = xlabel
         self._ylabel = ylabel
         self._trim = legend_length
 
@@ -732,6 +768,9 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_title()
         return self._default_title(self._tables[0])
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._tables[0])
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
@@ -791,6 +830,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
+        xlabel: Label | None = None,
         ylabels: Labels | None = None,
         legend: Legend | None = None,
         marker: Marker | None = None,
@@ -803,6 +843,7 @@ class MultiTablesColumnBuilder(ElementsBase):
         self._linestyle = linestyle
         self._legend = legend
         self._titles = titles
+        self._xlabel = xlabel
         self._ylabels = ylabels
         self._trim = legend_length
 
@@ -841,6 +882,9 @@ class MultiTablesColumnBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_titles()
         return self._default_tables_titles()
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._tables[0])
 
     def build_ylabels(self) -> Titles:
         self._check_ylabels()
@@ -898,6 +942,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self,
         builder: ITableBuilder,
         titles: Titles | None = None,
+        xlabel: Label | None = None,
         ylabels: Labels | None = None,
         legends: Legends | None = None,
         markers: Markers | None = None,
@@ -909,6 +954,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self._linestyles = linestyles
         self._legends = legends
         self._titles = titles
+        self._xlabel = xlabel
         self._ylabels = ylabels
         self._trim = legend_length
 
@@ -956,6 +1002,9 @@ class MultiTablesColumnsBuilder(ElementsBase):
     def build_titles(self) -> Titles:
         self._check_titles()
         return self._default_tables_titles()
+
+    def build_xlabel(self) -> Label:
+        return self._default_xlabel(self._tables[0])
 
     def build_ylabels(self) -> Titles:
         self._check_ylabels()
