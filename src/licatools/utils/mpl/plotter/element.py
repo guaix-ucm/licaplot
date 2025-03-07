@@ -131,7 +131,7 @@ class ElementsBase(IElementsBuilder):
             result = self._title if isinstance(self._title, str) else " ".join(self._title)
         else:
             result = table.meta["title"]
-        part = [result]
+        part = [result]*self._ntab
         self._elements.append(part)
         return part
 
@@ -140,7 +140,7 @@ class ElementsBase(IElementsBuilder):
             result = self._ylabel if isinstance(self._ylabel, str) else " ".join(self._ylabel)
         else:
             result = table.columns[y].name
-        part = [result]
+        part = [result]*self._ntab
         self._elements.append(part)
         return part
 

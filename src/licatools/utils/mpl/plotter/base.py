@@ -172,13 +172,11 @@ class PlotterBase(ABC):
             len(self.linestyles_grp),
         )
         # This is not to exhaust the zip iterator
-        titles = self.titles * len(self.tables) if len(self.titles) == 1 else self.titles
-        ylabels = self.ylabels * len(self.tables) if len(self.ylabels) == 1 else self.ylabels
         return zip(
             self.axes,
             self.tables,
-            titles,
-            ylabels,
+            self.titles,
+            self.ylabels,
             self.yc_grp,
             self.legends_grp,
             self.markers_grp,

@@ -379,8 +379,22 @@ class TestSingleTablesColumn(unittest.TestCase):
         self.assertEqual(xc, self.xcol - 1)
         self.assertEqual(yc_grp, [(self.ycol - 1,) for t in tables])
         self.assertEqual(len(tables), self.ntab)
-        self.assertEqual(titles, ["Blue filter Measurements"])
-        self.assertEqual(ylabels, ["Photodiode Electrical Current"])
+        self.assertEqual(
+            titles,
+            [
+                "Blue filter Measurements",
+                "Blue filter Measurements",
+                "Blue filter Measurements",
+            ],
+        )
+        self.assertEqual(
+            ylabels,
+            [
+                "Photodiode Electrical Current",
+                "Photodiode Electrical Current",
+                "Photodiode Electrical Current",
+            ],
+        )
         self.assertEqual(legends_grp, [("Blue",), ("Green",), ("Red",)])
         self.assertEqual(markers_grp, [(None,), (None,), (None,)])
         self.assertEqual(linestyl_grp, [(None,), (None,), (None,)])
@@ -394,7 +408,9 @@ class TestSingleTablesColumn(unittest.TestCase):
         xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(titles, ["Eysdon RGB Filter set"])
+        self.assertEqual(
+            titles, ["Eysdon RGB Filter set", "Eysdon RGB Filter set", "Eysdon RGB Filter set"]
+        )
 
     def test_single_tables_column_ylabel(self):
         builder = SingleTablesColumnBuilder(
@@ -405,7 +421,7 @@ class TestSingleTablesColumn(unittest.TestCase):
         xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(ylabels, ["Y-Label 1"])
+        self.assertEqual(ylabels, ["Y-Label 1", "Y-Label 1", "Y-Label 1"])
 
     def test_single_tables_column_legends_1(self):
         builder = SingleTablesColumnBuilder(
@@ -555,8 +571,22 @@ class TestSingleTablesColumns(unittest.TestCase):
         self.assertEqual(yc_grp, [tuple(map(lambda y: y - 1, self.ycol)) for t in tables])
         self.assertEqual(len(tables), self.ntab)
         # Chooses the first title in the sequence of tables.
-        self.assertEqual(titles, ["Blue filter Measurements"])
-        self.assertEqual(ylabels, ["Electrical Current"])
+        self.assertEqual(
+            titles,
+            [
+                "Blue filter Measurements",
+                "Blue filter Measurements",
+                "Blue filter Measurements",
+            ],
+        )
+        self.assertEqual(
+            ylabels,
+            [
+                "Electrical Current",
+                "Electrical Current",
+                "Electrical Current",
+            ],
+        )
         # Table label +  Table column abbreviatted
         self.assertEqual(
             legends_grp,
@@ -577,7 +607,9 @@ class TestSingleTablesColumns(unittest.TestCase):
         xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(titles, ["Eysdon RGB Filter set"])
+        self.assertEqual(
+            titles, ["Eysdon RGB Filter set", "Eysdon RGB Filter set", "Eysdon RGB Filter set"]
+        )
 
     def test_single_tables_columns_ylabel(self):
         builder = SingleTablesColumnsBuilder(
@@ -588,7 +620,7 @@ class TestSingleTablesColumns(unittest.TestCase):
         xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(ylabels, ["Y-Label 1"])
+        self.assertEqual(ylabels, ["Y-Label 1", "Y-Label 1", "Y-Label 1"])
 
     def test_single_tables_columns_label_trimm(self):
         builder = SingleTablesColumnsBuilder(
@@ -1097,8 +1129,13 @@ class TestSingleTablesMixedColumns2(unittest.TestCase):
         self.assertEqual(len(tables), self.ntab)
         self.assertEqual(len(tables), len(yc_grp))
         # Chooses the first title in the sequence of tables.
-        self.assertEqual(titles, ["Blue filter Measurements"])
-        self.assertEqual(ylabels, ["Electrical Current"])
+        self.assertEqual(
+            titles,
+            ["Blue filter Measurements", "Blue filter Measurements", "Blue filter Measurements"],
+        )
+        self.assertEqual(
+            ylabels, ["Electrical Current", "Electrical Current", "Electrical Current"]
+        )
         # Table label +  Table column abbreviatted
         self.assertEqual(legends_grp, [("Blue-Electr.",), ("Green-Electr.",), ("Red-Electr.",)])
         self.assertEqual(markers_grp, [(None,), (None,), (None,)])
@@ -1113,7 +1150,9 @@ class TestSingleTablesMixedColumns2(unittest.TestCase):
         xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(titles, ["Eysdon RGB Filter set"])
+        self.assertEqual(
+            titles, ["Eysdon RGB Filter set", "Eysdon RGB Filter set", "Eysdon RGB Filter set"]
+        )
 
     def test_single_tables_mixed_columns_ylabel(self):
         builder = SingleTablesMixedColumnsBuilder(
@@ -1124,7 +1163,7 @@ class TestSingleTablesMixedColumns2(unittest.TestCase):
         xc, yc, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
             director.build_elements()
         )
-        self.assertEqual(ylabels, ["Y-Label 1"])
+        self.assertEqual(ylabels, ["Y-Label 1", "Y-Label 1", "Y-Label 1"])
 
     def test_single_tables_mixed_columns_label_trimm(self):
         builder = SingleTablesMixedColumnsBuilder(
