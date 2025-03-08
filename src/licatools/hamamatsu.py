@@ -176,12 +176,12 @@ def cli_stage1(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        x = table.colnames.index(COL.WAVE)
-        y = table.colnames.index(COL.RESP)
+        xcn = table.colnames.index(COL.WAVE)
+        ycn = table.colnames.index(COL.RESP)
         plot_single_table_column(
             table=table,
-            x=x + 1,
-            y=y + 1,
+            xcn=xcn + 1,
+            ycn=ycn + 1,
             title=f"{args.title} #{table.meta['Serial']}, NPL Calibrated",
         )
 
@@ -191,8 +191,8 @@ def cli_stage2(args: Namespace) -> None:
     log.info("Loading NPL ECSV calibration File: %s", args.input_file)
     npl_table = astropy.io.ascii.read(args.input_file, format="ecsv")
     threshold = np.max(npl_table[COL.WAVE]) + 1
-    x = npl_table.colnames.index(COL.WAVE)
-    y = npl_table.colnames.index(COL.RESP)
+    xcn = npl_table.colnames.index(COL.WAVE)
+    ycn = npl_table.colnames.index(COL.RESP)
     datasheet_table, sliced_table = create_datasheet_table(
         path=args.datasheet_file,
         x=args.x,
@@ -201,16 +201,16 @@ def cli_stage2(args: Namespace) -> None:
     )
     plot_single_tables_column(
         tables=[npl_table, datasheet_table],
-        x=x + 1,
-        y=y + 1,
+        xcn=xcn + 1,
+        ycn=ycn + 1,
         title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
     plot_single_tables_column(
         tables=[npl_table, sliced_table],
-        x=x + 1,
-        y=y + 1,
+        xcn=xcn + 1,
+        ycn=ycn + 1,
         title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
@@ -234,12 +234,12 @@ def cli_stage3(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        x = interpolated_table.colnames.index(COL.WAVE)
-        y = interpolated_table.colnames.index(COL.RESP)
+        xcn = interpolated_table.colnames.index(COL.WAVE)
+        ycn = interpolated_table.colnames.index(COL.RESP)
         plot_single_tables_column(
             tables=[interpolated_table, table],
-            x=x,
-            y=y,
+            xcn=xcn + 1,
+            ycn=ycn + 1,
             title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["Interp.", "NPL+Datasheet"],
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
@@ -264,12 +264,12 @@ def cli_pipeline(args: Namespace) -> None:
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     log.info(interpolated_table.info)
     if args.plot:
-        x = interpolated_table.colnames.index(COL.WAVE)
-        y = interpolated_table.colnames.index(COL.RESP)
+        xcn = interpolated_table.colnames.index(COL.WAVE)
+        ycn = interpolated_table.colnames.index(COL.RESP)
         plot_single_tables_column(
             tables=[interpolated_table, npl_table, sliced_table],
-            x=x,
-            y=y,
+            xcn=xcn + 1,
+            ycn=ycn + 1,
             legends=["Interp.", "NPL Calib.", "Datasheet"],
             title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
@@ -381,6 +381,22 @@ def add_args(parser: ArgumentParser) -> None:
         "stage3",
         parents=[plot_parser(), interp_parser()],
         help="Resamples calibration data to uniform 1nm wavelength step and convert to ECSV",
+    )
+    parser_stage3.add_argument(
+        "-x",
+        "--x",
+        type=float,
+        default=0.0,
+        metavar="<X offset>",
+        help="X (wavelength) offset to apply to input CSV file (defaults to %(default)f)",
+    )
+    parser_stage3.add_argument(
+        "-y",
+        "--y",
+        type=float,
+        default=0.0,
+        metavar="<Y offset>",
+        help="Y (responsivity) offset to apply to input CSV file (defaults to %(default)f)",
     )
     parser_stage3.set_defaults(func=cli_stage3)
     parser_pipe = subparser.add_parser(

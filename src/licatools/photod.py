@@ -18,11 +18,9 @@ import logging
 # ---------------------
 
 import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
 
-from astropy.table import Table
 from lica.cli import execute
-from lica.lab import COL, BENCH
+from lica.lab import BENCH
 from lica.lab.photodiode import PhotodiodeModel
 import lica
 
@@ -76,8 +74,8 @@ def plot(args):
     log.info("Table info is\n%s", table.info)
     plot_single_table_column(
         table=table,
-        x=1,
-        y=2,
+        xcn=1,
+        ycn=2,
         title=f"{args.model} characteristics @ {args.resolution} nm",
     )
 

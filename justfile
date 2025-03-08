@@ -98,7 +98,7 @@ hama3:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/hamamatsu"
-    lica-hama --console --trace stage3 --plot -i ${dir}/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12
+    lica-hama --console --trace stage3 --plot -i ${dir}/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12 -x 16 -y 0.009
 
 # Plot lica stored resource: Hamamatsu calibration curve
 hama-plot:
