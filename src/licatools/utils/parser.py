@@ -63,6 +63,34 @@ def titles(title: str, purpose: str) -> ArgumentParser:
     )
     return parser
 
+def xlabel() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xl",
+        "--x-label",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Plot X label",
+    )
+    return parser
+
+
+def xlabels() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-xl",
+        "--x-label",
+        dest="x_labels",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Plot X labels",
+    )
+    return parser
+
 def ylabel() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -326,20 +354,22 @@ def ifiles() -> ArgumentParser:
 def xlim() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-xl",
-        "--x-low",
+        "-xll",
+        "--x-low-limit",
+        dest="x_low",
         type=float,
         metavar="<LOW>",
         default=BENCH.WAVE_START.value,
-        help="Abcissa axes lower limit, defaults to %(default)s",
+        help="X axis lower limit, defaults to %(default)s",
     )
     parser.add_argument(
-        "-xh",
-        "--x-high",
+        "-xhl",
+        "--x-high-limit",
+        dest="x_high",
         type=float,
         metavar="<HIGH>",
         default=BENCH.WAVE_END.value,
-        help="Abcissa axes upper limit, defaults to %(default)s",
+        help="X axis upper limit, defaults to %(default)s",
     )
     parser.add_argument(
         "-xu",
@@ -347,7 +377,7 @@ def xlim() -> ArgumentParser:
         type=u.Unit,
         metavar="<Unit>",
         default=u.nm,
-        help="Abscissa limits units (ie. nm, A/W, etc.), defaults to %(default)s",
+        help="X limits units (ie. nm, A/W, etc.), defaults to %(default)s",
     )
     return parser
 

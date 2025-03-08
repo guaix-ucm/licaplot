@@ -83,6 +83,7 @@ def cli_single_table_column(args: Namespace):
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legend=args.label,
         marker=args.marker,
@@ -92,7 +93,9 @@ def cli_single_table_column(args: Namespace):
 
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     log.info("YC = %s", yc_grp)
     with visualization.quantity_support():
         with visualization.quantity_support():
@@ -101,6 +104,7 @@ def cli_single_table_column(args: Namespace):
                 yc_grp=yc_grp,
                 tables=tables,
                 titles=titles,
+                xlabels=xlabels,
                 ylabels=ylabels,
                 legends_grp=legends_grp,
                 markers_grp=markers_grp,
@@ -133,6 +137,7 @@ def cli_single_table_columns(args: Namespace):
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
@@ -141,13 +146,16 @@ def cli_single_table_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -181,6 +189,7 @@ def cli_single_tables_column(args: Namespace):
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
@@ -189,13 +198,16 @@ def cli_single_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -229,6 +241,7 @@ def cli_single_tables_columns(args: Namespace):
     builder = SingleTablesColumnsBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
@@ -237,13 +250,16 @@ def cli_single_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -277,6 +293,7 @@ def cli_single_tables_mixed(args: Namespace):
     builder = SingleTablesMixedColumnsBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
@@ -285,13 +302,16 @@ def cli_single_tables_mixed(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     with visualization.quantity_support():
         plotter = BasicPlotter(
             x=xc,
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -325,6 +345,7 @@ def cli_multi_tables_column(args: Namespace):
     builder = MultiTablesColumnBuilder(
         builder=tb_builder,
         titles=args.titles,
+        xlabels=args.x_labels,
         ylabels=args.y_labels,
         legend=args.labels,
         marker=args.markers,
@@ -333,7 +354,9 @@ def cli_multi_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -342,6 +365,7 @@ def cli_multi_tables_column(args: Namespace):
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -375,6 +399,7 @@ def cli_multi_tables_columns(args: Namespace):
     builder = MultiTablesColumnsBuilder(
         builder=tb_builder,
         titles=args.titles,
+        xlabels=args.x_labels,
         ylabels=args.y_labels,
         legends=args.labels,
         markers=args.markers,
@@ -383,7 +408,9 @@ def cli_multi_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
@@ -392,6 +419,7 @@ def cli_multi_tables_columns(args: Namespace):
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -436,6 +464,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.label("plotting"),
             prs.auxlines(),
@@ -462,6 +491,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.title(None, "Plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
@@ -492,6 +522,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.labels("plotting"),
             prs.auxlines(),
@@ -518,6 +549,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.title(None, "Plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
@@ -530,8 +562,6 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, multiple columns plot",
     )
     par_s_tt_cc.set_defaults(func=cli_single_tables_columns)
-
-
 
     # ---------------------------------------------------
     # Single Axes, Multiple Tables, Multiple Columns case
@@ -546,6 +576,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.title(None, "Plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),
@@ -558,11 +589,6 @@ def add_args(parser: ArgumentParser):
         help="Single Axes, multiple tables, mixed 1 column/table  plot",
     )
     par_s_tt_cx.set_defaults(func=cli_single_tables_mixed)
-
-
-
-
-
 
     # =============
     # Multiple Axes
@@ -587,6 +613,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yc(),
             prs.titles(None, "Plotting"),
+            prs.xlabels(),
             prs.ylabels(),
             prs.labels("plotting"),
             prs.resample(),
@@ -615,6 +642,7 @@ def add_args(parser: ArgumentParser):
             prs.xc(),
             prs.yycc(),
             prs.titles(None, "Plotting"),
+            prs.xlabels(),
             prs.ylabels(),
             prs.labels("plotting"),  # Column labels
             prs.auxlines(),

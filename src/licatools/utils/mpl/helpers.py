@@ -27,7 +27,6 @@ from .plotter import (
     Marker,
     Markers,
     Label,
-    Labels,
     Legend,
     Legends,
     LineStyle,
@@ -57,6 +56,7 @@ def plot_single_table_column(
     x: ColNum,
     y: ColNum,
     title: Optional[Title] = None,
+    xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
     marker: Optional[Marker] = None,
     legend: Optional[Legend] = None,
@@ -72,7 +72,7 @@ def plot_single_table_column(
         linestyle=linestyle,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
@@ -81,10 +81,11 @@ def plot_single_table_column(
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=ylabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
-            linestyles_grp=linestyl_grp,
+            linestyles_grp=linestyles_grp,
             changes=changes,
         )
         plotter.plot()
@@ -95,6 +96,7 @@ def plot_single_table_columns(
     x: ColNum,
     yy: ColNums,
     title: Optional[Title] = None,
+    xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
     markers: Optional[Markers] = None,
     legends: Optional[Legends] = None,
@@ -110,7 +112,7 @@ def plot_single_table_columns(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
@@ -119,10 +121,11 @@ def plot_single_table_columns(
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
-            linestyles_grp=linestyl_grp,
+            linestyles_grp=linestyles_grp,
             changes=changes,
         )
         plotter.plot()
@@ -133,6 +136,7 @@ def plot_single_tables_column(
     x: ColNum,
     y: ColNum,
     title: Optional[Title] = None,
+    xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
     legends: Optional[Legends] = None,
     markers: Optional[Markers] = None,
@@ -144,13 +148,14 @@ def plot_single_tables_column(
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=title,
+        xlabel=xlabel,
         ylabel=ylabel,
         legends=legends,
         markers=markers,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
@@ -159,19 +164,22 @@ def plot_single_tables_column(
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
-            linestyles_grp=linestyl_grp,
+            linestyles_grp=linestyles_grp,
             box=box,
         )
         plotter.plot()
+
 
 def plot_single_tables_mixed_columns(
     tables: Tables,
     x: ColNum,
     yy: ColNums,
     title: Optional[Title] = None,
+    xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
     legends: Optional[Legends] = None,
     markers: Optional[Markers] = None,
@@ -182,13 +190,14 @@ def plot_single_tables_mixed_columns(
     builder = SingleTablesMixedColumnsBuilder(
         builder=tb_builder,
         title=title,
+        xlabel=xlabel,
         ylabel=ylabel,
         legends=legends,
         markers=markers,
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyl_grp = (
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
@@ -197,9 +206,10 @@ def plot_single_tables_mixed_columns(
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
-            linestyles_grp=linestyl_grp,
+            linestyles_grp=linestyles_grp,
         )
         plotter.plot()

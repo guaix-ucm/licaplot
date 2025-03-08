@@ -52,7 +52,7 @@ from .utils.mpl.plotter import (
 
 log = logging.getLogger(__name__)
 
-plt.rcParams["legend.fontsize"] = "10"
+plt.rcParams["legend.fontsize"] = "12"
 
 
 UVA_RANGE = (430, 400)
@@ -176,6 +176,7 @@ def cli_single_plot_tables_column(args: Namespace):
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=args.title,
+        xlabel=args.x_label,
         ylabel=args.y_label,
         legends=args.labels,
         markers=args.markers,
@@ -184,13 +185,14 @@ def cli_single_plot_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             x=xc,
             yc_grp=yc_grp,
             tables=tables,
             titles=titles,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,
@@ -235,6 +237,7 @@ def add_args(parser):
             prs.xc(),
             prs.yc(),
             prs.title(None, "plotting"),
+            prs.xlabel(),
             prs.ylabel(),
             prs.labels("plotting"),
             prs.auxlines(),

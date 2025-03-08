@@ -60,6 +60,7 @@ class PlotterBase(ABC):
         yc_grp: ColNums,
         tables: Tables,
         titles: Titles,
+        xlabels: Labels,
         ylabels: Labels,
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
@@ -77,6 +78,7 @@ class PlotterBase(ABC):
         self.yc_grp = yc_grp
         self.tables = tables
         self.titles = titles
+        self.xlabels = xlabels
         self.ylabels = ylabels
         self.legends_grp = legends_grp
         self.markers_grp = markers_grp
@@ -110,6 +112,7 @@ class PlotterBase(ABC):
         self.linestyle = None
 
         log.info("titles = %s", titles)
+        log.info("xlabels = %s", xlabels)
         log.info("ylabels = %s", ylabels)
         log.info("yc grp = %s", yc_grp)
         log.info("legends grp = %s", legends_grp)
@@ -161,10 +164,11 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
         log.info(
-            "there are %d axes, %d tables, %d titles, %d y-labels, %d yc groups, %d legenda groups, %d markers group & %d linestyles group",
+            "there are %d axes, %d tables, %d titles, %d x-labels, %d y-labels, %d yc groups, %d legenda groups, %d markers group & %d linestyles group",
             len(self.axes),
             len(self.tables),
             len(self.titles),
+            len(self.xlabels),
             len(self.ylabels),
             len(self.yc_grp),
             len(self.legends_grp),
@@ -176,6 +180,7 @@ class PlotterBase(ABC):
             self.axes,
             self.tables,
             self.titles,
+            self.xlabels,
             self.ylabels,
             self.yc_grp,
             self.legends_grp,
@@ -189,6 +194,7 @@ class PlotterBase(ABC):
             self.ax,
             self.table,
             self.title,
+            self.xlabel,
             self.ylabel,
             self.yy,
             self.legends,
@@ -282,9 +288,8 @@ class PlotterBase(ABC):
 
     def set_axes_labels(self, y: int) -> None:
         """Get the labels for a table, using units if necessary"""
-        xlabel = self.table.columns[self.x].name
         xunit = self.table.columns[self.x].unit
-        xlabel = xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else xlabel
+        xlabel = self.xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else self.xlabel
         # ylabel = self.table.columns[y].name
         yunit = (
             u.pct

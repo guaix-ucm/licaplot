@@ -1,3 +1,12 @@
 Hamamatsu
 =========
 stage3 8& pipeline doesn't work)
+
+* X & Y column name variables consistency
+- parser => -xcn, -ycn
+- elememns xcm o _xcm, ycn o _ycn
+- ploter:
+	- array of Y-COLS named yycn?
+	- self.x => self.xcn
+	- self.y => self.ycn
+* Table Timestamp metadata
