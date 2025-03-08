@@ -53,8 +53,8 @@ def offset_box(x_offset: float, y_offset: float, x: float = 0.5, y: float = 0.2)
 
 def plot_single_table_column(
     table: Table,
-    x: ColNum,
-    y: ColNum,
+    xcn: ColNum,
+    ycn: ColNum,
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -63,7 +63,7 @@ def plot_single_table_column(
     linestyle: Optional[LineStyle] = None,
     changes: bool = False,
 ) -> None:
-    tb_builder = TableWrapper(table=table, xcol=x, ycol=y)
+    tb_builder = TableWrapper(table=table, xcn=xcn, ycn=ycn,)
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
@@ -72,13 +72,13 @@ def plot_single_table_column(
         linestyle=linestyle,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=ylabels,
@@ -93,8 +93,8 @@ def plot_single_table_column(
 
 def plot_single_table_columns(
     table: Table,
-    x: ColNum,
-    yy: ColNums,
+    xcn: ColNum,
+    ycns: ColNums,
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -103,7 +103,7 @@ def plot_single_table_columns(
     linestyles: Optional[LineStyles] = None,
     changes: bool = False,
 ) -> None:
-    tb_builder = TableWrapper(table=table, xcol=x, ycol=yy)
+    tb_builder = TableWrapper(table=table, xcn=xcn, ycn=ycns)
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
         title=title,
@@ -112,13 +112,13 @@ def plot_single_table_columns(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -133,8 +133,8 @@ def plot_single_table_columns(
 
 def plot_single_tables_column(
     tables: Tables,
-    x: ColNum,
-    y: ColNum,
+    xcn: ColNum,
+    ycn: ColNum,
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -144,7 +144,7 @@ def plot_single_tables_column(
     changes: bool = False,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    tb_builder = TablesWrapper(tables=tables, xcol=x, ycol=y)
+    tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycn)
     builder = SingleTablesColumnBuilder(
         builder=tb_builder,
         title=title,
@@ -155,13 +155,13 @@ def plot_single_tables_column(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BoxPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -176,8 +176,8 @@ def plot_single_tables_column(
 
 def plot_single_tables_mixed_columns(
     tables: Tables,
-    x: ColNum,
-    yy: ColNums,
+    xcn: ColNum,
+    ycns: ColNums,
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -186,7 +186,7 @@ def plot_single_tables_mixed_columns(
     linestyles: Optional[LineStyle] = None,
     changes: bool = False,
 ) -> None:
-    tb_builder = TablesWrapper(tables=tables, xcol=x, ycol=yy)
+    tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycns)
     builder = SingleTablesMixedColumnsBuilder(
         builder=tb_builder,
         title=title,
@@ -197,13 +197,13 @@ def plot_single_tables_mixed_columns(
         linestyles=linestyles,
     )
     director = Director(builder)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,

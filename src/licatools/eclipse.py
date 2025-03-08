@@ -143,11 +143,10 @@ def colname() -> ArgumentParser:
     return parser
 
 
-def inverse(table: Table, yc: ColNum, col_name: str = None) -> None:
-    ycol = table.columns[yc]
+def inverse(table: Table, ycn: ColNum, col_name: str = None) -> None:
+    ycol = table.columns[ycn]
     yname = col_name or f"Inverse Log10 of {ycol.name}"
-    log_ycol = -np.log10(ycol)
-    table[yname] = log_ycol
+    table[yname] = np.log10(ycol)
     table.meta["History"].append(f"Added new f{yname} column")
 
 
@@ -165,8 +164,8 @@ def cli_single_plot_tables_column(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -185,11 +184,11 @@ def cli_single_plot_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = elements
     with visualization.quantity_support():
         plotter = EclipsePlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,

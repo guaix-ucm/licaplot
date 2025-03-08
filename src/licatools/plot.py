@@ -72,8 +72,8 @@ def cli_single_table_column(args: Namespace):
         path=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -93,15 +93,15 @@ def cli_single_table_column(args: Namespace):
 
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
-    log.info("YC = %s", yc_grp)
+    log.info("YC = %s", ycns_grp)
     with visualization.quantity_support():
         with visualization.quantity_support():
             plotter = BasicPlotter(
-                x=xc,
-                yc_grp=yc_grp,
+                xcn=xcn,
+                ycns_grp=ycns_grp,
                 tables=tables,
                 titles=titles,
                 xlabels=xlabels,
@@ -126,8 +126,8 @@ def cli_single_table_columns(args: Namespace):
         path=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -146,13 +146,13 @@ def cli_single_table_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -178,8 +178,8 @@ def cli_single_tables_column(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -198,13 +198,13 @@ def cli_single_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -230,8 +230,8 @@ def cli_single_tables_columns(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -250,13 +250,13 @@ def cli_single_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -282,8 +282,8 @@ def cli_single_tables_mixed(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -302,13 +302,13 @@ def cli_single_tables_mixed(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -334,8 +334,8 @@ def cli_multi_tables_column(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -354,15 +354,15 @@ def cli_multi_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -388,8 +388,8 @@ def cli_multi_tables_columns(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_col_num,
-        ycol=args.y_col_num,
+        xcn=args.x_col_num,
+        ycn=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -408,15 +408,15 @@ def cli_multi_tables_columns(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xc, yc_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         elements
     )
     ncols = args.num_cols if args.num_cols is not None else int(ceil(sqrt(len(tables))))
     nrows = int(ceil(len(tables) / ncols))
     with visualization.quantity_support():
         plotter = BasicPlotter(
-            x=xc,
-            yc_grp=yc_grp,
+            xcn=xcn,
+            ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
             xlabels=xlabels,
@@ -489,7 +489,7 @@ def add_args(parser: ArgumentParser):
             prs.xlim(),
             prs.lica(),
             prs.xcn(),
-            prs.yccnn(),
+            prs.ycns(),
             prs.title(None, "Plotting"),
             prs.xlabel(),
             prs.ylabel(),
@@ -547,7 +547,7 @@ def add_args(parser: ArgumentParser):
             prs.logy(),
             prs.lica(),
             prs.xcn(),
-            prs.yccnn(),
+            prs.ycns(),
             prs.title(None, "Plotting"),
             prs.xlabel(),
             prs.ylabel(),
@@ -574,7 +574,7 @@ def add_args(parser: ArgumentParser):
             prs.logy(),
             prs.lica(),
             prs.xcn(),
-            prs.yccnn(),
+            prs.ycns(),
             prs.title(None, "Plotting"),
             prs.xlabel(),
             prs.ylabel(),
@@ -640,7 +640,7 @@ def add_args(parser: ArgumentParser):
             prs.xlim(),
             prs.lica(),
             prs.xcn(),
-            prs.yccnn(),
+            prs.ycns(),
             prs.titles(None, "Plotting"),
             prs.xlabels(),
             prs.ylabels(),

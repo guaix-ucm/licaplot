@@ -56,8 +56,8 @@ class PlotterBase(ABC):
 
     def __init__(
         self,
-        x: ColNum,
-        yc_grp: ColNums,
+        xcn: ColNum,
+        ycns_grp: ColNums,
         tables: Tables,
         titles: Titles,
         xlabels: Labels,
@@ -74,8 +74,8 @@ class PlotterBase(ABC):
         save_path: Optional[str] = None,
         save_dpi: Optional[int] = None,
     ):
-        self.x = x
-        self.yc_grp = yc_grp
+        self.xcn = xcn
+        self.ycns_grp = ycns_grp
         self.tables = tables
         self.titles = titles
         self.xlabels = xlabels
@@ -98,15 +98,14 @@ class PlotterBase(ABC):
         self.ax = None  # Current Axes object
         self.table = None  # Current Table object
         self.title = None  # Current title
-        self.yy = None # Current Y column list
+        self.ycns = None # Current Y column list
         self.markers = None  # current markers list
         self.linestyles = None  # current linestyles list
         self.legends = None  # current legends list
-        self.ycol = None
         # --------------------------------------------------------
         # These variables are created during the inner loop unpack
         # --------------------------------------------------------
-        self.y = None
+        self.ycn = None
         self.legend = None
         self.marker = None
         self.linestyle = None
@@ -114,7 +113,7 @@ class PlotterBase(ABC):
         log.info("titles = %s", titles)
         log.info("xlabels = %s", xlabels)
         log.info("ylabels = %s", ylabels)
-        log.info("yc grp = %s", yc_grp)
+        log.info("ycns grp = %s", ycns_grp)
         log.info("legends grp = %s", legends_grp)
         log.info("markers grp = %s", markers_grp)
         log.info("linestyles grp = %s", linestyles_grp)
@@ -131,14 +130,14 @@ class PlotterBase(ABC):
             self.plot_monochromator_filter_changes(single_plot, first_pass)
             self.set_title(single_plot)
             self.set_log_scales()
-            self.set_axes_labels(self.yy[0])
-            self.xcol = self.table.columns[self.x]
+            self.set_axes_labels(self.ycns[0])
+            self.xcol = self.table.columns[self.xcn]
             for t in self.get_inner_iterable_hook():
                 self.unpack_inner_tuple_hook(t)
                 ycol = (
-                    self.table.columns[self.y] * 100 * u.pct
-                    if self.percent and self.table.columns[self.y].unit == u.dimensionless_unscaled
-                    else self.table.columns[self.y]
+                    self.table.columns[self.ycn] * 100 * u.pct
+                    if self.percent and self.table.columns[self.ycn].unit == u.dimensionless_unscaled
+                    else self.table.columns[self.ycn]
                 )
                 self.ax.plot(
                     self.xcol,
@@ -164,13 +163,13 @@ class PlotterBase(ABC):
         """Should be overriden if extra arguments are needed."""
         log.debug("configuring the outer loop")
         log.info(
-            "there are %d axes, %d tables, %d titles, %d x-labels, %d y-labels, %d yc groups, %d legenda groups, %d markers group & %d linestyles group",
+            "there are %d axes, %d tables, %d titles, %d x-labels, %d y-labels, %d ycns groups, %d legenda groups, %d markers group & %d linestyles group",
             len(self.axes),
             len(self.tables),
             len(self.titles),
             len(self.xlabels),
             len(self.ylabels),
-            len(self.yc_grp),
+            len(self.ycns_grp),
             len(self.legends_grp),
             len(self.markers_grp),
             len(self.linestyles_grp),
@@ -182,7 +181,7 @@ class PlotterBase(ABC):
             self.titles,
             self.xlabels,
             self.ylabels,
-            self.yc_grp,
+            self.ycns_grp,
             self.legends_grp,
             self.markers_grp,
             self.linestyles_grp,
@@ -196,18 +195,18 @@ class PlotterBase(ABC):
             self.title,
             self.xlabel,
             self.ylabel,
-            self.yy,
+            self.ycns,
             self.legends,
             self.markers,
             self.linestyles,
         ) = t
 
     def get_inner_iterable_hook(self):
-        return zip(self.yy, self.legends, self.get_markers(), self.get_linestyles())
+        return zip(self.ycns, self.legends, self.get_markers(), self.get_linestyles())
 
     def unpack_inner_tuple_hook(self, t: Tuple):
         """Should be overriden if extra arguments are needed."""
-        self.y, self.legend, self.marker, self.linestyle = t
+        self.ycn, self.legend, self.marker, self.linestyle = t
 
     def plot_start_hook(self):
         pass
@@ -288,7 +287,7 @@ class PlotterBase(ABC):
 
     def set_axes_labels(self, y: int) -> None:
         """Get the labels for a table, using units if necessary"""
-        xunit = self.table.columns[self.x].unit
+        xunit = self.table.columns[self.xcn].unit
         xlabel = self.xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else self.xlabel
         # ylabel = self.table.columns[y].name
         yunit = (

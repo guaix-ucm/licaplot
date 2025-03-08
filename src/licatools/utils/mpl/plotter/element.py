@@ -14,7 +14,7 @@ from __future__ import annotations  # lazy evaluations of annotations
 import logging
 from abc import ABC, abstractmethod
 from itertools import batched
-from typing import Sequence, Any
+from typing import Sequence, Any, Optional
 
 # ---------------------
 # Third-party libraries
@@ -144,7 +144,7 @@ class ElementsBase(IElementsBuilder):
         if self._xlabel is not None:
             result = self._xlabel if isinstance(self._xlabel, str) else " ".join(self._xlabel)
         else:
-            result = table.columns[self._xcol].name
+            result = table.columns[self._xcn].name
         part = [result] * self._ntab
         self._elements.append(part)
         return part
@@ -173,18 +173,18 @@ class ElementsBase(IElementsBuilder):
                 [self._xlabels] * self._ntab if isinstance(self._xlabels, str) else self._xlabels
             )
         else:
-            result = [table.columns[self._xcol].name for table in self._tables]
+            result = [table.columns[self._xcn].name for table in self._tables]
         part = result
         self._elements.append(part)
         return part
 
-    def _default_tables_ylabels(self, y: ColNum) -> Labels:
+    def _default_tables_ylabels(self, ycn: ColNum) -> Labels:
         if self._ylabels is not None:
             result = (
                 [self._ylabels] * self._ntab if isinstance(self._ylabels, str) else self._ylabels
             )
         else:
-            result = [table.columns[y].name for table in self._tables]
+            result = [table.columns[ycn].name for table in self._tables]
         part = result
         self._elements.append(part)
         return part
@@ -217,11 +217,11 @@ class SingleTableColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None = None,
-        xlabel: Label | None = None,
-        ylabel: Label | None = None,
-        legend: Legend | None = None,
-        marker: Marker | None = None,
+        title: Optional[Title] = None,
+        xlabel: Optional[Label] = None,
+        ylabel: Optional[Label] = None,
+        legend: Optional[Legend] = None,
+        marker: Optional[Marker] = None,
         linestyle: LineStyle | None = None,
     ):
         super().__init__(builder)
@@ -262,9 +262,9 @@ class SingleTableColumnBuilder(ElementsBase):
             )
 
     def build_tables(self) -> Tables:
-        self._table, self._xcol, self._ycol = self._tb_builder.build_tables()
+        self._table, self._xcn, self._ycn = self._tb_builder.build_tables()
         tables = [self._table]
-        self._elements.extend([self._xcol, [(self._ycol,)], tables])
+        self._elements.extend([self._xcn, [(self._ycn,)], tables])
         return tables
 
     def build_titles(self) -> Titles:
@@ -277,7 +277,7 @@ class SingleTableColumnBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
-        return self._default_ylabel(self._table, self._ycol)
+        return self._default_ylabel(self._table, self._ycn)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -324,12 +324,12 @@ class SingleTableColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None = None,
-        xlabel: Label | None = None,
-        ylabel: Label | None = None,
-        legends: Legends | None = None,
-        markers: Markers | None = None,
-        linestyles: LineStyles | None = None,
+        title: Optional[Title] = None,
+        xlabel: Optional[Label] = None,
+        ylabel: Optional[Label] = None,
+        legends: Optional[Legends] = None,
+        markers: Optional[Markers] = None,
+        linestyles: Optional[LineStyles] = None,
         legend_length: int = 6,
     ):
         super().__init__(builder)
@@ -373,10 +373,10 @@ class SingleTableColumnsBuilder(ElementsBase):
             )
 
     def build_tables(self) -> Tables:
-        self._table, self._xcol, self._ycols = self._tb_builder.build_tables()
+        self._table, self._xcn, self._ycns = self._tb_builder.build_tables()
         tables = [self._table]
-        ycol_group = [tuple(y for y in self._ycols)]
-        self._elements.extend([self._xcol, ycol_group, tables])
+        ycns_group = [tuple(ycn for ycn in self._ycns)]
+        self._elements.extend([self._xcn, ycns_group, tables])
         return tables
 
     def build_titles(self) -> Titles:
@@ -389,14 +389,14 @@ class SingleTableColumnsBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
-        return self._default_ylabel(self._table, self._ycols[0])
+        return self._default_ylabel(self._table, self._ycns[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = (
             self._legends
             if self._legends is not None
-            else [self._table.columns[y].name[: self._trim] + "." for y in self._ycols]
+            else [self._table.columns[ycn].name[: self._trim] + "." for ycn in self._ycns]
         )
         part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
@@ -445,12 +445,12 @@ class SingleTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None = None,
-        xlabel: Label | None = None,
-        ylabel: Label | None = None,
-        legends: Legends | None = None,
-        markers: Markers | None = None,
-        linestyles: LineStyles | None = None,
+        title: Optional[Title] = None,
+        xlabel: Optional[Label] = None,
+        ylabel: Optional[Label] = None,
+        legends: Optional[Legends] = None,
+        markers: Optional[Markers] = None,
+        linestyles: Optional[LineStyles] = None,
     ):
         super().__init__(builder)
         self._markers = markers
@@ -498,9 +498,9 @@ class SingleTablesColumnBuilder(ElementsBase):
             )
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
-        ycol_group = [(self._ycol,) for t in self._tables]
-        self._elements.extend([self._xcol, ycol_group, self._tables])
+        self._tables, self._xcn, self._ycn = self._tb_builder.build_tables()
+        ycns_group = [(self._ycn,) for t in self._tables]
+        self._elements.extend([self._xcn, ycns_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -513,7 +513,7 @@ class SingleTablesColumnBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
-        return self._default_ylabel(self._tables[0], self._ycol)
+        return self._default_ylabel(self._tables[0], self._ycn)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -586,12 +586,12 @@ class SingleTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None = None,
-        xlabel: Label | None = None,
-        ylabel: Label | None = None,
-        legends: Legends | None = None,
-        markers: Markers | None = None,
-        linestyles: LineStyles | None = None,
+        title: Optional[Title] = None,
+        xlabel: Optional[Label] = None,
+        ylabel: Optional[Label] = None,
+        legends: Optional[Legends] = None,
+        markers: Optional[Markers] = None,
+        linestyles: Optional[LineStyles] = None,
         legend_length: int = 6,
     ):
         super().__init__(builder)
@@ -640,9 +640,9 @@ class SingleTablesColumnsBuilder(ElementsBase):
                 )
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
-        ycol_group = [tuple(self._ycols) for t in self._tables]
-        self._elements.extend([self._xcol, ycol_group, self._tables])
+        self._tables, self._xcn, self._ycns = self._tb_builder.build_tables()
+        ycns_group = [tuple(self._ycns) for t in self._tables]
+        self._elements.extend([self._xcn, ycns_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -655,7 +655,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
-        return self._default_ylabel(self._tables[0], self._ycols[0])
+        return self._default_ylabel(self._tables[0], self._ycns[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -664,9 +664,9 @@ class SingleTablesColumnsBuilder(ElementsBase):
             flat_legends = self._legends * self._ntab if N == self._ncol else self._legends
         else:
             flat_legends = [
-                table.meta["label"] + "-" + table.columns[y].name[: self._trim] + "."
+                table.meta["label"] + "-" + table.columns[ycn].name[: self._trim] + "."
                 for table in self._tables
-                for y in self._ycols
+                for ycn in self._ycns
             ]
         part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
@@ -731,12 +731,12 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        title: Title | None = None,
-        xlabel: Label | None = None,
-        ylabel: Label | None = None,
-        legends: Legends | None = None,
-        markers: Markers | None = None,
-        linestyles: LineStyles | None = None,
+        title: Optional[Title] = None,
+        xlabel: Optional[Label] = None,
+        ylabel: Optional[Label] = None,
+        legends: Optional[Legends] = None,
+        markers: Optional[Markers] = None,
+        linestyles: Optional[LineStyles] = None,
         legend_length: int = 6,
     ):
         super().__init__(builder)
@@ -785,14 +785,14 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
                 )
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
+        self._tables, self._xcn, self._ycns = self._tb_builder.build_tables()
         if self._ntab != self._ncol:
             raise ValueError(
                 "number of Y columns (%d) should match number of tables (%d)"
                 % (self._ncol, self._ntab)
             )
-        ycol_group = [(y,) for y in self._ycols]
-        self._elements.extend([self._xcol, ycol_group, self._tables])
+        ycns_group = [(y,) for y in self._ycns]
+        self._elements.extend([self._xcn, ycns_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -805,7 +805,7 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabel()
-        return self._default_ylabel(self._tables[0], self._ycols[0])
+        return self._default_ylabel(self._tables[0], self._ycns[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
@@ -813,8 +813,8 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
             flat_legends = self._legends
         else:
             flat_legends = [
-                f"{table.meta['label']}-{table.columns[yc].name[: self._trim]}."
-                for table, yc in zip(self._tables, self._ycols)
+                f"{table.meta['label']}-{table.columns[ycn].name[: self._trim]}."
+                for table, ycn in zip(self._tables, self._ycns)
             ]
         part = self._grouped(flat_legends, n=1)
         self._elements.append(part)
@@ -860,11 +860,11 @@ class MultiTablesColumnBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: Titles | None = None,
-        xlabels: Labels | None = None,
-        ylabels: Labels | None = None,
-        legend: Legend | None = None,
-        marker: Marker | None = None,
+        titles: Optional[Titles] = None,
+        xlabels: Optional[Labels] = None,
+        ylabels: Optional[Labels] = None,
+        legend: Optional[Legend] = None,
+        marker: Optional[Marker] = None,
         linestyle: LineStyle | None = None,
         legend_length: int = 6,
     ):
@@ -912,9 +912,9 @@ class MultiTablesColumnBuilder(ElementsBase):
         pass
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycol = self._tb_builder.build_tables()
-        ycol_group = [(self._ycol,) for t in self._tables]
-        self._elements.extend([self._xcol, ycol_group, self._tables])
+        self._tables, self._xcn, self._ycn = self._tb_builder.build_tables()
+        ycns_group = [(self._ycn,) for t in self._tables]
+        self._elements.extend([self._xcn, ycns_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -927,12 +927,12 @@ class MultiTablesColumnBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabels()
-        return self._default_tables_ylabels(self._ycol)
+        return self._default_tables_ylabels(self._ycn)
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = (
-            [table.columns[self._ycol].name[: self._trim] + "." for table in self._tables]
+            [table.columns[self._ycn].name[: self._trim] + "." for table in self._tables]
             if self._legend is None
             else [self._legend] * self._ntab
         )
@@ -980,12 +980,12 @@ class MultiTablesColumnsBuilder(ElementsBase):
     def __init__(
         self,
         builder: ITableBuilder,
-        titles: Titles | None = None,
-        xlabels: Label | None = None,
-        ylabels: Labels | None = None,
-        legends: Legends | None = None,
-        markers: Markers | None = None,
-        linestyles: LineStyles | None = None,
+        titles: Optional[Titles] = None,
+        xlabels: Optional[Label] = None,
+        ylabels: Optional[Labels] = None,
+        legends: Optional[Legends] = None,
+        markers: Optional[Markers] = None,
+        linestyles: Optional[LineStyles] = None,
         legend_length: int = 6,
     ):
         super().__init__(builder)
@@ -1040,9 +1040,9 @@ class MultiTablesColumnsBuilder(ElementsBase):
             )
 
     def build_tables(self) -> Tables:
-        self._tables, self._xcol, self._ycols = self._tb_builder.build_tables()
-        ycol_group = [tuple(self._ycols) for t in self._tables]
-        self._elements.extend([self._xcol, ycol_group, self._tables])
+        self._tables, self._xcn, self._ycns = self._tb_builder.build_tables()
+        ycns_group = [tuple(self._ycns) for t in self._tables]
+        self._elements.extend([self._xcn, ycns_group, self._tables])
         return self._tables
 
     def build_titles(self) -> Titles:
@@ -1055,15 +1055,15 @@ class MultiTablesColumnsBuilder(ElementsBase):
 
     def build_ylabels(self) -> Labels:
         self._check_ylabels()
-        return self._default_tables_ylabels(self._ycols[0])
+        return self._default_tables_ylabels(self._ycns[0])
 
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = (
             [
-                table.columns[y].name[: self._trim] + "."
+                table.columns[ycn].name[: self._trim] + "."
                 for table in self._tables
-                for y in self._ycols
+                for ycn in self._ycns
             ]
             if self._legends is None
             else self._legends * self._ntab

@@ -242,7 +242,7 @@ def ycn() -> ArgumentParser:
     return parser
 
 
-def yccnn() -> ArgumentParser:
+def ycns() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-ycn",

@@ -12,7 +12,7 @@
 
 
 import logging
-from typing import Optional, Tuple
+from typing import Tuple
 
 # ---------------------
 # Third-party libraries
@@ -21,8 +21,6 @@ from typing import Optional, Tuple
 # ------------------------
 # Own modules and packages
 # ------------------------
-
-from .types import ColNum, ColNums, Tables, Titles, Labels, LegendsGroup, MarkersGroup, LineStylesGroup
 
 from .base import BasicPlotter
 
