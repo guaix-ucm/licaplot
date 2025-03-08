@@ -33,8 +33,6 @@ from .plotter import (
     LineStyle,
     LineStyles,
     Tables,
-    ColNum,
-    ColNums,
     Title,
     Director,
     SingleTableColumnBuilder,
