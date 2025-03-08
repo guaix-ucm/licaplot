@@ -28,15 +28,13 @@ dependencies = [
     "pyqt5 >= 5.15",
     "astropy >= 6.0",
     "scipy >= 1.13",
-    "rawpy>=0.24.0",
-    "exifread>=3.0.0",
-    "lica[lab]",
+    "lica[lab] >= 1.1",
 ]
 
 [project.optional-dependencies]
 
 extras = [
-    "notebook",
+    "notebook >= 7.3",
 ]
 
 
