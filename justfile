@@ -153,7 +153,7 @@ ndf-plot tag="0.5":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/ndfilters/ndf{{tag}}"
-    lica-plot --console --trace single table column -t NDF-{{tag}} -yc 2 -i ${dir}/ND-{{tag}}-Transmittance@1nm.ecsv --changes
+    lica-plot --console --trace single table column -t NDF-{{tag}} -ycn 2 -i ${dir}/ND-{{tag}}-Transmittance@1nm.ecsv --changes
 
 # --------------------------
 # Eclipse sunglasses testing
@@ -177,7 +177,7 @@ nasa-reduce:
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
         lica-filters --console --trace one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
-        lica-eclip --console --trace inverse -yc 5 -i ${dir}/${i}_eg.ecsv --save
+        lica-eclip --console --trace inverse -ycn 5 -i ${dir}/${i}_eg.ecsv --save
     done
 
 # Single linear graphs for all glasses
@@ -187,7 +187,7 @@ eclipse-plot-all:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv  --lines --changes
+        lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv  --lines --changes
     done
 
 # Single linear graphs for all glasses with & without ND correction
@@ -197,7 +197,7 @@ eclipse-plot-all-nd:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv --lines --changes
+        lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv --lines --changes
     done
 
 # save NASA style plot of glasses for all glasses
@@ -210,7 +210,7 @@ eclipse-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
+    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
 
 # logaritmic style plotting for group 1
 eclipse-plot-g1-log:
@@ -222,7 +222,7 @@ eclipse-plot-g1-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 1 -i $file_accum -m None --lines --log-y
+    lica-plot --console --trace single tables column -ycn 5 -t Group 1 -i $file_accum -m None --lines --log-y
 
 
 # NASA style plotting of glasses for group 1
@@ -235,7 +235,7 @@ eclipse-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum --lines -m None
+    lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum --lines -m None
 
 # logaritmic style plotting for group 1
 eclipse-plot-g2-log:
@@ -247,7 +247,7 @@ eclipse-plot-g2-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum -m None --lines --log-y -sd 300
+    lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y -sd 300
 
 # NASA style plotting of glasses for group 2
 eclipse-plot-g2-nasa:
@@ -259,7 +259,7 @@ eclipse-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -m None --lines
+    lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -m None --lines
 
 
 # Save lingle linear plots for all glasses
@@ -269,7 +269,7 @@ eclipse-save-plot-all:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+        lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
 # Single linear graphs for all glasses with & without ND correction
@@ -279,7 +279,7 @@ eclipse-save-plot-all-nd:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -yc 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+        lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
 # save NASA style plot of glasses for all glasses
@@ -292,7 +292,7 @@ eclipse-save-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
+    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
 
 
 # save logaritmic style plotting for group 1
@@ -305,7 +305,7 @@ eclipse-save-plot-g1-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 1 -m None --lines -i $file_accum -sf ${dir}/group1_eg.png  --log-y -sd 300
+    lica-plot --console --trace single tables column -ycn 5 -t Group 1 -m None --lines -i $file_accum -sf ${dir}/group1_eg.png  --log-y -sd 300
 
 
 # Save NASA style plotting of glasses for group 1
@@ -318,7 +318,7 @@ eclipse-save-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
+    lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
 
 # Save logaritmic style plotting for group 1
 eclipse-save-plot-g2-log:
@@ -330,7 +330,7 @@ eclipse-save-plot-g2-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -yc 5 -t Group 2 -i $file_accum -m None --lines --log-y  -sf ${dir}/group2_eg.png -sd 300
+    lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y  -sf ${dir}/group2_eg.png -sd 300
 
 # Save NASA style plotting of glasses for group 2
 eclipse-save-plot-g2-nasa:
@@ -342,7 +342,7 @@ eclipse-save-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -yc 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
+    lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
 
 
 # ------------------------------------
@@ -366,7 +366,7 @@ omega-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-plot --console --trace single table column -% -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines
+    lica-plot --console --trace single table column -% -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines
 
 
 # --------------
@@ -390,7 +390,7 @@ eysdon-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines
+    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines
 
 
 # --------------------------------
@@ -412,13 +412,13 @@ tessw-plot-raw:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
-    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 2  --changes --lines
+    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 2  --changes --lines
 
 tessw-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
-    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -yc 5  --changes --lines
+    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 5  --changes --lines
 
 
 # TESS-W IV/IR-cut filter data reduction
@@ -432,7 +432,7 @@ sp750-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/IR_cut"
-    lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -yc 4 --changes --lines
+    lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -ycn 4 --changes --lines
 
 # =============================
 # Generic data reduction recipe
@@ -468,35 +468,35 @@ plot-s-t-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-plot --console --trace single table column -% -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -yc 4 --changes --lines {{args}}
+    lica-plot --console --trace single table column -% -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines {{args}}
 
 # Plot single axes, 1 table and 2 columns
 plot-s-t-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/eclipse"
-    lica-plot --console --trace single table columns -% -i ${dir}/02_eg.ecsv -xc 1 -yc 4 5 --changes --lines {{args}}
+    lica-plot --console --trace single table columns -% -i ${dir}/02_eg.ecsv -xcn 1 -ycn 4 5 --changes --lines {{args}}
 
 # Plot single axes, 3 tables, 1 column each
 plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -yc 4 --changes --lines {{args}}
+    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines {{args}}
 
 # Plot single Axes, 3 table per axes, 2 column per table
 plot-s-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace single tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
+    lica-plot --console --trace single tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
 
 # Plot single Axes, 1 table per axes, 1 column per table
 plot-s-tt-cx args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace single tables mixed -% -i ${dir}/03_eg.ecsv ${dir}/04_eg.ecsv  -yc 2 2 --changes --lines {{args}}
+    lica-plot --console --trace single tables mixed -% -i ${dir}/03_eg.ecsv ${dir}/04_eg.ecsv -ycn 2 2 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, one column per table
@@ -504,7 +504,7 @@ plot-m-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables column -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 5 --changes --lines {{args}}
+    lica-plot --console --trace multi tables column -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table
@@ -512,7 +512,7 @@ plot-m-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -yc 4 5 --changes --lines {{args}}
+    lica-plot --console --trace multi tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
 
 # run unut test on [table|element]
 test what:

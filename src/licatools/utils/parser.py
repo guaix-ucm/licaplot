@@ -35,6 +35,7 @@ from .mpl.plotter import Marker, LineStyle
 # Plotting Related parsers
 # ------------------------
 
+
 def title(title: str, purpose: str) -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -62,6 +63,7 @@ def titles(title: str, purpose: str) -> ArgumentParser:
         help=f"{purpose} title",
     )
     return parser
+
 
 def xlabel() -> ArgumentParser:
     """Common options for plotting"""
@@ -91,6 +93,7 @@ def xlabels() -> ArgumentParser:
     )
     return parser
 
+
 def ylabel() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -119,6 +122,7 @@ def ylabels() -> ArgumentParser:
     )
     return parser
 
+
 def marker() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
@@ -145,6 +149,7 @@ def markers() -> ArgumentParser:
         help="Plot line markers, defaults to %(default)s",
     )
     return parser
+
 
 def linstyl() -> ArgumentParser:
     """Common options for plotting"""
@@ -198,7 +203,8 @@ def labels(purpose: str) -> ArgumentParser:
     )
     return parser
 
-def ncols()  -> ArgumentParser:
+
+def ncols() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-nc",
@@ -209,41 +215,43 @@ def ncols()  -> ArgumentParser:
     )
     return parser
 
-def xc() -> ArgumentParser:
+
+def xcn() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-xc",
-        "--x-column",
+        "-xcn",
+        "--x-col-num",
         type=vnat,
         metavar="<N>",
         default=1,
-        help="1-based abcissa column number, defaults to %(default)d",
+        help="X column number (1-based), defaults to %(default)d",
     )
     return parser
 
 
-def yc() -> ArgumentParser:
+def ycn() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-yc",
-        "--y-column",
+        "-ycn",
+        "--y-col-num",
         type=vnat,
         metavar="<N>",
         default=2,
-        help="1-based ordinate column number, defaults to %(default)d",
+        help="Y column number (1-based), defaults to %(default)d",
     )
     return parser
 
 
-def yycc() -> ArgumentParser:
+def yccnn() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        "-yc",
-        "--y-column",
+        "-ycn",
+        "--y-col-num",
         type=vnat,
         nargs="+",
         metavar="<N>",
-        help="1-based ordinate axes column numbers in CSV/ECSV, defaults to %(default)d",
+        default=None,
+        help="Y column numbers (1-based) in CSV/ECSV, defaults to %(default)d",
     )
     return parser
 
@@ -275,6 +283,7 @@ def percent() -> ArgumentParser:
         help="Y axis as a percentage (default: %(default)s)",
     )
     return parser
+
 
 def logy() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -391,6 +400,7 @@ def lica() -> ArgumentParser:
     )
     return parser
 
+
 ### ONLY USED IN THE CASE OF  SINGLE COLUMN PLOTS
 def resample() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -424,6 +434,7 @@ def resol() -> ArgumentParser:
 # Other parsers
 # -------------
 
+
 def folder() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -435,6 +446,7 @@ def folder() -> ArgumentParser:
         help="ECSV input directory",
     )
     return parser
+
 
 def idir() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -461,6 +473,7 @@ def odir() -> ArgumentParser:
     )
     return parser
 
+
 def glob() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -471,6 +484,7 @@ def glob() -> ArgumentParser:
         help="Input files glob pattern (default %(default)s)",
     )
     return parser
+
 
 def tag() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
@@ -516,6 +530,7 @@ def save() -> ArgumentParser:
     )
     return parser
 
+
 def savefig() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -527,6 +542,7 @@ def savefig() -> ArgumentParser:
         help=".png or .pdf figure file path, defaults to %(default)s",
     )
     return parser
+
 
 def dpifig() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

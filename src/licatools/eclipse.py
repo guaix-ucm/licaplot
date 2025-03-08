@@ -155,7 +155,7 @@ def cli_inverse(args: Namespace):
     log.info("Processing %s", args.input_file)
     path = args.input_file
     table = read_ecsv(path)
-    inverse(table, args.y_column - 1, args.column_name)
+    inverse(table, args.y_col_num - 1, args.column_name)
     if args.save:
         table.write(path, delimiter=",", overwrite=True)
 
@@ -165,8 +165,8 @@ def cli_single_plot_tables_column(args: Namespace):
         paths=args.input_file,
         delimiter=args.delimiter,
         columns=args.columns,
-        xcol=args.x_column,
-        ycol=args.y_column,
+        xcol=args.x_col_num,
+        ycol=args.y_col_num,
         xlow=args.x_low,
         xhigh=args.x_high,
         xlunit=args.x_limits_unit,
@@ -219,7 +219,7 @@ def add_args(parser):
         "inverse",
         parents=[
             prs.ifile(),
-            prs.yc(),
+            prs.ycn(),
             colname(),
             prs.save(),
         ],
@@ -234,8 +234,8 @@ def add_args(parser):
             prs.xlim(),
             prs.resample(),
             prs.lica(),
-            prs.xc(),
-            prs.yc(),
+            prs.xcn(),
+            prs.ycn(),
             prs.title(None, "plotting"),
             prs.xlabel(),
             prs.ylabel(),
