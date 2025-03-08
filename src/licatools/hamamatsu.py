@@ -42,7 +42,7 @@ from lica.lab.photodiode import Hamamatsu
 
 from ._version import __version__
 
-from .utils.mpl.helpers import offset_box, plot_single_table_column, plot_single_tables_column
+from .utils.mpl.helpers import offset_box, plot_single_table_column, plot_single_tables_columns
 # -----------------------
 # Module global variables
 # -----------------------
@@ -176,12 +176,10 @@ def cli_stage1(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        xcn = table.colnames.index(COL.WAVE)
-        ycn = table.colnames.index(COL.RESP)
         plot_single_table_column(
             table=table,
-            xcn=xcn + 1,
-            ycn=ycn + 1,
+            xcolname=COL.WAVE,
+            ycolname=COL.RESP,
             title=f"{args.title} #{table.meta['Serial']}, NPL Calibrated",
         )
 
@@ -191,26 +189,24 @@ def cli_stage2(args: Namespace) -> None:
     log.info("Loading NPL ECSV calibration File: %s", args.input_file)
     npl_table = astropy.io.ascii.read(args.input_file, format="ecsv")
     threshold = np.max(npl_table[COL.WAVE]) + 1
-    xcn = npl_table.colnames.index(COL.WAVE)
-    ycn = npl_table.colnames.index(COL.RESP)
     datasheet_table, sliced_table = create_datasheet_table(
         path=args.datasheet_file,
         x=args.x,
         y=args.y,
         threshold=threshold,
     )
-    plot_single_tables_column(
+    plot_single_tables_columns(
         tables=[npl_table, datasheet_table],
-        xcn=xcn + 1,
-        ycn=ycn + 1,
+        xcolname=COL.WAVE,
+        ycolnames=[COL.RESP, COL.RESP],
         title=f"{args.title} #{npl_table.meta['Serial']} overlapped curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
     )
-    plot_single_tables_column(
+    plot_single_tables_columns(
         tables=[npl_table, sliced_table],
-        xcn=xcn + 1,
-        ycn=ycn + 1,
+        xcolname=COL.WAVE,
+        ycolnames=[COL.RESP, COL.RESP],
         title=f"{args.title} #{npl_table.meta['Serial']} combined curves",
         legends=["NPL Calib", "Datasheet"],
         box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
@@ -234,12 +230,10 @@ def cli_stage3(args: Namespace) -> None:
     log.info("Generating %s", output_path)
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        xcn = interpolated_table.colnames.index(COL.WAVE)
-        ycn = interpolated_table.colnames.index(COL.RESP)
-        plot_single_tables_column(
+        plot_single_tables_columns(
             tables=[interpolated_table, table],
-            xcn=xcn + 1,
-            ycn=ycn + 1,
+            xcolname=COL.WAVE,
+            ycolnames=[COL.RESP, COL.RESP],
             title=f"{args.title} #{table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["Interp.", "NPL+Datasheet"],
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),
@@ -264,12 +258,10 @@ def cli_pipeline(args: Namespace) -> None:
     interpolated_table.write(output_path, delimiter=",", overwrite=True)
     log.info(interpolated_table.info)
     if args.plot:
-        xcn = interpolated_table.colnames.index(COL.WAVE)
-        ycn = interpolated_table.colnames.index(COL.RESP)
-        plot_single_tables_column(
+        plot_single_tables_columns(
             tables=[interpolated_table, npl_table, sliced_table],
-            xcn=xcn + 1,
-            ycn=ycn + 1,
+            xcolname=COL.WAVE,
+            ycolnames=[COL.RESP, COL.RESP, COL.RESP],
             legends=["Interp.", "NPL Calib.", "Datasheet"],
             title=f"{args.title} #{npl_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             box=offset_box(x_offset=args.x, y_offset=args.y, x=0.02, y=0.8),

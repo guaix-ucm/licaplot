@@ -43,7 +43,7 @@ import lica.lab.photodiode
 
 from . import TBCOL
 from ._version import __version__
-from .utils.mpl import plot_single_tables_column
+from .utils.mpl import plot_single_tables_columns
 from .utils.validators import vecsvfile
 from .utils.processing import read_scan_csv
 
@@ -219,10 +219,10 @@ def cli_cross_calibration(args: Namespace) -> None:
         log.info("Saving Cross Calibrated ECSV to %s", output_path)
         osi_reference.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        plot_single_tables_column(
+        plot_single_tables_columns(
             tables=[osi_reference, hama_reference],
-            xcn=1,
-            ycn=2,
+            xcolname=COL.WAVE,
+            ycolname=[COL.RESP,COL.RESP],
             title=f"{args.title} #{osi_reference.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["OSI", "Hamamatsu."],
             changes=True,
@@ -239,10 +239,10 @@ def cli_digitized_datasheet(args: Namespace) -> None:
         log.info("Saving Digitized Datsheet ECSV to %s", output_path)
         interpolated_table.write(output_path, delimiter=",", overwrite=True)
     if args.plot:
-        plot_single_tables_column(
+        plot_single_tables_columns(
             tables=[datasheet_table, interpolated_table],
-            xcn=1,
-            ycn=2,
+            xcolname=COL.WAVE,
+            ycolname=[COL.RESP,COL.RESP],
             title=f"{args.title} #{datasheet_table.meta['Serial']} interpolated curves @ {args.resolution} nm",
             legends=["Datasheet", "Interp."],
         )
@@ -259,13 +259,12 @@ def cli_compare(args: Namespace) -> None:
     )
     osi = f"{OSI.MANUF} {OSI.MODEL}"
     hama = f"{Hamamatsu.MANUF} {Hamamatsu.MODEL}"
-    xcn = table1.colnames.index(COL.WAVE)
-    ycn = table1.colnames.index(COL.QE) if args.qe else table1.colnames.index(COL.RESP)
+    ycolname = COL.QE if args.qe else COL.RESP
     if args.plot:
-        plot_single_tables_column(
+        plot_single_tables_columns(
             tables=[table1, table2, hama_reference],
-            xcn=xcn + 1,
-            ycn=ycn + 1,
+            xcolname=COL.WAVE,
+            ycolname=[ycolname, ycolname],
             title=args.title,
             legends=[f"{osi} Cross Calibrated", f"{osi} From Datasheet", f"{hama} (Ref.)"],
             changes=True,

@@ -20,7 +20,7 @@ import logging
 import matplotlib.pyplot as plt
 
 from lica.cli import execute
-from lica.lab import BENCH
+from lica.lab import BENCH, COL
 from lica.lab.photodiode import PhotodiodeModel
 import lica
 
@@ -74,8 +74,8 @@ def plot(args):
     log.info("Table info is\n%s", table.info)
     plot_single_table_column(
         table=table,
-        xcn=1,
-        ycn=2,
+        xcolname=COL.WAVE,
+        ycolname=COL.RESP,
         title=f"{args.model} characteristics @ {args.resolution} nm",
     )
 

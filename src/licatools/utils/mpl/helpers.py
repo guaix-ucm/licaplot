@@ -10,11 +10,12 @@
 # System wide imports
 # -------------------
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Sequence
 
 # ---------------------
 # Third-party libraries
 # ---------------------
+
 
 from astropy import visualization
 from astropy.table import Table
@@ -53,8 +54,8 @@ def offset_box(x_offset: float, y_offset: float, x: float = 0.5, y: float = 0.2)
 
 def plot_single_table_column(
     table: Table,
-    xcn: ColNum,
-    ycn: ColNum,
+    xcolname: str,
+    ycolname: str,
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -63,7 +64,13 @@ def plot_single_table_column(
     linestyle: Optional[LineStyle] = None,
     changes: bool = False,
 ) -> None:
-    tb_builder = TableWrapper(table=table, xcn=xcn, ycn=ycn,)
+    xcn = table.colnames.index(xcolname) + 1
+    ycn = table.colnames.index(ycolname) + 1
+    tb_builder = TableWrapper(
+        table=table,
+        xcn=xcn,
+        ycn=ycn,
+    )
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
@@ -93,8 +100,8 @@ def plot_single_table_column(
 
 def plot_single_table_columns(
     table: Table,
-    xcn: ColNum,
-    ycns: ColNums,
+    xcolname: str,
+    ycolnames: Sequence[str],
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -103,6 +110,10 @@ def plot_single_table_columns(
     linestyles: Optional[LineStyles] = None,
     changes: bool = False,
 ) -> None:
+    if not (type(ycolnames) is list or type(ycolnames) is tuple):
+        raise ValueError("ycolnames should be a tuple or list")
+    xcn = table.colnames.index(xcolname) + 1
+    ycns = [table.colnames.index(name) + 1 for name in ycolnames]
     tb_builder = TableWrapper(table=table, xcn=xcn, ycn=ycns)
     builder = SingleTableColumnsBuilder(
         builder=tb_builder,
@@ -131,10 +142,10 @@ def plot_single_table_columns(
         plotter.plot()
 
 
-def plot_single_tables_column(
+def plot_single_tables_columns(
     tables: Tables,
-    xcn: ColNum,
-    ycn: ColNum,
+    xcolname: str,
+    ycolnames: Sequence[str],
     title: Optional[Title] = None,
     xlabel: Optional[Label] = None,
     ylabel: Optional[Label] = None,
@@ -144,16 +155,37 @@ def plot_single_tables_column(
     changes: bool = False,
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
-    tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycn)
-    builder = SingleTablesColumnBuilder(
-        builder=tb_builder,
-        title=title,
-        xlabel=xlabel,
-        ylabel=ylabel,
-        legends=legends,
-        markers=markers,
-        linestyles=linestyles,
-    )
+    if not (type(ycolnames) is list or type(ycolnames) is tuple):
+        raise ValueError("ycolnames should be a tuple or list")
+    if len(ycolnames) != len(tables):
+        raise ValueError(
+            "number of column names (%d) should mathc number of tables (%d)"
+            % (len(ycolnames), len(tables))
+        )
+    xcn = tables[0].colnames.index(xcolname) + 1
+    ycns = [table.colnames.index(name) + 1 for table, name in zip(tables, ycolnames)]
+    if all(ycn == ycns[0] for ycn in ycns):
+        tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycns[0])
+        builder = SingleTablesColumnBuilder(
+            builder=tb_builder,
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            legends=legends,
+            markers=markers,
+            linestyles=linestyles,
+        )
+    else:
+        tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycns)
+        builder = SingleTablesMixedColumnsBuilder(
+            builder=tb_builder,
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            legends=legends,
+            markers=markers,
+            linestyles=linestyles,
+        )
     director = Director(builder)
     xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
@@ -170,46 +202,5 @@ def plot_single_tables_column(
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
             box=box,
-        )
-        plotter.plot()
-
-
-def plot_single_tables_mixed_columns(
-    tables: Tables,
-    xcn: ColNum,
-    ycns: ColNums,
-    title: Optional[Title] = None,
-    xlabel: Optional[Label] = None,
-    ylabel: Optional[Label] = None,
-    legends: Optional[Legends] = None,
-    markers: Optional[Markers] = None,
-    linestyles: Optional[LineStyle] = None,
-    changes: bool = False,
-) -> None:
-    tb_builder = TablesWrapper(tables=tables, xcn=xcn, ycn=ycns)
-    builder = SingleTablesMixedColumnsBuilder(
-        builder=tb_builder,
-        title=title,
-        xlabel=xlabel,
-        ylabel=ylabel,
-        legends=legends,
-        markers=markers,
-        linestyles=linestyles,
-    )
-    director = Director(builder)
-    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
-        director.build_elements()
-    )
-    with visualization.quantity_support():
-        plotter = BasicPlotter(
-            xcn=xcn,
-            ycns_grp=ycns_grp,
-            tables=tables,
-            titles=titles,
-            xlabels=xlabels,
-            ylabels=ylabels,
-            legends_grp=legends_grp,
-            markers_grp=markers_grp,
-            linestyles_grp=linestyles_grp,
         )
         plotter.plot()
