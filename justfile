@@ -59,12 +59,12 @@ lica-dev version="main":
     fi
 
 # Adds lica release library as dependency with a given version
-lica-rel version="":
+lica-rel:
     #!/usr/bin/env bash
     set -exuo pipefail
     uv remove lica
-    echo "Adding LICA library {{ version }}";
-    uv add --refresh-package lica lica[lab] {{ version }};
+    echo "Adding release version of LICA library";
+    uv add --refresh-package lica lica[lab];
     uv remove rawpy exifread
 
 

@@ -28,7 +28,7 @@ dependencies = [
     "pyqt5 >= 5.15",
     "astropy >= 6.0",
     "scipy >= 1.13",
-    "lica[lab] >= 1.1",
+    "lica[lab]>=1.1.2",
 ]
 
 [project.optional-dependencies]
