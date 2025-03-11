@@ -72,11 +72,14 @@ def plot_single_table_column(
     builder = SingleTableColumnBuilder(
         builder=tb_builder,
         title=title,
+        xlabel=xlabel,
         ylabel=ylabel,
         legend=legend,
+        marker=marker,
         linestyle=linestyle,
     )
     director = Director(builder)
+
     xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
         director.build_elements()
     )
@@ -86,7 +89,7 @@ def plot_single_table_column(
             ycns_grp=ycns_grp,
             tables=tables,
             titles=titles,
-            xlabels=ylabels,
+            xlabels=xlabels,
             ylabels=ylabels,
             legends_grp=legends_grp,
             markers_grp=markers_grp,

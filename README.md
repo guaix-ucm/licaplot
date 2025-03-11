@@ -18,9 +18,10 @@ pip install licatools
 * `lica-tessw`. Process TESS-W data from LICA optical test bench.
 * `lica-photod`. Plot and export LICA photodiodes spectral response curves.
 * `lica-hama`. Build LICA's Hamamtsu S2281-04 photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
-* `lica-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve un ECSV format to be used for other calibration purposes elsewhere.
-* `lica-ndf`. Build Spectral reponse for LICA's Optical Bench Neutral Density Filters.
- `lica-plot`. Very simple plot utility to plot CSV/ECSV files.
+* `lica-osi` = Build LICA's OSI PIN-10D photodiode spectral response curve in ECSV format to be used for other calibration purposes elsewhere.
+* `lica-ndf`. Build Spectral response for LICA's Optical Bench Neutral Density Filters.
+* `lica-plot`. Very simple plot utility to plot CSV/ECSV files.
+* `lica-eclip`. Reduce & plot the data taken from solar eclipse glasses.
 
 Every command listed (and subcommands) con be described with `-h | --help`
 
@@ -32,6 +33,41 @@ lica-filters classif -h
 lica-filters classif photod -h
 ```
 
+All commands have a series of global options:
+* `--console` logs messages to console
+* `--log-file` logs messages to a file
+* `--verbose | --quiet`, raises or lowers the log verbosity level
+* `--trace` displays exception stack trace info for debugging purposes.
+
+Most commands has a short & long options. (e.g. `-l | --label` or `-ycn | --y-col-num`)
+The examples below showcase both options.
+
+## Generic plot utility
+
+The `lica-plot` utility is aimed to plot ECSV tabular data produced by this package. It can produce several graphics styles. Columns are given by the column order in the ECSV file ***starting by #1***. By default, the X axis is column #1.
+
+The following options are available accoording to the command line `lica-plot <Graphics> <Tables> <Columns>` schema.
+
+| Graphics | Tables | Columns | Description                                                                               |
+| :------- | :----- | :------ | :---------------------------------------------------------------------------------------- |
+| single   | table  | column  | Single graphics, one table, one Y column vs X column plot.                                |
+| single   | table  | columns | Single graphics, one table, several Y columns vs X column plot.                           |
+| single   | tables | column  | Single graphics, several tables with same Y column vs common X column                     |
+| single   | tables | mixed   | Single graphics, several tables with one Y column each table vs common X column           |
+| single   | tables | columns | Single graphics, several tables with several Y columns per table vs common X column       |
+| multi    | tables | column  | Multiple graphics, one table per graphics, one Y column per table vs X common column      |
+| multi    | tables | columns | Multiple graphics, one table per graphics, several Y columns per table vs common X column |
+
+
+The `single tables column` option is suitable to plot a filter set (i.e RGB filters) obtained in several ECSV files into a single graphics
+as seen in one of the examples below.
+
+The `single tables mixed` option is suitable to plot the same Y vs X magnitude where the Y colum is the same magnitude appearing in different column order in two or more different tables.
+
+
+* Titles, X & Y Labels can be supplied on the command line. If not specified, they take default values from the ECSV metadata ("title" and "label" metadata) and column names.
+* Markers, legends and line styles can be supplied by the command line. If not supplied, they take default values.
+
 # Usage examples
 
 ## Reducing Filters data (lica-filters)
@@ -39,12 +75,11 @@ lica-filters classif photod -h
 ### Simple case
 
 In the simple case, we hace one filter CSV and one clear photodiode CSV. Setting the wavelength limits is optional.
-Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01. The column in the ECSV file containing the transmission is column number 4.
+Setting the photodiode model is optional unless you are using the Hamamatsu S2281-01. The column in the ECSV file containing the transmission is column number 4. The plot also displays the Optical Bench passband filters change.
 
 ```bash
-lica-filters --console one -l Green -p data/filters/Eysdon_RGB/photodiode.txt -m PIN-10D -i data/filters/Eysdon_RGB/green.txt
-
-lica-plot --console single -i data/filters/Eysdon_RGB/green.ecsv --title Green filter -yc 4 --label G --lines --filters
+lica-filters --console one -l OMEGA NPB -p data/filters/Omega_NPB/QEdata_diode_2nm.txt -m PIN-10D -i data/filters/Omega_NPB/QEdata_filter_2nm.txt
+lica-plot --console single table column -% -i data/filters/Omega_NPB/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines
 ```
 
 ### More complex case
@@ -66,9 +101,9 @@ The output of this command is an ECSV file with the same information plus metada
 Tag them with the same tag as chosen by the photodiode file (`X`), as they share the same photodiode file.
 
 ```bash
-lica-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/green.txt -l Green
-lica-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/red.txt -l Red
-lica-filters --console classif filter --tag X -i data/filters/Eysdon_RGB/blue.txt -l Blue
+lica-filters --console classif filter -g X -i data/filters/Eysdon_RGB/green.txt -l Green
+lica-filters --console classif filter -g X -i data/filters/Eysdon_RGB/red.txt -l Red
+lica-filters --console classif filter -g X -i data/filters/Eysdon_RGB/blue.txt -l Blue
 ```
 
 The output of these commands are the ECSV files with the same data but additional metadata for further processing
@@ -83,7 +118,7 @@ lica-filters --console classif review -d data/filters/Eysdon_RGB
 
 4. Data reduction. 
 
-The optional `--save` flag allows to control the overriting of the input ECSV files with more columns and metadata.
+The recommended `--save` flag allows to control the overriting of the input ECSV files with more columns and metadata.
 
 ```bash
 lica-filters --console process -d data/filters/Eysdon_RGB --save
@@ -96,7 +131,7 @@ After this step both filter ECSV files contains additional columns with the clea
 Plot generated ECSV files using `lica-plot`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
 
 ```bash
-lica-plot --console multi -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --overlap -wc 1 -yc 4  --filters --lines
+lica-plot --console single tables column -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --ycn 4  --percent --filters --lines
 ```
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
@@ -110,10 +145,10 @@ Process the input files obtained at LICA for TESS-W measurements. For each devic
 
 ```bash
 lica-tessw --console classif photod -p data/tessw/stars1277-photodiode.csv --tag A
-lica-tessw --console classif sensor -i data/tessw/stars1277-frequencies.csv -l TSL237 --tag A
+lica-tessw --console classif sensor -i data/tessw/stars1277-frequencies.csv --label TSL237 --tag A
 
 lica-tessw --console classif photod -p data/tessw/stars6502-photodiode.csv --tag B
-lica-tessw --console classif sensor -i data/tessw/stars6502-frequencies.csv -l OTHER --tag B
+lica-tessw --console classif sensor -i data/tessw/stars6502-frequencies.csv --label OTHER --tag B
 ```
 
 2. Review the configuration
@@ -153,21 +188,20 @@ lica-tessw --console process  -d data/tessw/ --save
 
 4. Plot the result
 
-the `-yc 0` denotes the last column
 
 ```bash
-lica-plot --console multi -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv  --overlap -wc 1 -yc 0  --filters --lines
+ lica-plot --console single tables column -i data/tessw/stars1277-frequencies.ecsv  data/tessw/stars6502-frequencies.ecsv -ycn 5 --changes --lines
 ```
 
 ![Sensor comparison](doc/image/sensor_comparison.png)
 
 ## Comparing measured TESS-W response with manufactured datasheet
 
-There is a separate Jupyter notebook on this.
+There is a separate [Jupyter notebook](doc/TESS-W Spectral Response.ipynb) on this.
 
 ## Generating LICA photodiodes reference
 
-This is a quick reference of commands and procedure. There is a separate LICA report on the process.
+This is a quick reference of commands and procedure. There is a separate [LICA report]( https://doi.org/10.5281/zenodo.14884494) on the process.
 
 ### Hamamatsu S2281-01 diode (lica-hama)
 
@@ -241,3 +275,36 @@ lica-photod --console plot -m PIN-10D
 
 ![Hamamatsu SS2281-01](doc/image/S2281-01.png)
 ![OSI PIN-10D](doc/image/PIN-10D.png)
+
+## Reducing and plotting sun eclipse glasses
+
+The following script reduces the data of measured eclipse glasses:
+
+```bash
+	#!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+        lica-eclip --console inverse -ycn 5 -i ${dir}/${i}_eg.ecsv --save
+    done
+```
+
+The different ECSVs contain a last column (#6) with the log10 of the inverse of Transmittance.
+
+```bash
+ 	#!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/eclipse"
+    file_accum=""
+    for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
+    do
+        file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
+    done
+    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
+```
+
+
+
+
