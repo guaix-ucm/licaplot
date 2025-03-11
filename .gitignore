@@ -20,3 +20,4 @@ csv/
 # Other files
 *.ecsv
 *.png
+*.db

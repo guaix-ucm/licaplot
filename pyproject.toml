@@ -28,7 +28,7 @@ dependencies = [
     "pyqt5 >= 5.15",
     "astropy >= 6.0",
     "scipy >= 1.13",
-    "lica[lab]>=1.1.2",
+    "lica[lab,sqlalchemy]>=1.1.2",
     "pytz >= 2025.1",
 ]
 
@@ -53,7 +53,8 @@ lica-osi = "licatools.osi:main"
 lica-ndf = "licatools.ndfilters:main"
 lica-eclip = "licatools.eclipse:main"
 lica-tstamp = "licatools.timestamp:main"
-
+licadb-schema = "licadb.schema:main"
+licadb-slurp = "licadb.slurp:main"
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
