@@ -29,6 +29,7 @@ dependencies = [
     "astropy >= 6.0",
     "scipy >= 1.13",
     "lica[lab]>=1.1.2",
+    "pytz >= 2025.1",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +52,7 @@ lica-hama = "licatools.hamamatsu:main"
 lica-osi = "licatools.osi:main"
 lica-ndf = "licatools.ndfilters:main"
 lica-eclip = "licatools.eclipse:main"
+lica-tstamp = "licatools.timestamp:main"
 
 
 [build-system]

@@ -520,6 +520,16 @@ test what:
     set -exuo pipefail
     uv run python -m unittest -v test.{{what}}
 
+# --------------------
+# Timestamp manamement
+# --------------------
+
+scan:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="/media/rafa/D12B-14FD/Gafas Eclipse Solar/20250219"
+    uv run lica-tstamp --console --trace scan --input-dir "$dir" --output-file timestamps.txt
+
 # ===================
 # OTHER PRIVATE STUFF
 # ===================

@@ -842,13 +842,14 @@ lab = [
 
 [[package]]
 name = "licatools"
-version = "0.2.13.dev132+g770177f.d20250309"
+version = "0.2.13.dev135+gfbe862e.d20250311"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
     { name = "lica", extra = ["lab"] },
     { name = "matplotlib" },
     { name = "pyqt5" },
+    { name = "pytz" },
     { name = "scipy" },
 ]
 
@@ -869,6 +870,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "notebook", marker = "extra == 'extras'", specifier = ">=7.3" },
     { name = "pyqt5", specifier = ">=5.15" },
+    { name = "pytz", specifier = ">=2025.1" },
     { name = "scipy", specifier = ">=1.13" },
 ]
 
@@ -1391,6 +1393,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/9e/de/d3144a0bceede957f961e975f3752760fbe390d57fbe194baf709d8f1f7b/python_json_logger-3.3.0.tar.gz", hash = "sha256:12b7e74b17775e7d565129296105bbe3910842d9d0eb083fc83a6a617aa8df84", size = 16642 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/08/20/0f2523b9e50a8052bc6a8b732dfc8568abbdc42010aef03a2d750bdab3b2/python_json_logger-3.3.0-py3-none-any.whl", hash = "sha256:dd980fae8cffb24c13caf6e158d3d61c0d6d22342f932cb6e9deedab3d35eec7", size = 15163 },
+]
+
+[[package]]
+name = "pytz"
+version = "2025.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/57/df1c9157c8d5a05117e455d66fd7cf6dbc46974f832b1058ed4856785d8a/pytz-2025.1.tar.gz", hash = "sha256:c2db42be2a2518b28e65f9207c4d05e6ff547d1efa4086469ef855e4ab70178e", size = 319617 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/38/ac33370d784287baa1c3d538978b5e2ea064d4c1b93ffbd12826c190dd10/pytz-2025.1-py2.py3-none-any.whl", hash = "sha256:89dd22dca55b46eac6eda23b2d72721bf1bdfef212645d81513ef5d03038de57", size = 507930 },
 ]
 
 [[package]]
