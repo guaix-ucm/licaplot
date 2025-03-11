@@ -131,7 +131,7 @@ After this step both filter ECSV files contains additional columns with the clea
 Plot generated ECSV files using `lica-plot`. The column to be plotted is the fourth column (transmission) against the wavelenght column which happens to be the first one and thus no need to specify it.
 
 ```bash
-lica-plot --console single tables column -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv --ycn 4  --percent --filters --lines
+lica-plot --console single tables column -i data/filters/Eysdon_RGB/blue.ecsv data/filters/Eysdon_RGB/red.ecsv data/filters/Eysdon_RGB/green.ecsv -ycn 4 --percent --changes --lines
 ```
 
 ![RGB Filter Set Tranmsission curves](doc/image/plot_rgb_filters.png)
@@ -302,7 +302,7 @@ The different ECSVs contain a last column (#6) with the log10 of the inverse of 
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
+    lica-eclip --console --trace plot -ycn 6 -t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
 ```
 
 

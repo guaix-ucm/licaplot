@@ -292,7 +292,7 @@ eclipse-save-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png   -sd 300
+    lica-eclip --console --trace plot -ycn 6 -t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png -sd 300
 
 
 # save logaritmic style plotting for group 1
