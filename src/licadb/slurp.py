@@ -23,6 +23,8 @@ from typing import Sequence
 
 import pytz
 import sqlalchemy
+from sqlalchemy import select
+
 from lica.cli import execute
 from lica.sqlalchemy import sqa_logging
 from lica.sqlalchemy.dbase import Session
@@ -77,9 +79,9 @@ def get_file_paths(root_dir: str, depth: int) -> Sequence[str]:
         for extension in EXTENSIONS:
             alist = glob.glob(os.path.join(directory, extension))
             paths_set = paths_set.union(alist)
-    N = len(paths_set)
-    if N:
-        log.info(f"Scanning directory '{directory}'. Found {N} images matching '{EXTENSIONS}'")
+        N = len(paths_set)
+        if N:
+            log.info("Scanning directory %s. Found %d images matching '%s'", directory, N, EXTENSIONS)
     return sorted(paths_set)
 
 
@@ -90,29 +92,41 @@ def get_timestamp(path) -> datetime:
 
 
 def process_file(path: str) -> None:
-    log.info("processing file %s", path)
     filename = os.path.basename(path)
     dirname = os.path.dirname(path)
     timestamp = get_timestamp(path)
-    date=int(timestamp.strftime("%Y%m%d"))
+    date = int(timestamp.strftime("%Y%m%d"))
     with open(path, "rb") as fd:
         contents = fd.read()
     digest = hashlib.md5(contents).hexdigest()
     with Session() as session:
         with session.begin():
-            file = LicaFile(
-                original_name=filename,
-                original_dir=dirname,
-                creation_tstamp=timestamp,
-                creation_date=date,
-                digest=digest,
-                contents=contents,
-            )
-            session.add(file)
-            try:
-                session.commit()
-            except sqlalchemy.exc.IntegrityError:
-                log.debug("%s already loaded", filename)
+            q = select(LicaFile).where(LicaFile.digest == digest)
+            existing = session.scalars(q).one_or_none()
+            if existing:
+                if filename != existing.original_name:
+                    log.warn(
+                        "File being loaded exists with another name %s under %s",
+                        existing.original_name,
+                        existing.original_dir,
+                    )
+                elif dirname != existing.original_dir:
+                    log.warn(
+                        "File being loaded (%s) exists in another original directory: %s",
+                        existing.original_name, existing.original_dir,
+                    )
+                else:
+                    log.debug("Skipping already loade file")
+            else:
+                file = LicaFile(
+                    original_name=filename,
+                    original_dir=dirname,
+                    creation_tstamp=timestamp,
+                    creation_date=date,
+                    digest=digest,
+                    contents=contents,
+                )
+                session.add(file)
 
 
 def slurp(args: Namespace) -> None:
