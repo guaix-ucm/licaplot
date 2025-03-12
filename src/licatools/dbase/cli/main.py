@@ -12,10 +12,9 @@ import glob
 import hashlib
 import logging
 
-from enum import StrEnum
 from datetime import datetime
 from argparse import ArgumentParser, Namespace
-from typing import Sequence
+from typing import Sequence, Optional
 
 # ------------------
 # SQLAlchemy imports
@@ -36,6 +35,7 @@ from lica.sqlalchemy.dbase import engine, Model, Session
 from ... import __version__ as __version__
 
 # We must pull one model to make it work
+from ..api import Extension
 from ..api.model import Config, LicaFile, Setup  # noqa: F401
 from . import parser as prs
 
@@ -46,11 +46,6 @@ from . import parser as prs
 DESCRIPTION = "LICA acqusition files database management tool"
 
 MADRID = pytz.timezone("Europe/Madrid")
-
-
-class Extension(StrEnum):
-    CSV = "*.csv"
-    TXT = "*.txt"
 
 
 # -----------------------
@@ -88,16 +83,18 @@ def get_file_paths(root_dir: str, depth: int) -> Sequence[str]:
     for directory in directories:
         for extension in Extension:
             alist = glob.glob(os.path.join(directory, extension))
+            if alist:
+                log.info(
+                    "Scanning directory %s. Found %d files matching '%s'",
+                    directory,
+                    len(alist),
+                    extension,
+                )
             paths_set = paths_set.union(alist)
-        N = len(paths_set)
-        if N:
-            log.info(
-                "Scanning directory %s. Found %d images matching '%s'", directory, N, extension
-            )
     return sorted(paths_set)
 
 
-def process_file(path: str) -> None:
+def create_lica_file(path: str, session: Session) -> Optional[LicaFile]:
     filename = os.path.basename(path)
     dirname = os.path.dirname(path)
     timestamp = get_timestamp(path)
@@ -105,35 +102,35 @@ def process_file(path: str) -> None:
     with open(path, "rb") as fd:
         contents = fd.read()
     digest = hashlib.md5(contents).hexdigest()
-    with Session() as session:
-        with session.begin():
-            q = select(LicaFile).where(LicaFile.digest == digest)
-            existing = session.scalars(q).one_or_none()
-            if existing:
-                if filename != existing.original_name:
-                    log.warn(
-                        "File being loaded exists with another name %s under %s",
-                        existing.original_name,
-                        existing.original_dir,
-                    )
-                elif dirname != existing.original_dir:
-                    log.warn(
-                        "File being loaded (%s) exists in another original directory: %s",
-                        existing.original_name,
-                        existing.original_dir,
-                    )
-                else:
-                    log.debug("Skipping already loade file")
-            else:
-                file = LicaFile(
-                    original_name=filename,
-                    original_dir=dirname,
-                    creation_tstamp=timestamp,
-                    creation_date=date,
-                    digest=digest,
-                    contents=contents,
-                )
-                session.add(file)
+    q = select(LicaFile).where(LicaFile.digest == digest)
+    existing = session.scalars(q).one_or_none()
+    if existing:
+        result = None
+        if filename != existing.original_name:
+            log.warn(
+                "File being loaded exists with another name %s under %s",
+                existing.original_name,
+                existing.original_dir,
+            )
+        elif dirname != existing.original_dir:
+            log.warn(
+                "File being loaded (%s) exists in another original directory: %s",
+                existing.original_name,
+                existing.original_dir,
+            )
+        else:
+            log.debug("Skipping already loade file")
+
+    else:
+        result = LicaFile(
+            original_name=filename,
+            original_dir=dirname,
+            creation_tstamp=timestamp,
+            creation_date=date,
+            digest=digest,
+            contents=contents,
+        )
+    return result
 
 
 # =============
@@ -143,18 +140,24 @@ def process_file(path: str) -> None:
 
 def cli_slurp(args: Namespace) -> None:
     file_paths = get_file_paths(args.input_dir, args.depth)
-    for path in file_paths:
-        process_file(path)
+    with Session() as session:
+        with session.begin():
+            for path in file_paths:
+                lica_file = create_lica_file(path, session)
+                if lica_file:
+                    session.add(lica_file)
 
 
 def cli_populate(args: Namespace) -> None:
     with Session() as session:
         try:
             with session.begin():
-                ancient = Setup(name="ancient", psu_current=8.20, monocromator_slit=3.0)
+                ancient = Setup(name="ancient", psu_current=8.20, monocromator_slit=1.26)
                 log.info("Populating with %s", ancient)
                 session.add(ancient)
-                eclipse = Setup(name="eclipse", psu_current=8.20, monocromator_slit=1.2)
+                eclipse = Setup(name="eclipse", psu_current=8.20, monocromator_slit=2.5)
+                log.info("Populating with %s", eclipse)
+                eclipse = Setup(name="ndfilters", psu_current=8.20, monocromator_slit=1.04)
                 log.info("Populating with %s", eclipse)
                 session.add(eclipse)
         except sqlalchemy.exc.IntegrityError:
