@@ -107,24 +107,24 @@ def read_tess_csv(path: str) -> Table:
     table.meta[META.PHAREA] = 0.92 * u.mm**2
     return table
 
+
 def add_lica_metadata(path: str, table: Table) -> None:
+    log.info("Looking up LICA database for more metadata of %s", path)
     metadata = db_lookup(path)
-    del metadata["name"]
-    timestamp = datetime.strptime(metadata["timestamp"],"%Y-%m-%d %H:%M:%S")
-    #timestamp = Time(timestamp, scale='utc')
-    table.meta["timestamp"] = timestamp
-    table.meta["original_name"] = metadata["original_name"]
-    monochromator_slit = metadata.get("monochromator_slit")
-    if monochromator_slit:
-        table.meta["monochromator_slit"] = monochromator_slit * u.mm
-    input_slit = metadata.get("input_slit")
-    if input_slit:
-        table.meta["input_slit"] = input_slit * u.mm
-    psu_current = metadata.get("psu_current")
-    if psu_current:
-        table.meta["psu_current"] = psu_current * u.A
-
-
+    if metadata:
+        timestamp = datetime.strptime(metadata["timestamp"], "%Y-%m-%d %H:%M:%S")
+        #timestamp = Time(timestamp, scale='utc')
+        table.meta["timestamp"] = timestamp
+        table.meta["original_name"] = metadata["original_name"]
+        monochromator_slit = metadata.get("monochromator_slit")
+        if monochromator_slit:
+            table.meta["monochromator_slit"] = monochromator_slit * u.mm
+        input_slit = metadata.get("input_slit")
+        if input_slit:
+            table.meta["input_slit"] = input_slit * u.mm
+        psu_current = metadata.get("psu_current")
+        if psu_current:
+            table.meta["psu_current"] = psu_current * u.A
 
 
 def read_scan_csv(path: str) -> Table:
@@ -139,7 +139,6 @@ def read_scan_csv(path: str) -> Table:
     table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
     table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
-    add_lica_metadata(path, table)
     return table
 
 
@@ -155,7 +154,6 @@ def read_manual_csv(path: str) -> Table:
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
     table[TBCOL.CURRENT] = np.abs(table[TBCOL.CURRENT]) * u.A
     table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
-    add_lica_metadata(path, table)
 
 
 def read_tsl237_datasheet_csv(path: str) -> Table:
@@ -203,6 +201,7 @@ def photodiode_table(
         },
         "History": [],
     }
+    add_lica_metadata(path, table)
     if history:
         log.info("Trinming %s to [%d-%d] nm", name, x_low, x_high)
         table.meta["History"].append(history)
@@ -249,7 +248,7 @@ def filter_table(path: str, label: str, title: str, tag: str) -> Table:
         },
         "History": [],
     }
-    
+    add_lica_metadata(path, table)
     table.remove_column(TBCOL.INDEX)
     log.info("Processing metadata is added: %s", table.meta)
     return table
@@ -284,6 +283,7 @@ def tessw_table(path: str, label: str, title: str = None, tag: str = "") -> Tabl
             f"Averaged readings grouping by {COL.WAVE}",
         ],
     }
+    add_lica_metadata(path, table)
     log.info("Processing metadata is added: %s", table.meta)
     return table
 

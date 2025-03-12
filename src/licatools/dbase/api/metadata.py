@@ -14,7 +14,6 @@ from typing import Optional, Dict, Any
 # -------------------
 
 from sqlalchemy import select
-
 from lica.sqlalchemy.dbase import Session
 
 # --------------
@@ -55,8 +54,8 @@ def _db_lookup(path: str, session: Session) -> Optional[Dict[str, Any]]:
                 if setup.input_slit:
                     result["input_slit"] = setup.input_slit
                 if setup.psu_current:
-                    result["psu_current"] = setup.input_slit
-               
+                    result["psu_current"] = setup.psu_current
+
     return result
 
 
@@ -65,9 +64,11 @@ def db_lookup(path: str) -> Optional[Dict[str, Any]]:
     with Session() as session:
         return _db_lookup(path, session)
 
+
 def remove_original_name(item: Dict[str, Any]) -> Dict[str, Any]:
     del item["original_name"]
     return item
+
 
 def export(input_dir: str, output_path: str) -> bool:
     """Exports metradata for all LICA acquistion files in the given input directory"""
@@ -87,7 +88,7 @@ def export(input_dir: str, output_path: str) -> bool:
     if metadata:
         metadata = list(map(remove_original_name, metadata))
         with open(output_path, "w", newline="") as fd:
-            fieldnames =metadata[0].keys()
+            fieldnames = metadata[0].keys()
             writer = csv.DictWriter(fd, fieldnames=fieldnames, delimiter=";")
             writer.writeheader()
             for row in metadata:
