@@ -53,8 +53,8 @@ lica-osi = "licatools.osi:main"
 lica-ndf = "licatools.ndfilters:main"
 lica-eclip = "licatools.eclipse:main"
 lica-tstamp = "licatools.timestamp:main"
-licadb-schema = "licadb.schema:main"
-licadb-slurp = "licadb.slurp:main"
+lica-db = "licatools.dbase.cli.main:main"
+
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]

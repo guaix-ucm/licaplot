@@ -78,7 +78,7 @@ class Setup(Model):
     # Unique name identifying the setup
     name: Mapped[str] = mapped_column(String(64), unique=True)
     # Power Supply Current in amperes
-    psw_current: Mapped[Optional[float]]
+    psu_current: Mapped[Optional[float]]
     # Monocromator slit micrometer apertue, in mm
     monocromator_slit: Mapped[Optional[float]]
     # General input flux microemeter slit, inmmm
@@ -87,7 +87,7 @@ class Setup(Model):
     files: Mapped[List["LicaFile"]] = relationship(back_populates="setup")
 
     def __repr__(self) -> str:
-        return f"File(Setup={self.name}, psu={self.psu_current:.2f}, slit={self.monocromator_slit:.3f}, input={self.input_slit:.3f})"
+        return f"File(Setup={self.name}, psu={self.psu_current}, slit={self.monocromator_slit}, input={self.input_slit})"
 
 
 
