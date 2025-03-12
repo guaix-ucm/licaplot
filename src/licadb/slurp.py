@@ -92,7 +92,9 @@ def get_timestamp(path) -> datetime:
 def process_file(path: str) -> None:
     log.info("processing file %s", path)
     filename = os.path.basename(path)
+    dirname = os.path.dirname(path)
     timestamp = get_timestamp(path)
+    date=int(timestamp.strftime("%Y%m%d"))
     with open(path, "rb") as fd:
         contents = fd.read()
     digest = hashlib.md5(contents).hexdigest()
@@ -100,7 +102,9 @@ def process_file(path: str) -> None:
         with session.begin():
             file = LicaFile(
                 original_name=filename,
+                original_dir=dirname,
                 creation_tstamp=timestamp,
+                creation_date=date,
                 digest=digest,
                 contents=contents,
             )
