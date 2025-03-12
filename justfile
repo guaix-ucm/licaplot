@@ -86,25 +86,25 @@ hama1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/hamamatsu"
-    lica-hama --console --trace stage1 --plot -i ${dir}/S2281-01-Responsivity-NPL.csv
+    uv run lica-hama --console --trace stage1 --plot -i ${dir}/S2281-01-Responsivity-NPL.csv
 
 hama2:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/hamamatsu"
-    lica-hama --console --trace stage2 --plot --save -i ${dir}/S2281-01-Responsivity-NPL.ecsv -d ${dir}/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
+    uv run lica-hama --console --trace stage2 --plot --save -i ${dir}/S2281-01-Responsivity-NPL.ecsv -d ${dir}/S2281-04-Responsivity-Datasheet.csv -x 16 -y 0.009
 
 hama3:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/hamamatsu"
-    lica-hama --console --trace stage3 --plot -i ${dir}/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12 -x 16 -y 0.009
+    uv run lica-hama --console --trace stage3 --plot -i ${dir}/S2281-01-Responsivity-NPL+Datasheet.ecsv -m cubic -r 1 --revision 2024-12 -x 16 -y 0.009
 
 # Plot lica stored resource: Hamamatsu calibration curve
 hama-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-photod --console plot -m S2281-01
+    uv run lica-photod --console plot -m S2281-01
 
 # -------------------
 # OSI utility testing
@@ -114,24 +114,24 @@ hama-plot:
 osi-sheet:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-osi --console datasheet -i data/osi/PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save --revision 2024-12
+    uv run lica-osi --console datasheet -i data/osi/PIN-10D-Responsivity-Datasheet.csv -m cubic -r 1 --plot --save --revision 2024-12
 
 # OSI Pĥotodiode calibration by cross calibration
 osi-cross:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-osi --console cross --osi data/osi/QEdata_PIN-10D.txt --hama data/osi/QEdata_S2201-01.txt --plot --save --revision 2024-12
+    uv run lica-osi --console cross --osi data/osi/QEdata_PIN-10D.txt --hama data/osi/QEdata_S2201-01.txt --plot --save --revision 2024-12
 # OSI Pĥotodiode: comparison of methods
 osi-cmp:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
+    uv run lica-osi --console compare -c data/osi/OSI\ PIN-10D+Cross-Calibrated@1nm.ecsv -d data/osi/OSI\ PIN-10D-Responsivity-Datasheet+Interpolated@1nm.ecsv --plot
 
 # Plot lica stored resource: OSI calibration curve
 osi-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
-    lica-photod --console plot -m PIN-10D
+    uv run lica-photod --console plot -m PIN-10D
 
 # ---------------------------------------
 # Neutral Density filters utility testing
@@ -145,7 +145,7 @@ ndf-reduce tag="0.5" i="0":
     dir="data/ndfilters/ndf{{tag}}"
     photodiodes=( $(ls -1 ${dir}/??_osi_clear.txt) )
     filters=( $(ls -1 ${dir}/??_osi_nd*.txt) )
-    lica-ndf --console --trace calib -n ND-{{tag}} -m PIN-10D -i ${filters[0]} -p ${photodiodes[{{i}}]} -o ${dir} 
+    uv run lica-ndf --console --trace calib -n ND-{{tag}} -m PIN-10D -i ${filters[0]} -p ${photodiodes[{{i}}]} -o ${dir} 
 
 
 # Plot NDF calibration curve
@@ -153,7 +153,7 @@ ndf-plot tag="0.5":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/ndfilters/ndf{{tag}}"
-    lica-plot --console --trace single table column -t NDF-{{tag}} -ycn 2 -i ${dir}/ND-{{tag}}-Transmittance@1nm.ecsv --changes
+    uv run lica-plot --console --trace single table column -t NDF-{{tag}} -ycn 2 -i ${dir}/ND-{{tag}}-Transmittance@1nm.ecsv --changes
 
 # --------------------------
 # Eclipse sunglasses testing
@@ -166,7 +166,7 @@ eclipse-reduce:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+        uv run lica-filters --console one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
     done
 
 [private]
@@ -176,8 +176,8 @@ nasa-reduce:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-filters --console --trace one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
-        lica-eclip --console --trace inverse -ycn 5 -i ${dir}/${i}_eg.ecsv --save
+        uv run lica-filters --console --trace one -l $i -g $i -p ${dir}/${i}_osi_nd0.5.txt -m PIN-10D -i ${dir}/${i}_eg.txt --ndf ND-0.5
+        uv run lica-eclip --console --trace inverse -ycn 5 -i ${dir}/${i}_eg.ecsv --save
     done
 
 # Single linear graphs for all glasses
@@ -187,7 +187,7 @@ eclipse-plot-all:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv  --lines --changes
+        uv run lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv  --lines --changes
     done
 
 # Single linear graphs for all glasses with & without ND correction
@@ -197,7 +197,7 @@ eclipse-plot-all-nd:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv --lines --changes
+        uv run lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv --lines --changes
     done
 
 # save NASA style plot of glasses for all glasses
@@ -210,7 +210,7 @@ eclipse-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
+    uv run lica-eclip --console --trace plot -ycn 6 --t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines --marker None -i $file_accum 
 
 # logaritmic style plotting for group 1
 eclipse-plot-g1-log:
@@ -222,7 +222,7 @@ eclipse-plot-g1-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -ycn 5 -t Group 1 -i $file_accum -m None --lines --log-y
+    uv run lica-plot --console --trace single tables column -ycn 5 -t Group 1 -i $file_accum -m None --lines --log-y
 
 
 # NASA style plotting of glasses for group 1
@@ -235,7 +235,7 @@ eclipse-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum --lines -m None
+    uv run lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum --lines -m None
 
 # logaritmic style plotting for group 1
 eclipse-plot-g2-log:
@@ -247,7 +247,7 @@ eclipse-plot-g2-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y -sd 300
+    uv run lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y -sd 300
 
 # NASA style plotting of glasses for group 2
 eclipse-plot-g2-nasa:
@@ -259,7 +259,7 @@ eclipse-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -m None --lines
+    uv run lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -m None --lines
 
 
 # Save lingle linear plots for all glasses
@@ -269,7 +269,7 @@ eclipse-save-plot-all:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+        uv run lica-plot --console --trace single table columns -ycn 5 -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
 # Single linear graphs for all glasses with & without ND correction
@@ -279,7 +279,7 @@ eclipse-save-plot-all-nd:
     dir="data/eclipse"
     for i in 01 02 03 04 05 06 07 08 09 10 11 12 13
     do
-        lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
+        uv run lica-plot --console --trace single table columns -ycn 4 5 -l Raw ND-Corr -t Eclipse Glasses $i -i ${dir}/${i}_eg.ecsv -sf ${dir}/${i}_eg.png --lines --changes -sd 300
     done
 
 # save NASA style plot of glasses for all glasses
@@ -292,7 +292,7 @@ eclipse-save-plot-all-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 -t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png -sd 300
+    uv run lica-eclip --console --trace plot -ycn 6 -t 'Transmittance vs Wavelength' -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/Transmittance_vs_Wavelength_log101_Transmittance.png -sd 300
 
 
 # save logaritmic style plotting for group 1
@@ -305,7 +305,7 @@ eclipse-save-plot-g1-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -ycn 5 -t Group 1 -m None --lines -i $file_accum -sf ${dir}/group1_eg.png  --log-y -sd 300
+    uv run lica-plot --console --trace single tables column -ycn 5 -t Group 1 -m None --lines -i $file_accum -sf ${dir}/group1_eg.png  --log-y -sd 300
 
 
 # Save NASA style plotting of glasses for group 1
@@ -318,7 +318,7 @@ eclipse-save-plot-g1-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
+    uv run lica-eclip --console --trace plot -ycn 6 --t Group 1 -yl '$log_{10}(\frac{1}{Transmittance})$' --lines -m None -i $file_accum -sf ${dir}/inv_log_group_a.png -sd 300
 
 # Save logaritmic style plotting for group 1
 eclipse-save-plot-g2-log:
@@ -330,7 +330,7 @@ eclipse-save-plot-g2-log:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "
     done
-    lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y  -sf ${dir}/group2_eg.png -sd 300
+    uv run lica-plot --console --trace single tables column -ycn 5 -t Group 2 -i $file_accum -m None --lines --log-y  -sf ${dir}/group2_eg.png -sd 300
 
 # Save NASA style plotting of glasses for group 2
 eclipse-save-plot-g2-nasa:
@@ -342,7 +342,7 @@ eclipse-save-plot-g2-nasa:
     do
         file_accum="${file_accum}${dir}/${i}_eg.ecsv "   
     done
-    lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
+    uv run lica-eclip --console --trace plot -ycn 6 --t Group 2 -yl '$log_{10}(\frac{1}{Transmittance})$' -i $file_accum -sf ${dir}/inv_log_group_b.png --lines -m None
 
 
 # ------------------------------------
@@ -359,14 +359,14 @@ omega-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-filters --console --trace one -l OMEGA NPB -p ${dir}/QEdata_diode_2nm.txt -m PIN-10D -i ${dir}/QEdata_filter_2nm.txt
+    uv run lica-filters --console --trace one -l OMEGA NPB -p ${dir}/QEdata_diode_2nm.txt -m PIN-10D -i ${dir}/QEdata_filter_2nm.txt
 
 # Plot single axes, 3 table, 1 column each
 omega-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-plot --console --trace single table column -% -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines
+    uv run lica-plot --console --trace single table column -% -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines
 
 
 # --------------
@@ -378,11 +378,11 @@ eysdon-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-filters --console --trace classif photod -g X -p ${dir}/photodiode.txt
-    lica-filters --console --trace classif filter -g X -i ${dir}/green.txt -l Green
-    lica-filters --console --trace classif filter -g X -i ${dir}/red.txt -l Red
-    lica-filters --console --trace classif filter -g X -i ${dir}/blue.txt -l Blue
-    lica-filters --console --trace process -d ${dir} --save
+    uv run lica-filters --console --trace classif photod -g X -p ${dir}/photodiode.txt
+    uv run lica-filters --console --trace classif filter -g X -i ${dir}/green.txt -l Green
+    uv run lica-filters --console --trace classif filter -g X -i ${dir}/red.txt -l Red
+    uv run lica-filters --console --trace classif filter -g X -i ${dir}/blue.txt -l Blue
+    uv run lica-filters --console --trace process -d ${dir} --save
 
 
 # Plot Eysdon Filter set
@@ -390,7 +390,7 @@ eysdon-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines
+    uv run lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines
 
 
 # --------------------------------
@@ -402,23 +402,23 @@ tessw-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/tessw"
-    lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
-    lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
-    lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
-    lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER
-    lica-tessw --console --trace process  -d ${dir} --save
+    uv run lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
+    uv run lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
+    uv run lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
+    uv run lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER
+    uv run lica-tessw --console --trace process  -d ${dir} --save
 
 tessw-plot-raw:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
-    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 2  --changes --lines
+    uv run lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 2  --changes --lines
 
 tessw-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/tessw
-    lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 5  --changes --lines
+    uv run lica-plot --console single tables column -i ${dir}/stars1277-frequencies.ecsv  ${dir}/stars6502-frequencies.ecsv  -ycn 5  --changes --lines
 
 
 # TESS-W IV/IR-cut filter data reduction
@@ -426,13 +426,13 @@ sp750-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/IR_cut"
-    lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
+    uv run lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
 
 sp750-plot:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/IR_cut"
-    lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -ycn 4 --changes --lines
+    uv run lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -ycn 4 --changes --lines
 
 # =============================
 # Generic data reduction recipe

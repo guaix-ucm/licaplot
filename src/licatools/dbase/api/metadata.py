@@ -50,8 +50,8 @@ def _db_lookup(path: str, session: Session) -> Optional[Dict[str, Any]]:
             result["original_name"] = existing.original_name
             setup = existing.setup
             if setup:
-                if setup.monocromator_slit:
-                    result["monocromator_slit"] = setup.monocromator_slit
+                if setup.monochromator_slit:
+                    result["monochromator_slit"] = setup.monochromator_slit
                 if setup.input_slit:
                     result["input_slit"] = setup.input_slit
                 if setup.psu_current:

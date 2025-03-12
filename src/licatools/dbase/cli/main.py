@@ -152,13 +152,13 @@ def cli_populate(args: Namespace) -> None:
     with Session() as session:
         try:
             with session.begin():
-                ancient = Setup(name="ancient", psu_current=8.20, monocromator_slit=1.26)
+                ancient = Setup(name="ancient", psu_current=8.20, monochromator_slit=1.26)
                 log.info("Populating with %s", ancient)
                 session.add(ancient)
-                eclipse = Setup(name="eclipse", psu_current=8.20, monocromator_slit=2.5)
+                eclipse = Setup(name="eclipse", psu_current=8.20, monochromator_slit=2.5)
                 log.info("Populating with %s", eclipse)
                 session.add(eclipse)
-                ndfilters = Setup(name="ndfilters", psu_current=8.20, monocromator_slit=1.04)
+                ndfilters = Setup(name="ndfilters", psu_current=8.20, monochromator_slit=1.04)
                 log.info("Populating with %s", ndfilters)
                 session.add(ndfilters)
         except sqlalchemy.exc.IntegrityError:
