@@ -55,7 +55,6 @@ def _db_lookup(path: str, session: Session) -> Optional[Dict[str, Any]]:
                     result["input_slit"] = setup.input_slit
                 if setup.psu_current:
                     result["psu_current"] = setup.psu_current
-
     return result
 
 

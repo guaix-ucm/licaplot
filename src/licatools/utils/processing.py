@@ -109,9 +109,9 @@ def read_tess_csv(path: str) -> Table:
 
 
 def add_lica_metadata(path: str, table: Table) -> None:
-    log.info("Looking up LICA database for more metadata of %s", path)
     metadata = db_lookup(path)
     if metadata:
+        log.info("Additional LICA database metadata found for %s", path)
         timestamp = datetime.strptime(metadata["timestamp"], "%Y-%m-%d %H:%M:%S")
         #timestamp = Time(timestamp, scale='utc')
         table.meta["timestamp"] = timestamp
@@ -125,6 +125,8 @@ def add_lica_metadata(path: str, table: Table) -> None:
         psu_current = metadata.get("psu_current")
         if psu_current:
             table.meta["psu_current"] = psu_current * u.A
+    else:
+        log.info("No additional LICA database metadata found for %s", path)
 
 
 def read_scan_csv(path: str) -> Table:
@@ -154,6 +156,7 @@ def read_manual_csv(path: str) -> Table:
     table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
     table[TBCOL.CURRENT] = np.abs(table[TBCOL.CURRENT]) * u.A
     table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
+    return table
 
 
 def read_tsl237_datasheet_csv(path: str) -> Table:
