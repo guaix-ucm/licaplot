@@ -157,9 +157,10 @@ def cli_populate(args: Namespace) -> None:
                 session.add(ancient)
                 eclipse = Setup(name="eclipse", psu_current=8.20, monocromator_slit=2.5)
                 log.info("Populating with %s", eclipse)
-                eclipse = Setup(name="ndfilters", psu_current=8.20, monocromator_slit=1.04)
-                log.info("Populating with %s", eclipse)
                 session.add(eclipse)
+                ndfilters = Setup(name="ndfilters", psu_current=8.20, monocromator_slit=1.04)
+                log.info("Populating with %s", ndfilters)
+                session.add(ndfilters)
         except sqlalchemy.exc.IntegrityError:
             log.warn("Setup data was already populated")
 

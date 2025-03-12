@@ -52,13 +52,25 @@ def export(input_dir: str, output_path: str) -> bool:
                     missing.append(name)
                     log.debug("%s does not exists in database, skipping ...")
                     continue
-                metadata.append((existing.creation_tstamp.strftime("%Y-%m-%d %H:%M:%S"), name))
+                setup = existing.setup
+                if setup:
+                    metadata.append(
+                        (
+                            existing.creation_tstamp.strftime("%Y-%m-%d %H:%M:%S"),
+                            name,
+                            setup.monocromator_slit,
+                            setup.input_slit,
+                            setup.psu_current,
+                        )
+                    )
+                else:
+                    metadata.append((existing.creation_tstamp.strftime("%Y-%m-%d %H:%M:%S"), name, None, None, None))
     metadata = sorted(metadata, key=lambda x: x[0])
     log.info("found %d entries in the database, %d files are missing", len(metadata), len(missing))
     if metadata:
         with open(output_path, "w") as fd:
             writer = csv.writer(fd, delimiter=";")
-            writer.writerow(("creation_time", "name"))
+            writer.writerow(("creation_time", "name", "monocromator_slit", "input_slit", "psu_current"))
             for row in metadata:
                 writer.writerow(row)
     return len(metadata) > 0
