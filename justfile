@@ -553,8 +553,7 @@ env-backup bak_dir:
     fi
     mkdir -p {{ bak_dir }}
     cp {{ local_env }} {{ bak_dir }}
-    mkdir -p {{ bak_dir }}/csv
-    cp -r csv {{ bak_dir }}
+    cp lica.db {{ bak_dir }}
   
 [private]
 env-restore bak_dir:
@@ -565,5 +564,4 @@ env-restore bak_dir:
         exit 1 
     fi
     cp {{ bak_dir }}/.env {{ local_env }}
-    mkdir -p csv
-    cp -r {{ bak_dir }}/csv .
+    cp {{ bak_dir }}/lica.db .
