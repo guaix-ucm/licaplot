@@ -97,9 +97,9 @@ class LicaEvent(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     # Timestamp in UTC
-    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, unique=True)
-    subject: Mapped[SubjectType] = mapped_column(SubjectType, nullable=False)
-    event: Mapped[EventType] = mapped_column(EventType, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, unique=True)
+    subject: Mapped[SubjectType] = mapped_column(SubjectType)
+    event: Mapped[EventType] = mapped_column(EventType)
     comment: Mapped[Optional[str]] = mapped_column(String(512))
 
     def __repr__(self) -> str:
@@ -134,7 +134,7 @@ class LicaFile(Model):
     original_dir: Mapped[str] = mapped_column(String(256))
     # Timestamp in UTC
     creation_tstamp: Mapped[datetime] = mapped_column(DateTime)
-    # Creation date as YYYYMMDD for easy day filtering
+    # Creation date as YYYYMMDD (UTC) for easy day filtering
     creation_date: Mapped[int]
     digest: Mapped[str] = mapped_column(String(128), unique=True)
     contents: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
