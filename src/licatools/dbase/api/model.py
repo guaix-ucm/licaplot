@@ -97,10 +97,13 @@ class LicaEvent(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     # Timestamp in UTC
-    timestamp: Mapped[datetime] = mapped_column(DateTime)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, unique=True)
     subject: Mapped[SubjectType] = mapped_column(SubjectType, nullable=False)
     event: Mapped[EventType] = mapped_column(EventType, nullable=False)
     comment: Mapped[Optional[str]] = mapped_column(String(512))
+
+    def __repr__(self) -> str:
+        return f"LicaEvent(tstamp={self.timestamp}, subject={self.subject}, event={self.event})"
 
 
 class LicaSetup(Model):
@@ -119,7 +122,7 @@ class LicaSetup(Model):
     files: Mapped[List["LicaFile"]] = relationship(back_populates="setup")
 
     def __repr__(self) -> str:
-        return f"File(LicaSetup={self.name}, psu={self.psu_current}, slit={self.monochromator_slit}, input={self.input_slit})"
+        return f"LicaSetup(name={self.name}, psu={self.psu_current}, slit={self.monochromator_slit}, input={self.input_slit})"
 
 
 class LicaFile(Model):
@@ -139,4 +142,4 @@ class LicaFile(Model):
     setup: Mapped[Optional["LicaSetup"]] = relationship(back_populates="files")
 
     def __repr__(self) -> str:
-        return f"File(name={self.original_name}, tstamp={datestr(self.creation_tstamp)})"
+        return f"LicaFile(name={self.original_name}, tstamp={datestr(self.creation_tstamp)})"
