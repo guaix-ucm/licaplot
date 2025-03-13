@@ -28,7 +28,7 @@ dependencies = [
     "pyqt5 >= 5.15",
     "astropy >= 6.0",
     "scipy >= 1.13",
-    "lica[lab,sqlalchemy]>=1.1.2",
+    "lica[lab,sqlalchemy]>=1.1.3",
     "pytz >= 2025.1",
 ]
 
@@ -54,6 +54,7 @@ lica-ndf = "licatools.ndfilters:main"
 lica-eclip = "licatools.eclipse:main"
 lica-meta = "licatools.metadata:main"
 lica-db = "licatools.dbase.cli.main:main"
+lica-file = "licatools.file:main"
 
 
 [build-system]
