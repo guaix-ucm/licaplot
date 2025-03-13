@@ -47,16 +47,16 @@ SubjectType: Enum = Enum(
     create_constraint=False,
     metadata=Model.metadata,
     validate_strings=True,
-    values_callable=lambda x: [e.name.lower() for e in x],
+    values_callable=lambda x: [e.value.upper() for e in x],
 )
 
 EventType: Enum = Enum(
     Event,
-    name="subject_type",
+    name="event_type",
     create_constraint=False,
     metadata=Model.metadata,
     validate_strings=True,
-    values_callable=lambda x: [e.name.lower() for e in x],
+    values_callable=lambda x: [e.value.upper() for e in x],
 )
 
 
