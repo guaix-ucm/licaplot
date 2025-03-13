@@ -883,7 +883,7 @@ sqlalchemy = [
 
 [[package]]
 name = "licatools"
-version = "0.2.13.dev155+g741c79a.d20250313"
+version = "0.3.1.dev0+g2fff119.d20250313"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -892,6 +892,7 @@ dependencies = [
     { name = "pyqt5" },
     { name = "pytz" },
     { name = "scipy" },
+    { name = "sqlalchemy" },
 ]
 
 [package.optional-dependencies]
@@ -913,6 +914,7 @@ requires-dist = [
     { name = "pyqt5", specifier = ">=5.15" },
     { name = "pytz", specifier = ">=2025.1" },
     { name = "scipy", specifier = ">=1.13" },
+    { name = "sqlalchemy" },
 ]
 
 [package.metadata.requires-dev]
