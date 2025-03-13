@@ -56,6 +56,8 @@ lica-meta = "licatools.metadata:main"
 lica-db = "licatools.dbase.cli.main:main"
 lica-file = "licatools.file:main"
 
+[dependency-groups]
+dev = ["alembic"]
 
 [build-system]
 requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
@@ -70,11 +72,6 @@ line-length = 100
 # pyproject.toml
 [tool.setuptools_scm]
 write_to = "src/licatools/_version.py"
-
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.3.3",
-]
 
 [tool.setuptools.packages.find]
 # scanning for namespace packages is true by default in pyproject.toml, so
