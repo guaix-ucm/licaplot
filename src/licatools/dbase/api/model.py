@@ -34,10 +34,31 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from lica.sqlalchemy.dbase import Model
 
+from . import Subject, Event
 
 # ================
 # Module constants
 # ================
+
+
+SubjectType: Enum = Enum(
+    Subject,
+    name="subject_type",
+    create_constraint=False,
+    metadata=Model.metadata,
+    validate_strings=True,
+    values_callable=lambda x: [e.name.lower() for e in x],
+)
+
+EventType: Enum = Enum(
+    Event,
+    name="subject_type",
+    create_constraint=False,
+    metadata=Model.metadata,
+    validate_strings=True,
+    values_callable=lambda x: [e.name.lower() for e in x],
+)
+
 
 # =======================
 # Module global variables
@@ -71,8 +92,19 @@ class Config(Model):
         return f"Config(section={self.section!r}, prop={self.prop!r}, value={self.value!r})"
 
 
-class Setup(Model):
-    __tablename__ = "setup_t"
+class LicaEvent(Model):
+    __tablename__ = "lica_event_t"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # Timestamp in UTC
+    timestamp: Mapped[datetime] = mapped_column(DateTime)
+    subject: Mapped[SubjectType] = mapped_column(SubjectType, nullable=False)
+    event: Mapped[EventType] = mapped_column(EventType, nullable=False)
+    comment: Mapped[Optional[str]] = mapped_column(String(512))
+
+
+class LicaSetup(Model):
+    __tablename__ = "lica_setup_t"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     # Unique name identifying the setup
@@ -87,24 +119,24 @@ class Setup(Model):
     files: Mapped[List["LicaFile"]] = relationship(back_populates="setup")
 
     def __repr__(self) -> str:
-        return f"File(Setup={self.name}, psu={self.psu_current}, slit={self.monochromator_slit}, input={self.input_slit})"
-
+        return f"File(LicaSetup={self.name}, psu={self.psu_current}, slit={self.monochromator_slit}, input={self.input_slit})"
 
 
 class LicaFile(Model):
     __tablename__ = "lica_file_t"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    setup_id: Mapped[Optional[int]] = mapped_column(ForeignKey("setup_t.id"))
+    setup_id: Mapped[Optional[int]] = mapped_column(ForeignKey("lica_setup_t.id"))
     original_name: Mapped[str] = mapped_column(String(65))
     original_dir: Mapped[str] = mapped_column(String(256))
+    # Timestamp in UTC
     creation_tstamp: Mapped[datetime] = mapped_column(DateTime)
     # Creation date as YYYYMMDD for easy day filtering
     creation_date: Mapped[int]
     digest: Mapped[str] = mapped_column(String(128), unique=True)
     contents: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
     # This isnot a real column, it is meant for the ORM
-    setup: Mapped[Optional["Setup"]] = relationship(back_populates="files")
+    setup: Mapped[Optional["LicaSetup"]] = relationship(back_populates="files")
 
     def __repr__(self) -> str:
         return f"File(name={self.original_name}, tstamp={datestr(self.creation_tstamp)})"

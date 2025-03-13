@@ -35,8 +35,8 @@ from lica.sqlalchemy.dbase import engine, Model, Session
 from ... import __version__ as __version__
 
 # We must pull one model to make it work
-from ..api import Extension
-from ..api.model import Config, LicaFile, Setup  # noqa: F401
+from ..api import Extension, Subject, Event
+from ..api.model import Config, LicaFile, LicaSetup, LicaEvent
 from . import parser as prs
 
 # ----------------
@@ -138,6 +138,36 @@ def create_lica_file(path: str, session: Session) -> Optional[LicaFile]:
 # =============
 
 
+def cli_event_lamp_change(args: Namespace) -> None:
+    tstamp = args.timestamp or datetime.now()
+    tstamp = MADRID.localize(tstamp).astimezone(pytz.utc)
+    comment = " ".join(args.comment) if args.comment else None
+    with Session() as session:
+        with session.begin():
+            event = LicaEvent(
+                subject=Subject.LAMP, timestamp=tstamp, event=Event.CHANGE, comment=comment
+            )
+            session.add(event)
+
+
+def cli_event_lamp_on(args: Namespace) -> None:
+    tstamp = args.timestamp or datetime.now()
+    tstamp = MADRID.localize(tstamp).astimezone(pytz.utc)
+    with Session() as session:
+        with session.begin():
+            event = LicaEvent(subject=Subject.LAMP, timestamp=tstamp, event=Event.ON)
+            session.add(event)
+
+
+def cli_event_lamp_off(args: Namespace) -> None:
+    tstamp = args.timestamp or datetime.now()
+    tstamp = MADRID.localize(tstamp).astimezone(pytz.utc)
+    with Session() as session:
+        with session.begin():
+            event = LicaEvent(subject=Subject.LAMP, timestamp=tstamp, event=Event.OFF)
+            session.add(event)
+
+
 def cli_slurp(args: Namespace) -> None:
     file_paths = get_file_paths(args.input_dir, args.depth)
     with Session() as session:
@@ -152,17 +182,17 @@ def cli_populate(args: Namespace) -> None:
     with Session() as session:
         try:
             with session.begin():
-                ancient = Setup(name="ancient", psu_current=8.20, monochromator_slit=1.26)
+                ancient = LicaSetup(name="ancient", psu_current=8.20, monochromator_slit=1.26)
                 log.info("Populating with %s", ancient)
                 session.add(ancient)
-                eclipse = Setup(name="eclipse", psu_current=8.20, monochromator_slit=2.5)
+                eclipse = LicaSetup(name="eclipse", psu_current=8.20, monochromator_slit=2.5)
                 log.info("Populating with %s", eclipse)
                 session.add(eclipse)
-                ndfilters = Setup(name="ndfilters", psu_current=8.20, monochromator_slit=1.04)
+                ndfilters = LicaSetup(name="ndfilters", psu_current=8.20, monochromator_slit=1.04)
                 log.info("Populating with %s", ndfilters)
                 session.add(ndfilters)
         except sqlalchemy.exc.IntegrityError:
-            log.warn("Setup data was already populated")
+            log.warn("LicaSetup data was already populated")
 
 
 def cli_schema(args: Namespace) -> None:
@@ -189,7 +219,24 @@ def add_args(parser: ArgumentParser) -> None:
         "slurp", parents=[prs.idir(), prs.depth()], help="Slurps files into the database"
     )
     parser.set_defaults(func=cli_slurp)
-    pass
+    # ================
+    # Event subparsers
+    # ================
+    parser_event = subparser.add_parser("event", help="Slurps files into the database")
+    sub_event = parser_event.add_subparsers(required=True)
+    # ---------------------
+    # Lamp Events subparser
+    # ---------------------
+    prs_lamp = sub_event.add_parser("lamp", help="Lamp events")
+    sub_lamp = prs_lamp.add_subparsers(required=True)
+    prs_lamp_change = sub_lamp.add_parser(
+        "change", parents=[prs.tstamp(), prs.comment()], help="Lamp change event"
+    )
+    prs_lamp_change.set_defaults(func=cli_event_lamp_change)
+    prs_lamp_on = sub_lamp.add_parser("on", parents=[prs.tstamp()], help="Power on lamp event")
+    prs_lamp_on.set_defaults(func=cli_event_lamp_on)
+    prs_lamp_off = sub_lamp.add_parser("off", parents=[prs.tstamp()], help="Power off lamp event")
+    prs_lamp_off.set_defaults(func=cli_event_lamp_off)
 
 
 def main():

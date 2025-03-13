@@ -23,7 +23,7 @@ from lica.sqlalchemy.dbase import Session
 from ... import __version__ as __version__
 
 # We must pull one model to make it work
-from ..api.model import Config, LicaFile, Setup  # noqa: F401
+from ..api.model import Config, LicaFile, LicaSetup  # noqa: F401
 from ..api import Extension
 # -----------------------
 # Module global variables
