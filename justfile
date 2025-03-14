@@ -78,6 +78,40 @@ env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, project))
 notebook:
     uv run jupyter notebook
 
+# -----------------
+# Database metadata
+# -----------------
+
+# This is the current drive Id for the USB stick I am using
+usb_drive_uuid := "D12B-14FD"
+usb_stick := join("/media", user, usb_drive_uuid)
+
+
+# Initializes the LICA database
+dbase-init:
+    uv run lica-db --console schema
+    uv run lica-db --console populate
+
+slurp depth="10":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="{{usb_stick}}/LICA"
+    uv run lica-db --console --log-file lica-db.log slurp --input-dir ${dir} --depth {{depth}}
+
+# -------------------------------------------
+# Anotate metadata for the different projects
+# -------------------------------------------
+
+# generated metadata file for NDF filters
+meta-ndf:
+    uv run lica-meta --console generate -i data/ndfilters/ndf0.5 -gp *.txt
+    uv run lica-meta --console generate -i data/ndfilters/ndf1.0 -gp *.txt
+
+# generated metadata file for TESSW
+meta-tess:
+    uv run lica-meta --console generate -i data/tessw -gp *.csv
+  
+
 # -------------------------
 # Hamamatsu utility testing
 # -------------------------

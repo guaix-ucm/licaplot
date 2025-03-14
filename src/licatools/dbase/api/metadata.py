@@ -69,11 +69,11 @@ def remove_original_name(item: Dict[str, Any]) -> Dict[str, Any]:
     return item
 
 
-def export(input_dir: str, output_path: str) -> bool:
+def export(input_dir: str, extension: str, output_path: str) -> bool:
     """Exports metradata for all LICA acquistion files in the given input directory"""
-    iterator = glob.iglob(Extension.TXT, root_dir=input_dir)
+    iterator = glob.iglob(extension, root_dir=input_dir)
     metadata = list()
-    missing = list()
+    excluded = list()
     with Session() as session:
         for name in iterator:
             path = os.path.join(input_dir, name)
@@ -81,9 +81,9 @@ def export(input_dir: str, output_path: str) -> bool:
             if individual_metadata:
                 metadata.append(individual_metadata)
             else:
-                missing.append(name)
+                excluded.append(name)
     metadata = sorted(metadata, key=lambda x: x["timestamp"])
-    log.info("found %d entries in the database, %d files are missing", len(metadata), len(missing))
+    log.info("found %d files in the database, %d input files excluded", len(metadata), len(excluded))
     if metadata:
         metadata = list(map(remove_original_name, metadata))
         with open(output_path, "w", newline="") as fd:

@@ -54,7 +54,7 @@ log = logging.getLogger(__name__)
 def cli_generate(args: Namespace) -> None:
     output_path = args.output_file or os.path.join(args.input_dir, "metadata.csv")
     log.info("Generating metadata for %s", args.input_dir)
-    exported = api.metadata.export(args.input_dir, output_path)
+    exported = api.metadata.export(args.input_dir, args.glob_pattern, output_path)
     if exported:
         log.info("Output metadata file is %s", output_path)
 
