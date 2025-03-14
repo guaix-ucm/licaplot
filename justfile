@@ -111,6 +111,29 @@ meta-ndf:
 meta-tess:
     uv run lica-meta --console generate -i data/tessw -gp *.csv
   
+# generated metadata file for Eclipse glasses
+meta-eclipse:
+    uv run lica-meta --console generate -i data/eclipse -gp *.csv
+
+# generated metadata file forEysdon RGB filter set
+meta-eysdon:
+    uv run lica-meta --console generate -i data/filters/Eysdon_RGB -gp *.txt 
+
+# generated metadata file forEysdon RGB filter set
+meta-IR_cut:
+    uv run lica-meta --console generate -i data/filters/IR_cut -gp *.txt 
+
+# generated metadata file forEysdon RGB filter set
+meta-omega:
+    uv run lica-meta --console generate -i data/filters/IR_cut -gp *.txt 
+
+meta:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    for item in ndf tess eclipse eysdon IR_cut omega
+    do
+        just meta-${item}
+    done
 
 # -------------------------
 # Hamamatsu utility testing

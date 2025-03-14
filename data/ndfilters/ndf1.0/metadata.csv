@@ -1,4 +1,4 @@
-creation_time;name
-2025-02-25 12:10:00;03_osi_clear.txt
-2025-02-25 12:34:38;04_osi_nd1.0.txt
-2025-02-25 12:59:06;05_osi_clear.txt
+timestamp;name;monochromator_slit;psu_current
+2025-02-25 12:10:00;03_osi_clear.txt;1.04;8.2
+2025-02-25 12:34:38;04_osi_nd1.0.txt;1.04;8.2
+2025-02-25 12:59:06;05_osi_clear.txt;1.04;8.2
