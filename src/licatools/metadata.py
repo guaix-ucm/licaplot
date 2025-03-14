@@ -70,7 +70,6 @@ def vdate(datestr: str|list[str]) -> datetime:
 # -----------------------
 
 def cli_file_time(args: Namespace):
-    log.info(args)
     if args.from_date:
         modif_time =  args.from_date.timestamp()
         access_time = modif_time
