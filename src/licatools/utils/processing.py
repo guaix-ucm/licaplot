@@ -111,6 +111,7 @@ def read_tess_csv(path: str) -> Table:
 def add_lica_metadata(path: str, table: Table) -> None:
     use_database = decouple.config("USE_DATABASE",cast=bool,default=False)
     if not use_database:
+        log.warn("Not using LICA metadata database")
         return
     metadata = db_lookup(path)
     if metadata:
