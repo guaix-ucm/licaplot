@@ -111,11 +111,11 @@ def read_tess_csv(path: str) -> Table:
 def add_lica_metadata(path: str, table: Table) -> None:
     use_database = decouple.config("USE_DATABASE",cast=bool,default=False)
     if not use_database:
-        log.warn("Not using LICA metadata database")
+        log.warn("LICA database: not being used")
         return
     metadata = db_lookup(path)
     if metadata:
-        log.info("Additional LICA database metadata found for %s", path)
+        log.info("LICA database: additional metadata found for %s", path)
         timestamp = datetime.strptime(metadata["timestamp"], "%Y-%m-%d %H:%M:%S")
         #timestamp = Time(timestamp, scale='utc')
         table.meta["timestamp"] = timestamp
@@ -130,7 +130,7 @@ def add_lica_metadata(path: str, table: Table) -> None:
         if psu_current:
             table.meta["psu_current"] = psu_current * u.A
     else:
-        log.info("No additional LICA database metadata found for %s", path)
+        log.info("LICA database: No additional metadata found for %s", path)
 
 
 def read_scan_csv(path: str) -> Table:
