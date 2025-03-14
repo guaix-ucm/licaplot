@@ -43,6 +43,10 @@ test-publish pkg="licatools": build
         --extra-index-url https://pypi.org/simple/ \
         -- python -c "from {{pkg}} import __version__; print(__version__)"
 
+# Uploads tags to public repo
+tags:
+    git push --tags origin main
+
 # Adds lica source library as dependency. 'version' may be a tag or branch
 lica-dev version="main":
     #!/usr/bin/env bash
