@@ -55,7 +55,6 @@ lica-ndf = "licatools.ndfilters:main"
 lica-eclip = "licatools.eclipse:main"
 lica-meta = "licatools.metadata:main"
 lica-db = "licatools.dbase.cli.main:main"
-lica-file = "licatools.file:main"
 
 [dependency-groups]
 dev = ["alembic"]
