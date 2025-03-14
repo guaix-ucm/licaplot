@@ -251,7 +251,7 @@ def cli_digitized_datasheet(args: Namespace) -> None:
 def cli_compare(args: Namespace) -> None:
     table1 = astropy.io.ascii.read(args.cross_file, format="ecsv")
     table2 = astropy.io.ascii.read(args.datasheet_file, format="ecsv")[0:-1]
-    hama_reference = lica.photodiode.load(
+    hama_reference = lica.lab.photodiode.load(
         PhotodiodeModel.lab.HAMAMATSU,
         1,
         BENCH.WAVE_START,
