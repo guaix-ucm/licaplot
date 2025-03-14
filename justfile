@@ -30,13 +30,13 @@ build:
     uv build
 
 # Publish the package to PyPi
-publish pkg="licaplot": build
+publish pkg="licatools": build
     twine upload -r pypi dist/*
     uv run --no-project --with {{pkg}} --refresh-package {{pkg}} \
         -- python -c "from {{pkg}} import __version__; print(__version__)"
 
 # Publish to Test PyPi server
-test-publish pkg="licaplot": build
+test-publish pkg="licatools": build
     twine upload --verbose -r testpypi dist/*
     uv run --no-project  --with {{pkg}} --refresh-package {{pkg}} \
         --index-url https://test.pypi.org/simple/ \

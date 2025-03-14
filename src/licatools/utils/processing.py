@@ -14,10 +14,10 @@ from typing import Tuple, Iterable, Dict, DefaultDict
 # Third-party libraries
 # ---------------------
 
+import decouple
 import numpy as np
 import astropy.io.ascii
 import astropy.units as u
-from astropy.time import Time
 from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.constants import astropyconst20 as const
@@ -109,6 +109,9 @@ def read_tess_csv(path: str) -> Table:
 
 
 def add_lica_metadata(path: str, table: Table) -> None:
+    use_database = decouple.config("USE_DATABASE",cast=bool,default=False)
+    if not use_database:
+        return
     metadata = db_lookup(path)
     if metadata:
         log.info("Additional LICA database metadata found for %s", path)
