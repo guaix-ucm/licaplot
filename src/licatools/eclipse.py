@@ -146,7 +146,7 @@ def colname() -> ArgumentParser:
 def inverse(table: Table, ycn: ColNum, col_name: str = None) -> None:
     ycol = table.columns[ycn]
     yname = col_name or f"Inverse Log10 of {ycol.name}"
-    table[yname] = np.log10(ycol)
+    table[yname] = -np.log10(ycol)
     table.meta["History"].append(f"Added new f{yname} column")
 
 
