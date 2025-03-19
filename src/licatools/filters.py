@@ -69,6 +69,8 @@ def photodiode(
     photod_path: str,
     model: str,
     tag: str,
+    title: str | None = None,
+    label: str | None = None,
     x_low: int = BENCH.WAVE_START,
     x_high: int = BENCH.WAVE_END,
 ) -> None:
@@ -76,7 +78,7 @@ def photodiode(
     log.info("Converting to an Astropy Table: %s", photod_path)
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
     return processing.photodiode_ecsv(
-        path=photod_path, model=model, title=None, tag=tag, x_low=x_low, x_high=x_high
+        path=photod_path, model=model, title=title, label=label, tag=tag, x_low=x_low, x_high=x_high
     )
 
 
@@ -102,10 +104,9 @@ def one_filter(
     ndf: NDFilter,
 ) -> str:
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
-
     tag = tag or processing.random_tag()
     processing.photodiode_ecsv(
-        path=photod_path, model=model, title=None, tag=tag, x_low=x_low, x_high=x_high
+        path=photod_path, model=model, title=None, label=None, tag=tag, x_low=x_low, x_high=x_high
     )
     result = processing.filter_ecsv(path=input_path, label=label, title=title, tag=tag)
     dir_path = os.path.dirname(input_path)
@@ -129,7 +130,17 @@ def cli_process(args: Namespace) -> None:
 
 
 def cli_photodiode(args: Namespace) -> None:
-    photodiode(args.photod_file, args.model, args.tag, args.x_low, args.x_high)
+    title = " ".join(args.title) if args.title is not None else None
+    label = " ".join(args.title) if args.title is not None else None
+    photodiode(
+        photod_path=args.photod_file,
+        model=args.model,
+        tag=args.tag,
+        title=title,
+        label=label,
+        x_low=args.x_low,
+        x_high=args.x_high,
+    )
 
 
 def cli_filters(args: Namespace) -> None:
@@ -189,7 +200,13 @@ def add_args(parser):
     subsubparser = parser_classif.add_subparsers(dest="subcommand")
     parser_photod = subsubparser.add_parser(
         "photod",
-        parents=[prs.photod(), prs.tag(), prs.xlim()],
+        parents=[
+            prs.photod(),
+            prs.tag(),
+            prs.xlim(),
+            prs.title(None, "Plotting"),
+            prs.label("plotting"),
+        ],
         help="photodiode subcommand",
     )
     parser_photod.set_defaults(func=cli_photodiode)

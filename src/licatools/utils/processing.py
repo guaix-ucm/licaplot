@@ -180,7 +180,8 @@ def photodiode_table(
     path: str,
     model: str,
     tag: str,
-    title: str,
+    title: str | None,
+    label: str | None,
     x_low: int,
     x_high: int,
     manual: bool = False,
@@ -197,7 +198,7 @@ def photodiode_table(
     title = title or f"{model} reference measurements"
     title = " ".join(title) if not isinstance(title, str) else title
     table.meta = {
-        "label": model,  # label used for display purposes
+        "label": label or model,  # label used for display purposes
         "title": title,
         "Processing": {
             "type": PROMETA.PHOTOD.value,
@@ -225,13 +226,14 @@ def photodiode_ecsv(
     path: str,
     model: str,
     tag: str,
-    title: str,
+    title: str | None,
+    label: str | None,
     x_low: int,
     x_high: int,
     manual=False,
 ) -> str:
     table = photodiode_table(
-        path=path, model=model, tag=tag, title=title, x_low=x_low, x_high=x_high, manual=manual
+        path=path, model=model, tag=tag, title=title, label=label, x_low=x_low, x_high=x_high, manual=manual
     )
     output_path = str(equivalent_ecsv(path))
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
