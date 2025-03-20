@@ -65,7 +65,7 @@ class PlotterBase(ABC):
         legends_grp: LegendsGroup,
         markers_grp: MarkersGroup,
         linestyles_grp: LineStylesGroup,
-        changes: bool = True,
+        changes: bool = False,
         percent: bool = False,
         log_y: bool = False,
         linewidth: int = 1,

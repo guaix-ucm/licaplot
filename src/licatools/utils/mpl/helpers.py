@@ -202,6 +202,7 @@ def plot_single_tables_columns(
             legends_grp=legends_grp,
             markers_grp=markers_grp,
             linestyles_grp=linestyles_grp,
+            changes=changes,
             box=box,
         )
         plotter.plot()
