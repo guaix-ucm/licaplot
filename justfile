@@ -542,35 +542,35 @@ plot-s-t-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Omega_NPB"
-    lica-plot --console --trace single table column -% -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines {{args}}
+    uv run lica-plot --console --trace single table column -% -t Omega Nebula Band Pass Filter -i ${dir}/QEdata_filter_2nm.ecsv -ycn 4 --changes --lines {{args}}
 
 # Plot single axes, 1 table and 2 columns
 plot-s-t-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/eclipse"
-    lica-plot --console --trace single table columns -% -i ${dir}/02_eg.ecsv -xcn 1 -ycn 4 5 --changes --lines {{args}}
+    uv run lica-plot --console --trace single table columns -% -i ${dir}/02_eg.ecsv -xcn 1 -ycn 4 5 --changes --lines {{args}}
 
 # Plot single axes, 3 tables, 1 column each
 plot-s-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/Eysdon_RGB"
-    lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines {{args}}
+    uv run lica-plot --console --trace single tables column -% -i ${dir}/blue.ecsv ${dir}/red.ecsv ${dir}/green.ecsv -ycn 4 --changes --lines {{args}}
 
 # Plot single Axes, 3 table per axes, 2 column per table
 plot-s-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace single tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
+    uv run lica-plot --console --trace single tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
 
 # Plot single Axes, 1 table per axes, 1 column per table
 plot-s-tt-cx args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace single tables mixed -% -i ${dir}/03_eg.ecsv ${dir}/04_eg.ecsv -ycn 2 2 --changes --lines {{args}}
+    uv run lica-plot --console --trace single tables mixed -% -i ${dir}/03_eg.ecsv ${dir}/04_eg.ecsv -ycn 2 2 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, one column per table
@@ -578,7 +578,7 @@ plot-m-tt-c args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables column -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 5 --changes --lines {{args}}
+    uv run lica-plot --console --trace multi tables column -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 5 --changes --lines {{args}}
 
 
 # Plot multiple Axes, one table per axes, several column per table
@@ -586,9 +586,9 @@ plot-m-tt-cc args="":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir=data/eclipse
-    lica-plot --console --trace multi tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
+    uv run lica-plot --console --trace multi tables columns -% -i ${dir}/01_eg.ecsv ${dir}/02_eg.ecsv ${dir}/03_eg.ecsv -ycn 4 5 --changes --lines {{args}}
 
-# run unut test on [table|element]
+# run unit test on [table|element]
 test what:
     #!/usr/bin/env bash
     set -exuo pipefail

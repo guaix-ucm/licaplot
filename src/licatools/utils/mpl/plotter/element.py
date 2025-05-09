@@ -46,6 +46,7 @@ from .types import (
 )
 
 from .table import ITableBuilder
+from ...table import tcn
 
 # -----------------------
 # Module global variables
@@ -53,7 +54,6 @@ from .table import ITableBuilder
 
 
 log = logging.getLogger(__name__)
-
 
 class Director:
     """
@@ -144,7 +144,7 @@ class ElementsBase(IElementsBuilder):
         if self._xlabel is not None:
             result = self._xlabel if isinstance(self._xlabel, str) else " ".join(self._xlabel)
         else:
-            result = table.columns[self._xcn].name
+            result = tcn(table, self._xcn)
         part = [result] * self._ntab
         self._elements.append(part)
         return part
@@ -153,7 +153,7 @@ class ElementsBase(IElementsBuilder):
         if self._ylabel is not None:
             result = self._ylabel if isinstance(self._ylabel, str) else " ".join(self._ylabel)
         else:
-            result = table.columns[y].name
+            result = tcn(table,y)
         part = [result] * self._ntab
         self._elements.append(part)
         return part
@@ -173,7 +173,7 @@ class ElementsBase(IElementsBuilder):
                 [self._xlabels] * self._ntab if isinstance(self._xlabels, str) else self._xlabels
             )
         else:
-            result = [table.columns[self._xcn].name for table in self._tables]
+            result = [tcn(table, self._xcn) for table in self._tables]
         part = result
         self._elements.append(part)
         return part
@@ -184,7 +184,7 @@ class ElementsBase(IElementsBuilder):
                 [self._ylabels] * self._ntab if isinstance(self._ylabels, str) else self._ylabels
             )
         else:
-            result = [table.columns[ycn].name for table in self._tables]
+            result = [tcn(table, ycn) for table in self._tables]
         part = result
         self._elements.append(part)
         return part
@@ -396,7 +396,7 @@ class SingleTableColumnsBuilder(ElementsBase):
         flat_legends = (
             self._legends
             if self._legends is not None
-            else [self._table.columns[ycn].name[: self._trim] + "." for ycn in self._ycns]
+            else [tcn(self._table, ycn)[: self._trim] + "." for ycn in self._ycns]
         )
         part = self._grouped(flat_legends, n=self._ncol)
         self._elements.append(part)
@@ -664,7 +664,7 @@ class SingleTablesColumnsBuilder(ElementsBase):
             flat_legends = self._legends * self._ntab if N == self._ncol else self._legends
         else:
             flat_legends = [
-                table.meta["label"] + "-" + table.columns[ycn].name[: self._trim] + "."
+                table.meta["label"] + "-" + tcn(table, ycn)[: self._trim] + "."
                 for table in self._tables
                 for ycn in self._ycns
             ]
@@ -813,7 +813,7 @@ class SingleTablesMixedColumnsBuilder(ElementsBase):
             flat_legends = self._legends
         else:
             flat_legends = [
-                f"{table.meta['label']}-{table.columns[ycn].name[: self._trim]}."
+                f"{table.meta['label']}-{tcn(table,ycn)[: self._trim]}."
                 for table, ycn in zip(self._tables, self._ycns)
             ]
         part = self._grouped(flat_legends, n=1)
@@ -932,7 +932,7 @@ class MultiTablesColumnBuilder(ElementsBase):
     def build_legends_grp(self) -> LegendsGroup:
         self._check_legends()
         flat_legends = (
-            [table.columns[self._ycn].name[: self._trim] + "." for table in self._tables]
+            [tcn(table, self._ycn)[: self._trim] + "." for table in self._tables]
             if self._legend is None
             else [self._legend] * self._ntab
         )
@@ -1061,7 +1061,7 @@ class MultiTablesColumnsBuilder(ElementsBase):
         self._check_legends()
         flat_legends = (
             [
-                table.columns[ycn].name[: self._trim] + "."
+                tcn(table,ycn)[: self._trim] + "."
                 for table in self._tables
                 for ycn in self._ycns
             ]

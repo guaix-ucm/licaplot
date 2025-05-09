@@ -30,6 +30,7 @@ import scipy.interpolate
 # ---------
 
 from .types import Tables, ColNum, ColNums
+from ...table import tcn, tcu
 
 # -----------------------
 # Module global variables
@@ -72,7 +73,7 @@ def trim_table(
     lica: bool,
 ) -> None:
     x = table.columns[xcn]
-    xunit = x.unit
+    xunit = tcu(table, xcn)
     xmax = np.max(x) * xunit if xhigh is None else xhigh * xlunit
     xmin = np.min(x) * xunit if xlow is None else xlow * xlunit
     if lica:
@@ -156,7 +157,7 @@ class TableBase(ITableBuilder):
     def _build_one_resampled_table(self, path: str, ycn: ColNum) -> Table:
         log.debug("resampling table to %s", self._resol)
         table = read_csv(path, self._columns, self._delim)
-        xunit = table.columns[self._xcn].unit
+        xunit = tcu(table, self._xcn)
         wavelength, resampled_col = resample_column(
             table, self._resol, self._xcn, xunit, ycn, self._lica_trim
         )
@@ -172,12 +173,14 @@ class TableBase(ITableBuilder):
             new_table, self._xcn, self._xl, self._xh, self._xu, self._lica_trim
         )
         table = new_table
-        col_x = table.columns[self._xcn]
-        col_y = table.columns[ycn]
-        if col_y.unit is None:
-            table[col_y.name] = table[col_y.name] * u.dimensionless_unscaled
-        if col_x.unit is None:
-            table[col_x.name] = table[col_x.name] * u.dimensionless_unscaled
+        col_x_unit = tcu(table, self._xcn)
+        col_y_unit = tcu(table,ycn)
+        if col_y_unit is None:
+            col_y_name = tcn(table, ycn)
+            table[col_y_name] = table[col_y_name] * u.dimensionless_unscaled
+        if col_x_unit is None:
+            col_x_name = tcn(table, self._xcn)
+            table[col_x_name] = table[col_x_name] * u.dimensionless_unscaled
         log.debug(table.info)
         log.debug(table.meta)
         return table

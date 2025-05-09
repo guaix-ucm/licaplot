@@ -36,6 +36,7 @@ from .types import (
     LineStylesGroup,
 )
 
+from ...table import tcu
 
 # ----------------
 # Global variables
@@ -136,7 +137,7 @@ class PlotterBase(ABC):
                 self.unpack_inner_tuple_hook(t)
                 ycol = (
                     self.table.columns[self.ycn] * 100 * u.pct
-                    if self.percent and self.table.columns[self.ycn].unit == u.dimensionless_unscaled
+                    if self.percent and tcu(self.table, self.ycn) == u.dimensionless_unscaled
                     else self.table.columns[self.ycn]
                 )
                 self.ax.plot(
@@ -287,13 +288,13 @@ class PlotterBase(ABC):
 
     def set_axes_labels(self, y: int) -> None:
         """Get the labels for a table, using units if necessary"""
-        xunit = self.table.columns[self.xcn].unit
+        xunit = tcu(self.table, self.xcn)
         xlabel = self.xlabel + f" [{xunit}]" if xunit != u.dimensionless_unscaled else self.xlabel
         # ylabel = self.table.columns[y].name
         yunit = (
             u.pct
-            if self.percent and self.table.columns[y].unit == u.dimensionless_unscaled
-            else self.table.columns[y].unit
+            if self.percent and tcu(self.table, y) == u.dimensionless_unscaled
+            else tcu(self.table, y)
         )
         ylabel = self.ylabel + f" [{yunit}]" if yunit != u.dimensionless_unscaled else self.ylabel
         self.ax.set_xlabel(xlabel)
