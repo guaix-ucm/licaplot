@@ -211,7 +211,9 @@ def add_args(parser):
     )
     parser_photod.set_defaults(func=cli_photodiode)
     parser_filter = subsubparser.add_parser(
-        "filter", parents=[prs.ifile(), prs.label("metadata"), prs.tag()], help="filter subcommand"
+        "filter",
+        parents=[prs.ifile(), prs.label("metadata"), prs.tag(), prs.xlim()],
+        help="filter subcommand",
     )
     parser_filter.set_defaults(func=cli_filters)
     parser_review = subsubparser.add_parser(

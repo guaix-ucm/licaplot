@@ -207,7 +207,14 @@ def add_args(parser) -> None:
     )
     parser_photod.set_defaults(func=cli_photodiode)
     parser_sensor = subsubparser.add_parser(
-        "sensor", parents=[prs.ifile(), prs.label("metadata"), prs.tag()], help="sensor subcommand"
+        "sensor",
+        parents=[
+            prs.ifile(),
+            prs.label("metadata"),
+            prs.tag(),
+            prs.xlim(),
+        ],
+        help="sensor subcommand",
     )
     parser_sensor.set_defaults(func=cli_sensor)
     parser_review = subsubparser.add_parser(

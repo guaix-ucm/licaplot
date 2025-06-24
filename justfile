@@ -476,10 +476,10 @@ tessw-reduce:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/tessw"
-    uv run lica-tessw --console --trace classif photod -g A -p ${dir}/stars1277-photodiode.csv
-    uv run lica-tessw --console --trace classif sensor -g A -i ${dir}/stars1277-frequencies.csv -l TSL237
-    uv run lica-tessw --console --trace classif photod -g B -p ${dir}/stars6502-photodiode.csv 
-    uv run lica-tessw --console --trace classif sensor -g B -i ${dir}/stars6502-frequencies.csv -l OTHER
+    uv run lica-tessw --console --trace classif photod -g A -xl 375 -p ${dir}/stars1277-photodiode.csv
+    uv run lica-tessw --console --trace classif sensor -g A -xl 375 -i ${dir}/stars1277-frequencies.csv -l TSL237
+    uv run lica-tessw --console --trace classif photod -g B -xl 375 -p ${dir}/stars6502-photodiode.csv 
+    uv run lica-tessw --console --trace classif sensor -g B -xl 375 -i ${dir}/stars6502-frequencies.csv -l OTHER
     uv run lica-tessw --console --trace process  -d ${dir} --save
 
 tessw-plot-raw:
