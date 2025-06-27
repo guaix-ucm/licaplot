@@ -84,12 +84,17 @@ def photodiode(
 
 def filters(
     input_path: str,
-    label: str = "",
     tag: str = "",
+    title: str | None = None,
+    label: str | None = None,
+    x_low: int = BENCH.WAVE_START,
+    x_high: int = BENCH.WAVE_END,
 ) -> None:
     """Returns the path of the newly created ECSV"""
     log.info("Converting to an Astropy Table: %s", input_path)
-    return processing.filter_ecsv(path=input_path, label=label, title=None, tag=tag)
+    return processing.filter_ecsv(
+        path=input_path, label=label, title=title, tag=tag, x_low=x_low, x_high=x_high
+    )
 
 
 def one_filter(
@@ -108,7 +113,9 @@ def one_filter(
     processing.photodiode_ecsv(
         path=photod_path, model=model, title=None, label=None, tag=tag, x_low=x_low, x_high=x_high
     )
-    result = processing.filter_ecsv(path=input_path, label=label, title=title, tag=tag)
+    result = processing.filter_ecsv(
+        path=input_path, label=label, title=title, tag=tag, x_low=x_low, x_high=x_high
+    )
     dir_path = os.path.dirname(input_path)
     just_name = processing.name_from_file(input_path)
     log.info("Classifying files in directory %s", dir_path)
@@ -145,7 +152,14 @@ def cli_photodiode(args: Namespace) -> None:
 
 def cli_filters(args: Namespace) -> None:
     label = " ".join(args.label) if args.label else ""
-    filters(args.input_file, label, args.tag)
+    filters(
+        input_path=args.input_file,
+        tag=args.tag,
+        title=None,
+        label=label,
+        x_low=args.x_low,
+        x_high=args.x_high,
+    )
 
 
 def cli_one_filter(args: Namespace) -> None:

@@ -109,7 +109,7 @@ def read_tess_csv(path: str) -> Table:
 
 
 def add_lica_metadata(path: str, table: Table) -> None:
-    use_database = decouple.config("USE_DATABASE",cast=bool,default=False)
+    use_database = decouple.config("USE_DATABASE", cast=bool, default=False)
     if not use_database:
         log.warn("LICA database: not being used")
         return
@@ -117,7 +117,7 @@ def add_lica_metadata(path: str, table: Table) -> None:
     if metadata:
         log.info("LICA database: additional metadata found for %s", path)
         timestamp = datetime.strptime(metadata["timestamp"], "%Y-%m-%d %H:%M:%S")
-        #timestamp = Time(timestamp, scale='utc')
+        # timestamp = Time(timestamp, scale='utc')
         table.meta["timestamp"] = timestamp
         table.meta["original_name"] = metadata["original_name"]
         monochromator_slit = metadata.get("monochromator_slit")
@@ -233,7 +233,14 @@ def photodiode_ecsv(
     manual=False,
 ) -> str:
     table = photodiode_table(
-        path=path, model=model, tag=tag, title=title, label=label, x_low=x_low, x_high=x_high, manual=manual
+        path=path,
+        model=model,
+        tag=tag,
+        title=title,
+        label=label,
+        x_low=x_low,
+        x_high=x_high,
+        manual=manual,
     )
     output_path = str(equivalent_ecsv(path))
     log.info("Saving Astropy photodiode table to ECSV file: %s", output_path)
@@ -241,9 +248,22 @@ def photodiode_ecsv(
     return path
 
 
-def filter_table(path: str, label: str, title: str, tag: str) -> Table:
+def filter_table(
+    path: str,
+    label: str,
+    title: str,
+    tag: str,
+    x_low: int,
+    x_high: int,
+) -> Table:
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
+    assert all([r == resolution[0] for r in resolution])
+    if not (x_low == BENCH.WAVE_START and x_high == BENCH.WAVE_END):
+        table = table[(table[COL.WAVE] >= x_low) & (table[COL.WAVE] <= x_high)]
+        history = f"Trimmed to [{x_low:04d}-{x_high:04d}] nm wavelength range"
+    else:
+        history = None
     title = title or f"{label} filter Measurements"
     title = " ".join(title) if not isinstance(title, str) else title
     table.meta = {
@@ -255,7 +275,7 @@ def filter_table(path: str, label: str, title: str, tag: str) -> Table:
             "name": name_from_file(path),
             "resolution": resolution[0],
         },
-        "History": [],
+        "History": [] if not history else [history],
     }
     add_lica_metadata(path, table)
     table.remove_column(TBCOL.INDEX)
@@ -263,8 +283,15 @@ def filter_table(path: str, label: str, title: str, tag: str) -> Table:
     return table
 
 
-def filter_ecsv(path: str, label: str, title: str = None, tag: str = "") -> str:
-    table = filter_table(path=path, label=label, title=title, tag=tag)
+def filter_ecsv(
+    path: str,
+    label: str,
+    title: str,
+    tag: str,
+    x_low: int,
+    x_high: int,
+) -> str:
+    table = filter_table(path=path, label=label, title=title, tag=tag, x_low=x_low, x_high=x_high)
     output_path = equivalent_ecsv(path)
     log.info("Saving Astropy device table to ECSV file: %s", output_path)
     table.write(output_path, delimiter=",", overwrite=True)
