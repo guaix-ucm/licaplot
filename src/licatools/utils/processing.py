@@ -520,6 +520,12 @@ def passive_process(
             if ndf is not None:
                 resolution = np.ediff1d(filter_table[COL.WAVE])[0]
                 ndf_table = lica.lab.ndfilters.load(model=ndf, resolution=int(resolution))
+                if x_low:
+                    log.info("Trinming NDF %s to [%d-%d] nm", ndf, x_low, x_high)
+                    ndf_table = ndf_table[
+                        (ndf_table[COL.WAVE] >= x_low) & (ndf_table[COL.WAVE] <= x_high)
+                    ]
+
                 log.info("Correcting %s %s by %s spectral response", name, COL.TRANS, ndf)
                 column = f"{ndf} Corrected {COL.TRANS}"
                 filter_table[column] = filter_table[COL.TRANS] * ndf_table[COL.TRANS]

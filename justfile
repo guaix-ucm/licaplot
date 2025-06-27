@@ -610,58 +610,61 @@ scan:
 
 # This is the current drive Id for the USB stick I am using
 eclipse_big_cpg_root_dir := join("data", "eclipse2")
+eclipse_big_xlow := "370"
 
 # Day 1 (20250603) run
 eclipse1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250603
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
     # For some reason, I lost the last photodiode reading that day
-    uv run lica-filters --console classif photod -xl 370 --tag X -p ${dir}/01_diode.txt
-    uv run lica-filters --console classif photod -xl 370 --tag Y -p ${dir}/06_diode.txt
+    uv run lica-filters --console classif photod -xl ${xlow} --tag X -p ${dir}/01_diode.txt
+    uv run lica-filters --console classif photod -xl ${xlow} --tag Y -p ${dir}/06_diode.txt
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -xl 370 -i ${dir}/02_asm48.txt -l ASM48
-    uv run lica-filters --console classif filter -g X -xl 370 -i ${dir}/03_asm49.txt -l ASM49
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_asm48.txt -l ASM48
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/03_asm49.txt -l ASM49
 
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/04_asm50.txt -l ASM50
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/05_asm51.txt -l ASM51
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/07_asm52.txt -l ASM52
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/08_cta01.txt -l CTA01
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/09_ncl1.txt -l NCL2
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/10_ncl2.txt -l NCL2
-    uv run lica-filters --console classif filter -g Y -xl 370 -i ${dir}/11_jgm1.txt -l JGM1
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/04_asm50.txt -l ASM50
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/05_asm51.txt -l ASM51
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_asm52.txt -l ASM52
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/08_cta01.txt -l CTA01
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_ncl1.txt -l NCL2
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_ncl2.txt -l NCL2
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/11_jgm1.txt -l JGM1
     # Calculate the filter transmission for all eclipse glasses
-    uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
+    uv run lica-filters --console --trace process -d ${dir} --ndf ND-0.5 --save
 
 # Day 2 (20250604) run
 eclipse2:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250604
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
-    uv run lica-filters --console classif photod --tag X -p ${dir}/03_diode.txt
-    uv run lica-filters --console classif photod --tag Y -p ${dir}/08_diode.txt
-    uv run lica-filters --console classif photod --tag Z -p ${dir}/13_diode.txt
+    uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -i ${dir}/01_jgm2.txt -l JGM2
-    uv run lica-filters --console classif filter -g X -i ${dir}/02_jgm3.txt -l JGM3
-    uv run lica-filters --console classif filter -g X -i ${dir}/04_jgm4.txt -l JGM4
-    uv run lica-filters --console classif filter -g X -i ${dir}/05_jgm5.txt -l JGM5
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_jgm2.txt -l JGM2
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_jgm3.txt -l JGM3
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/04_jgm4.txt -l JGM4
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/05_jgm5.txt -l JGM5
 
-    uv run lica-filters --console classif filter -g Y -i ${dir}/06_jgm6.txt -l JGM6
-    uv run lica-filters --console classif filter -g Y -i ${dir}/07_jgm7.txt -l JGM7
-    uv run lica-filters --console classif filter -g Y -i ${dir}/09_jgm8.txt -l JGM8
-    uv run lica-filters --console classif filter -g Y -i ${dir}/10_jgm9.txt -l JGM9
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/06_jgm6.txt -l JGM6
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_jgm7.txt -l JGM7
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_jgm8.txt -l JGM8
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_jgm9.txt -l JGM9
 
-    uv run lica-filters --console classif filter -g Z -i ${dir}/11_jgm10.txt -l JGM10
-    uv run lica-filters --console classif filter -g Z -i ${dir}/12_jgm11.txt -l JGM11
-    uv run lica-filters --console classif filter -g Z -i ${dir}/14_jgm12.txt -l JGM12
-    uv run lica-filters --console classif filter -g Z -i ${dir}/15_jgm15.txt -l JGM15
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/11_jgm10.txt -l JGM10
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/12_jgm11.txt -l JGM11
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/14_jgm12.txt -l JGM12
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/15_jgm15.txt -l JGM15
 
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
@@ -671,27 +674,28 @@ eclipse3:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250610
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
-    uv run lica-filters --console classif photod --tag X -p ${dir}/03_diode.txt
-    uv run lica-filters --console classif photod --tag Y -p ${dir}/08_diode.txt
-    uv run lica-filters --console classif photod --tag Z -p ${dir}/13_diode.txt
+    uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -i ${dir}/01_jgm13.txt -l JGM13
-    uv run lica-filters --console classif filter -g X -i ${dir}/02_jgm14.txt -l JGM14
-    uv run lica-filters --console classif filter -g X -i ${dir}/04_jgm16.txt -l JGM16
-    uv run lica-filters --console classif filter -g X -i ${dir}/05_asm1.txt -l ASM1
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_jgm13.txt -l JGM13
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_jgm14.txt -l JGM14
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/04_jgm16.txt -l JGM16
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/05_asm1.txt -l ASM1
 
-    uv run lica-filters --console classif filter -g Y -i ${dir}/06_asm2.txt -l ASM2
-    uv run lica-filters --console classif filter -g Y -i ${dir}/07_asm3.txt -l ASM3
-    uv run lica-filters --console classif filter -g Y -i ${dir}/09_asm4.txt -l ASM4
-    uv run lica-filters --console classif filter -g Y -i ${dir}/10_asm5.txt -l ASM5
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/06_asm2.txt -l ASM2
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_asm3.txt -l ASM3
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_asm4.txt -l ASM4
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_asm5.txt -l ASM5
 
-    uv run lica-filters --console classif filter -g Z -i ${dir}/11_asm6.txt -l ASM6
-    uv run lica-filters --console classif filter -g Z -i ${dir}/12_asm9.txt -l ASM9
-    uv run lica-filters --console classif filter -g Z -i ${dir}/14_asm7.txt -l ASM7
-    uv run lica-filters --console classif filter -g Z -i ${dir}/15_asm8.txt -l ASM8
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/11_asm6.txt -l ASM6
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/12_asm9.txt -l ASM9
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/14_asm7.txt -l ASM7
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/15_asm8.txt -l ASM8
 
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
@@ -701,27 +705,28 @@ eclipse4:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250612
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
-    uv run lica-filters --console classif photod --tag X -p ${dir}/03_diode.txt
-    uv run lica-filters --console classif photod --tag Y -p ${dir}/08_diode.txt
-    uv run lica-filters --console classif photod --tag Z -p ${dir}/13_diode.txt
+    uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -i ${dir}/01_asm10.txt -l ASM10
-    uv run lica-filters --console classif filter -g X -i ${dir}/02_asm11.txt -l ASM11
-    uv run lica-filters --console classif filter -g X -i ${dir}/04_asm12.txt -l ASM12
-    uv run lica-filters --console classif filter -g X -i ${dir}/05_asm13.txt -l ASM13
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_asm10.txt -l ASM10
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_asm11.txt -l ASM11
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/04_asm12.txt -l ASM12
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/05_asm13.txt -l ASM13
 
-    uv run lica-filters --console classif filter -g Y -i ${dir}/06_asm14.txt -l ASM14
-    uv run lica-filters --console classif filter -g Y -i ${dir}/07_asm15.txt -l ASM15
-    uv run lica-filters --console classif filter -g Y -i ${dir}/09_asm16.txt -l ASM16
-    uv run lica-filters --console classif filter -g Y -i ${dir}/10_asm17.txt -l ASM17
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/06_asm14.txt -l ASM14
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_asm15.txt -l ASM15
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_asm16.txt -l ASM16
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_asm17.txt -l ASM17
 
-    uv run lica-filters --console classif filter -g Z -i ${dir}/11_asm18.txt -l ASM18
-    uv run lica-filters --console classif filter -g Z -i ${dir}/12_asm19.txt -l ASM19
-    uv run lica-filters --console classif filter -g Z -i ${dir}/14_asm20.txt -l ASM20
-    uv run lica-filters --console classif filter -g Z -i ${dir}/15_asm21.txt -l ASM21
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/11_asm18.txt -l ASM18
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/12_asm19.txt -l ASM19
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/14_asm20.txt -l ASM20
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/15_asm21.txt -l ASM21
 
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
@@ -731,27 +736,28 @@ eclipse5:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250618
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
-    uv run lica-filters --console classif photod --tag X -p ${dir}/03_diode.txt
-    uv run lica-filters --console classif photod --tag Y -p ${dir}/08_diode.txt
-    uv run lica-filters --console classif photod --tag Z -p ${dir}/13_diode.txt
+    uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -i ${dir}/01_asm30.txt -l ASM30
-    uv run lica-filters --console classif filter -g X -i ${dir}/02_asm31.txt -l ASM31
-    uv run lica-filters --console classif filter -g X -i ${dir}/04_asm36.txt -l ASM36
-    uv run lica-filters --console classif filter -g X -i ${dir}/05_asm38.txt -l ASM38
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_asm30.txt -l ASM30
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_asm31.txt -l ASM31
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/04_asm36.txt -l ASM36
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/05_asm38.txt -l ASM38
 
-    uv run lica-filters --console classif filter -g Y -i ${dir}/06_asm40.txt -l ASM40
-    uv run lica-filters --console classif filter -g Y -i ${dir}/07_asm44.txt -l ASM44
-    uv run lica-filters --console classif filter -g Y -i ${dir}/09_asm41.txt -l ASM41
-    uv run lica-filters --console classif filter -g Y -i ${dir}/10_asm42.txt -l ASM42
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/06_asm40.txt -l ASM40
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_asm44.txt -l ASM44
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_asm41.txt -l ASM41
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_asm42.txt -l ASM42
 
-    uv run lica-filters --console classif filter -g Z -i ${dir}/11_asm43.txt -l ASM43
-    uv run lica-filters --console classif filter -g Z -i ${dir}/12_asm46.txt -l ASM46
-    uv run lica-filters --console classif filter -g Z -i ${dir}/14_asm45.txt -l ASM45
-    uv run lica-filters --console classif filter -g Z -i ${dir}/15_asm47.txt -l ASM47
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/11_asm43.txt -l ASM43
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/12_asm46.txt -l ASM46
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/14_asm45.txt -l ASM45
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/15_asm47.txt -l ASM47
 
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
@@ -761,32 +767,33 @@ eclipse6:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir={{eclipse_big_cpg_root_dir}}/20250619
+    xlow={{eclipse_big_xlow}}
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
     # Tag the clear photodiode readings (X, Y, Z, ...)
-    uv run lica-filters --console classif photod --tag X -p ${dir}/03_diode.txt
-    uv run lica-filters --console classif photod --tag Y -p ${dir}/08_diode.txt
-    uv run lica-filters --console classif photod --tag Z -p ${dir}/13_diode.txt
-    uv run lica-filters --console classif photod --tag T -p ${dir}/18_diode.txt
+    uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
+    uv run lica-filters --console classif photod --tag T -xl ${xlow} -p ${dir}/18_diode.txt
 
     # Assign the eclipse glasses the photodiodes tag
-    uv run lica-filters --console classif filter -g X -i ${dir}/01_asm22.txt -l ASM22
-    uv run lica-filters --console classif filter -g X -i ${dir}/02_asm23.txt -l ASM23
-    uv run lica-filters --console classif filter -g X -i ${dir}/04_asm24.txt -l ASM24
-    uv run lica-filters --console classif filter -g X -i ${dir}/05_asm25.txt -l ASM25
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_asm22.txt -l ASM22
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_asm23.txt -l ASM23
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/04_asm24.txt -l ASM24
+    uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/05_asm25.txt -l ASM25
 
-    uv run lica-filters --console classif filter -g Y -i ${dir}/06_asm26.txt -l ASM26
-    uv run lica-filters --console classif filter -g Y -i ${dir}/07_asm27.txt -l ASM27
-    uv run lica-filters --console classif filter -g Y -i ${dir}/09_asm28.txt -l ASM28
-    uv run lica-filters --console classif filter -g Y -i ${dir}/10_asm29.txt -l ASM29
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/06_asm26.txt -l ASM26
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/07_asm27.txt -l ASM27
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/09_asm28.txt -l ASM28
+    uv run lica-filters --console classif filter -g Y -xl ${xlow} -i ${dir}/10_asm29.txt -l ASM29
 
-    uv run lica-filters --console classif filter -g Z -i ${dir}/11_asm32.txt -l ASM32
-    uv run lica-filters --console classif filter -g Z -i ${dir}/12_asm33.txt -l ASM33
-    uv run lica-filters --console classif filter -g Z -i ${dir}/14_asm34.txt -l ASM34
-    uv run lica-filters --console classif filter -g Z -i ${dir}/15_asm35.txt -l ASM35
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/11_asm32.txt -l ASM32
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/12_asm33.txt -l ASM33
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/14_asm34.txt -l ASM34
+    uv run lica-filters --console classif filter -g Z -xl ${xlow} -i ${dir}/15_asm35.txt -l ASM35
 
-    uv run lica-filters --console classif filter -g T -i ${dir}/16_asm37.txt -l ASM37
-    uv run lica-filters --console classif filter -g T -i ${dir}/17_asm39.txt -l ASM39
+    uv run lica-filters --console classif filter -g T -xl ${xlow} -i ${dir}/16_asm37.txt -l ASM37
+    uv run lica-filters --console classif filter -g T -xl ${xlow} -i ${dir}/17_asm39.txt -l ASM39
 
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
