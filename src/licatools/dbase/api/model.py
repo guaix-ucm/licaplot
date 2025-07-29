@@ -32,7 +32,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from lica.sqlalchemy.dbase import Model
+from lica.sqlalchemy.model import Model
 
 from . import Subject, Event
 
