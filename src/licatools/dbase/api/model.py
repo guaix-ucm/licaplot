@@ -19,17 +19,11 @@ from datetime import datetime
 # =====================
 
 from sqlalchemy import (
-    select,
-    func,
     Enum,
-    Table,
-    Column,
-    Integer,
     String,
     DateTime,
     LargeBinary,
     ForeignKey,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from lica.sqlalchemy.noasync.model import Model
