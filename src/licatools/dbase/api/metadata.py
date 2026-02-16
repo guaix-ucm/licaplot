@@ -14,7 +14,6 @@ from typing import Optional, Dict, Any
 # -------------------
 
 from sqlalchemy import select
-from lica.sqlalchemy.dbase import Session
 
 # --------------
 # local imports
@@ -24,7 +23,9 @@ from ... import __version__ as __version__
 
 # We must pull one model to make it work
 from ..api.model import Config, LicaFile, LicaSetup  # noqa: F401
-from ..api import Extension
+
+from .dao import Session
+
 # -----------------------
 # Module global variables
 # -----------------------
@@ -83,7 +84,9 @@ def export(input_dir: str, extension: str, output_path: str) -> bool:
             else:
                 excluded.append(name)
     metadata = sorted(metadata, key=lambda x: x["timestamp"])
-    log.info("found %d files in the database, %d input files excluded", len(metadata), len(excluded))
+    log.info(
+        "found %d files in the database, %d input files excluded", len(metadata), len(excluded)
+    )
     if metadata:
         metadata = list(map(remove_original_name, metadata))
         with open(output_path, "w", newline="") as fd:
