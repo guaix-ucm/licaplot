@@ -187,6 +187,7 @@ def photodiode_table(
     manual: bool = False,
 ) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
+    x_low = int(x_low); x_high = int(x_high) # Por si acaso
     table = read_manual_csv(path) if manual else read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
@@ -256,6 +257,7 @@ def filter_table(
     x_low: int,
     x_high: int,
 ) -> Table:
+    x_low = int(x_low); x_high = int(x_high) # Por si acaso
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
