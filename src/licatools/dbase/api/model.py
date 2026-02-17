@@ -28,7 +28,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from lica.sqlalchemy.noasync.model import Model
 
-from . import Subject, Event
+from .constants import Subject, Event
 
 # ================
 # Module constants

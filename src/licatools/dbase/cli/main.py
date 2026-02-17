@@ -26,7 +26,6 @@ from sqlalchemy import select
 
 from lica.cli import execute
 from lica.sqlalchemy import sqa_logging
-from lica.sqlalchemy.dbase import engine, Model, Session
 
 # --------------
 # local imports
@@ -34,10 +33,10 @@ from lica.sqlalchemy.dbase import engine, Model, Session
 
 from ... import __version__ as __version__
 
-# We must pull one model to make it work
-from ..api import Extension, Subject, Event
-from ..api.model import Config, LicaFile, LicaSetup, LicaEvent
+from ..api import Extension, Subject, Event, engine, Session
+from ..api import Model, Config, LicaFile, LicaSetup, LicaEvent
 from . import parser as prs
+
 
 # ----------------
 # Module constants

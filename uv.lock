@@ -860,16 +860,16 @@ wheels = [
 
 [[package]]
 name = "lica"
-version = "1.1.4"
+version = "3.0.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-decouple" },
     { name = "strenum" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/9e/e7e5ac93fa5670dfbb21d84712e9979605748390275a41b78f5f0ce0d94a/lica-1.1.4.tar.gz", hash = "sha256:93470cb70418284b4459cd12d79df44c3e60408159c6498d8cd9762a69cdb8fd", size = 145527 }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/80/8dd983c123f546a2d0af8161212bd97507c5c88de20226bcec99b21c482b/lica-3.0.7.tar.gz", hash = "sha256:0964b8efa00800543fadb2aedadcc69763f8212e97357b7004ff25dac4ceda2d", size = 146336 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/9b/ba6a09627a47a48e55d0f0c03dbace46c17e3bd4bbe1fffeb4d7866d9eb1/lica-1.1.4-py3-none-any.whl", hash = "sha256:0fb6fde7f79234dbc9896cb8ba9b990c8243e42c00e14def41ff44aebc4f7aff", size = 81412 },
+    { url = "https://files.pythonhosted.org/packages/cb/3e/155718031c608487a327a96d868dba13d4c229e3e5b23ea94b196f341f6a/lica-3.0.7-py3-none-any.whl", hash = "sha256:fc3374a4b0010a07a1a5b25d6c7f1722cf336a4efe42cd1d9b9997a20d7ed19c", size = 82789 },
 ]
 
 [package.optional-dependencies]
@@ -883,7 +883,7 @@ sqlalchemy = [
 
 [[package]]
 name = "licatools"
-version = "0.3.0.5"
+version = "0.3.15.dev1+gf87aeea39.d20260217"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -908,7 +908,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=6.0" },
-    { name = "lica", extras = ["lab", "sqlalchemy"], specifier = ">=1.1.3" },
+    { name = "lica", extras = ["lab", "sqlalchemy"], specifier = ">=3.0" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "notebook", marker = "extra == 'extras'", specifier = ">=7.3" },
     { name = "pyqt5", specifier = ">=5.15" },
