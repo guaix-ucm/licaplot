@@ -250,7 +250,7 @@ def ycns() -> ArgumentParser:
         type=vnat,
         nargs="+",
         metavar="<N>",
-        default=None,
+        default=2,
         help="Y column numbers (1-based) in CSV/ECSV, defaults to %(default)d",
     )
     return parser
