@@ -127,6 +127,7 @@ class EclipsePlotter(BasicPlotter):
     def outer_loop_end_hook(self, single_plot: bool, first_pass: bool):
         plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=5, frameon=True)
 
+
 # -------------------
 # Auxiliary functions
 # -------------------
@@ -150,11 +151,27 @@ def inverse(table: Table, ycn: ColNum, col_name: str = None) -> None:
     table.meta["History"].append(f"Added new f{yname} column")
 
 
+def log10(table: Table, ycn: ColNum, col_name: str = None) -> None:
+    ycol = table.columns[ycn]
+    yname = col_name or f"Log10 of {ycol.name}"
+    table[yname] = np.log10(ycol)
+    table.meta["History"].append(f"Added new f{yname} column")
+
+
 def cli_inverse(args: Namespace):
-    log.info("Processing %s", args.input_file)
+    log.info("Processing %s for 1/log10()", args.input_file)
     path = args.input_file
     table = read_ecsv(path)
     inverse(table, args.y_col_num - 1, args.column_name)
+    if args.save:
+        table.write(path, delimiter=",", overwrite=True)
+
+
+def cli_log10(args: Namespace):
+    log.info("Processing %s for log10()", args.input_file)
+    path = args.input_file
+    table = read_ecsv(path)
+    log10(table, args.y_col_num - 1, args.column_name)
     if args.save:
         table.write(path, delimiter=",", overwrite=True)
 
@@ -184,7 +201,9 @@ def cli_single_plot_tables_column(args: Namespace):
     director = Director(builder)
     elements = director.build_elements()
     log.debug(elements)
-    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = elements
+    xcn, ycns_grp, tables, titles, xlabels, ylabels, legends_grp, markers_grp, linestyles_grp = (
+        elements
+    )
     with visualization.quantity_support():
         plotter = EclipsePlotter(
             xcn=xcn,
@@ -203,6 +222,7 @@ def cli_single_plot_tables_column(args: Namespace):
             ncols=1,
             save_path=args.save_figure_path,
             save_dpi=args.save_figure_dpi,
+            log_y=args.log_y,
         )
         plotter.plot()
 
@@ -222,9 +242,20 @@ def add_args(parser):
             colname(),
             prs.save(),
         ],
-        help="Calculates -log10(Y) of a given column number",
+        help="Calculates 1/log10(Y) of a given column number",
     )
     parser_inv.set_defaults(func=cli_inverse)
+    parser_log = subparser.add_parser(
+        "log10",
+        parents=[
+            prs.ifile(),
+            prs.ycn(),
+            colname(),
+            prs.save(),
+        ],
+        help="Calculates log10(Y) of a given column number",
+    )
+    parser_log.set_defaults(func=cli_log10)
 
     parser_plot = subparser.add_parser(
         "plot",
@@ -245,6 +276,7 @@ def add_args(parser):
             prs.linstyls(),
             prs.savefig(),
             prs.dpifig(),
+            prs.logy(),
         ],
         help="Plot Eclipse Glasses with limits",
     )
