@@ -21,3 +21,4 @@ csv/
 *.ecsv
 *.png
 *.db
+data/
