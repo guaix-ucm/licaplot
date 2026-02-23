@@ -55,7 +55,7 @@ log = logging.getLogger(__name__)
 plt.rcParams["legend.fontsize"] = "12"
 
 
-UVA_RANGE = (430, 400)
+UVA_RANGE = (400, 430) # realmente esta metido en el VIS_RANGE asi que no lo pinto
 VIS_RANGE = (380, 780)
 IR_RANGE = (780, 1040)
 
@@ -65,25 +65,37 @@ REF_LINES = [
         "value": 0.000032,
         "range": VIS_RANGE,
         "linestyle": "--",
+        "color": "red",
+    },
+    {
+        "label": "Max. luminous trans. (τv) - CHOU 2021",
+        "value": 0.0000120,
+        "range": VIS_RANGE,
+        "linestyle": "-.",
+        "color": "red",
     },
     {
         "label": "Min. luminous trans. (τv)",
         "value": 0.00000061,
         "range": VIS_RANGE,
-        "linestyle": "-.",
+        "linestyle": "--",
+        "color": "blue",
     },
     {
-        "label": "Max. solar UVA trans. (τSUVA)",
-        "value": 0.000032,
-        "range": UVA_RANGE,
-        "linestyle": "--",
+        "label": "Min. luminous trans. (τv) - CHOU 2021",
+        "value": 0.0000004,
+        "range": VIS_RANGE,
+        "linestyle": "-.",
+        "color": "blue",
     },
     {
         "label": "Maxi. solar infrared trans. (τSIR)",
         "value": 0.03,
         "range": IR_RANGE,
-        "linestyle": "-.",
+        "linestyle": ":",
+        "color": "red",
     },
+
 ]
 
 # -----------------
@@ -114,12 +126,14 @@ class EclipsePlotter(BasicPlotter):
                 y_value = ref["value"]
                 ls = ref["linestyle"]
                 x_min, x_max = ref["range"]
-                y_val_ref = -np.log10(y_value)
+                # For matplotlib log plots we must not do a log10 ourselves
+                y_val_ref = -np.log10(y_value) if not self.log_y else y_value
+                color=ref["color"]
                 self.ax.hlines(
                     y=y_val_ref,
                     xmin=x_min,
                     xmax=x_max,
-                    color="gray",
+                    color=color,
                     linestyle=ls,
                     label=f"{label}: {y_value:.8f}",
                 )
