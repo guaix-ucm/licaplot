@@ -55,7 +55,7 @@ log = logging.getLogger(__name__)
 plt.rcParams["legend.fontsize"] = "12"
 
 
-UVA_RANGE = (400, 430) # realmente esta metido en el VIS_RANGE asi que no lo pinto
+UVA_RANGE = (400, 430)  # realmente esta metido en el VIS_RANGE asi que no lo pinto
 VIS_RANGE = (380, 780)
 IR_RANGE = (780, 1040)
 
@@ -95,7 +95,6 @@ REF_LINES = [
         "linestyle": ":",
         "color": "red",
     },
-
 ]
 
 # -----------------
@@ -114,6 +113,14 @@ class EclipsePlotter(BasicPlotter):
         linestyles = itertools.cycle(self.default_linestyles)
         self.linestyles_grp = list(map(lambda x: (next(linestyles),), self.linestyles_grp))
 
+    def configure_axes(self):
+        super().configure_axes()
+        # ← MÁS espacio: ejes terminan en 0.20 (encima del legend_ax que va hasta 0.10)
+        self.fig.subplots_adjust(bottom=0.20, top=0.92)
+        # Crear rectángulo para leyenda ABAJO de los ejes
+        self.legend_ax = self.fig.add_axes([0.15, 0.02, 0.7, 0.08])  # ← bottom=0.02 
+        self.legend_ax.axis('off')  # Sin ejes ni ticks
+
     def outer_loop_start_hook(self, single_plot: bool, first_pass: bool):
         """
         single_plot : Flag, single_plot Axis only
@@ -128,7 +135,7 @@ class EclipsePlotter(BasicPlotter):
                 x_min, x_max = ref["range"]
                 # For matplotlib log plots we must not do a log10 ourselves
                 y_val_ref = -np.log10(y_value) if not self.log_y else y_value
-                color=ref["color"]
+                color = ref["color"]
                 self.ax.hlines(
                     y=y_val_ref,
                     xmin=x_min,
@@ -138,9 +145,21 @@ class EclipsePlotter(BasicPlotter):
                     label=f"{label}: {y_value:.8f}",
                 )
 
-    def outer_loop_end_hook(self, single_plot: bool, first_pass: bool):
-        plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=5, frameon=True)
+    def set_legends(self):
+        pass
 
+    def plot_end_hook(self):
+        handles, labels = self.axes[0].get_legend_handles_labels()
+        unique_handles_labels = dict(zip(labels, handles))
+        handles = list(unique_handles_labels.values())
+        labels = list(unique_handles_labels.keys())
+        # Leyenda en el rectángulo reservado (NO solapa)
+        self.legend_ax.legend(handles, labels, 
+                             ncol=3, 
+                             fontsize=10,
+                             frameon=True,
+                             loc='center')
+      
 
 # -------------------
 # Auxiliary functions

@@ -798,6 +798,51 @@ eclipse6:
     # Calculate the filter transmission for all eclipse glasses
     uv run lica-filters --console process -d ${dir} --ndf ND-0.5 --save
 
+eclipse3_root_dir := "data/eclipse3"
+
+# session 8 (20260213,20260217,20260305) run. Checking jgm2
+eclipse8:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir1={{eclipse3_root_dir}}/20260213
+    dir2={{eclipse3_root_dir}}/20260217
+    dir3={{eclipse3_root_dir}}/20260305
+ 
+    # Generate additional metadata file to later incorporate to ECSV files
+    uv run lica-meta --console generate -i ${dir1} -gp *.txt
+    uv run lica-meta --console generate -i ${dir2} -gp *.txt
+    uv run lica-meta --console generate -i ${dir3} -gp *.txt
+
+    # Tag the clear photodiode readings (X, Y, Z, ...)
+    uv run lica-filters --console classif photod --tag X -m S2281-01 -p ${dir1}/01_diode_hama.txt
+    uv run lica-filters --console classif photod --tag Y -m S2281-01 -p ${dir2}/01_diode_hama.txt
+    uv run lica-filters --console classif photod --tag Z -m S2281-01 -p ${dir3}/02_diode_hama.txt
+
+    # Assign the eclipse glasses the photodiodes tag
+    uv run lica-filters --console classif filter -g X -i ${dir1}/02_jgm17.txt -l JGM17
+    uv run lica-filters --console classif filter -g Y -i ${dir2}/02_jgm17.txt -l JGM17-all-ndf
+    uv run lica-filters --console classif filter -g Z -i ${dir3}/01_jgm17.txt -l JGM17-no-ndf
+    uv run lica-filters --console classif filter -g Z -i ${dir3}/03_asm53.txt -l ASM53
+
+    # Calculate the filter transmission for all eclipse glasses
+    uv run lica-filters --trace --console process -d ${dir1} --ndf ND-0.5 --save
+    uv run lica-filters --trace --console process -d ${dir2} --save
+    uv run lica-filters --trace --console process -d ${dir3} --save
+
+eclipse11-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir3={{eclipse3_root_dir}}/20260305
+    file_accum=""
+    for i in 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01
+    do
+        file_accum="${file_accum}${dir3}/${i}_jgm17.ecsv "   
+    done
+    uv run lica-eclip --console plot -i $file_accum -ycn 4 --log-y  --t 'Transmittance vs Wavelength' -yl 'Transmittance' --lines --marker None 
+    #uv run lica-plot --console single table column -t "Sin filtros NDF" -ycn 4 -i ${dir3}/01_jgm17.ecsv --changes -sf jgm17-no-ndf.png
+    #uv run lica-plot --console single table column -t "Sin filtros NDF" -ycn 4 -i ${dir3}/03_asm53.ecsv --changes -sf asm53-no-ndf.png
+
+
 # Reduce all days data
 eclipse-all:
     just eclipse1
