@@ -135,16 +135,35 @@ def add_lica_metadata(path: str, table: Table) -> None:
 
 def read_scan_csv(path: str) -> Table:
     """Load CSV files produced by LICA Scan.exe (QEdata.txt files)"""
-    table = astropy.io.ascii.read(
-        path,
-        delimiter="\t",
-        data_start=0,
-        names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
-        converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
-    )
-    table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
-    table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
-    table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+    try:
+        table = astropy.io.ascii.read(
+            path,
+            delimiter="\t",
+            data_start=0,
+            names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT),
+            converters={TBCOL.INDEX: np.float64, COL.WAVE: np.float64, TBCOL.CURRENT: np.float64},
+        )
+        table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
+        table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
+        table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+    except astropy.io.ascii.core.InconsistentTableError:
+        log.warn("trying with a new column")
+        table = astropy.io.ascii.read(
+            path,
+            delimiter="\t",
+            data_start=0,
+            names=(TBCOL.INDEX, COL.WAVE, TBCOL.CURRENT, TBCOL.READ_NOISE),
+            converters={
+                TBCOL.INDEX: np.float64,
+                COL.WAVE: np.float64,
+                TBCOL.CURRENT: np.float64,
+                TBCOL.READ_NOISE: np.float64,
+            },
+        )
+        table[TBCOL.INDEX] = table[TBCOL.INDEX].astype(np.int32)
+        table[COL.WAVE] = np.round(table[COL.WAVE], decimals=0) * u.nm
+        table[TBCOL.CURRENT] = table[TBCOL.CURRENT] * u.A
+        table[TBCOL.READ_NOISE] = table[TBCOL.READ_NOISE] * u.A
     return table
 
 
@@ -187,7 +206,8 @@ def photodiode_table(
     manual: bool = False,
 ) -> Table:
     """Converts CSV file from photodiode into ECSV file"""
-    x_low = int(x_low); x_high = int(x_high) # Por si acaso
+    x_low = int(x_low)
+    x_high = int(x_high)  # Por si acaso
     table = read_manual_csv(path) if manual else read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])
@@ -257,7 +277,8 @@ def filter_table(
     x_low: int,
     x_high: int,
 ) -> Table:
-    x_low = int(x_low); x_high = int(x_high) # Por si acaso
+    x_low = int(x_low)
+    x_high = int(x_high)  # Por si acaso
     table = read_scan_csv(path)
     resolution = np.ediff1d(table[COL.WAVE])
     assert all([r == resolution[0] for r in resolution])

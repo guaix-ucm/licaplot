@@ -78,7 +78,7 @@ def photodiode(
     log.info("Converting to an Astropy Table: %s", photod_path)
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
     return processing.photodiode_ecsv(
-        path=photod_path, model=model, title=title, label=label, tag=tag, x_low=x_low, x_high=x_high
+        path=photod_path, model=model, title=title, label=label, tag=tag, x_low=x_low, x_high=x_high, manual=False,
     )
 
 
@@ -111,7 +111,7 @@ def one_filter(
     x_low, x_high = min(x_low, x_high), max(x_low, x_high)
     tag = tag or processing.random_tag()
     processing.photodiode_ecsv(
-        path=photod_path, model=model, title=None, label=None, tag=tag, x_low=x_low, x_high=x_high
+        path=photod_path, model=model, title=None, label=None, tag=tag, x_low=x_low, x_high=x_high, manual=False
     )
     result = processing.filter_ecsv(
         path=input_path, label=label, title=title, tag=tag, x_low=x_low, x_high=x_high

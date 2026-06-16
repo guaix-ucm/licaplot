@@ -519,16 +519,26 @@ uvir-reduce:
 
     # Generate additional metadata file to later incorporate to ECSV files
     uv run lica-meta --console generate -i ${dir} -gp *.txt
-    # Tag the clear photodiode readings (X, Y, Z, ...)
-    #uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
-    #uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
-    #uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
-    # Assign the eclipse glasses the photodiodes tag
-    #uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_jgm13.txt -l JGM13
-    #uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_jgm14.txt -l JGM14
-    #uv run lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
 
+    uv run lica-filters --console --trace classif photod --tag A -m PIN-10D -p ${dir}/20260615_123130_osi.txt
+    uv run lica-filters --console --trace classif photod --tag B -m PIN-10D -p ${dir}/20260615_131515_osi.txt
+    uv run lica-filters --console --trace classif photod --tag C -m PIN-10D -p ${dir}/20260615_135723_osi.txt
 
+    uv run lica-filters --console --trace classif filter --tag A --label stars618 -i ${dir}/20260615_124720_stars618.txt
+    uv run lica-filters --console --trace classif filter --tag B --label UVIR750 -i ${dir}/20260615_130127_cut750.txt
+    uv run lica-filters --console --trace classif filter --tag B --label Newest -i ${dir}/20260615_132917_ultimo.txt
+    uv run lica-filters --console --trace classif filter --tag C --label UVIR740 -i ${dir}/20260615_134342_sp740.txt
+    uv run lica-filters --console --trace classif filter --tag C --label stars200-300 -i ${dir}/20260615_141128_stars200-300.txt
+    uv run lica-filters --console --trace classif filter --tag C --label Oldest -i ${dir}/20260615_142514_origen.txt
+
+    uv run lica-filters --console --trace process  -d ${dir} --save
+
+uvir-plot:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+
+    uv run lica-plot --console --trace single tables column --title "UV/IR filter comparison" -% -ycn 5 --lines -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_130127_cut750.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
 # =============================
 # Generic data reduction recipe
 # =============================
