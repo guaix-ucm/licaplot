@@ -508,6 +508,27 @@ sp750-plot:
     dir="data/filters/IR_cut"
     uv run lica-plot --console --trace single tables column -% -i ${dir}/SP750_QEdata.ecsv -ycn 4 --changes --lines
 
+# ---------------------------------
+# Batch of TESS W UV/IR-cut filters
+# ---------------------------------
+
+uvir-reduce:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+
+    # Generate additional metadata file to later incorporate to ECSV files
+    uv run lica-meta --console generate -i ${dir} -gp *.txt
+    # Tag the clear photodiode readings (X, Y, Z, ...)
+    #uv run lica-filters --console classif photod --tag X -xl ${xlow} -p ${dir}/03_diode.txt
+    #uv run lica-filters --console classif photod --tag Y -xl ${xlow} -p ${dir}/08_diode.txt
+    #uv run lica-filters --console classif photod --tag Z -xl ${xlow} -p ${dir}/13_diode.txt
+    # Assign the eclipse glasses the photodiodes tag
+    #uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/01_jgm13.txt -l JGM13
+    #uv run lica-filters --console classif filter -g X -xl ${xlow} -i ${dir}/02_jgm14.txt -l JGM14
+    #uv run lica-filters --console --trace one -l SP750 -p ${dir}/SP750_Photodiode_QEdata.txt -m PIN-10D -i ${dir}/SP750_QEdata.txt
+
+
 # =============================
 # Generic data reduction recipe
 # =============================
