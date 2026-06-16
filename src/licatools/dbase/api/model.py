@@ -97,7 +97,12 @@ class LicaEvent(Model):
     comment: Mapped[Optional[str]] = mapped_column(String(512))
 
     def __repr__(self) -> str:
-        return f"LicaEvent(tstamp={self.timestamp}, subject={self.subject}, event={self.event})"
+        return (
+            f"LicaEvent(tstamp={self.timestamp}, "
+            f"subject={self.subject.value}, "
+            f"event={self.event.value}, "
+            f"comment={self.comment})"
+        )
 
 
 class LicaSetup(Model):
@@ -106,6 +111,8 @@ class LicaSetup(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     # Unique name identifying the setup
     name: Mapped[str] = mapped_column(String(64), unique=True)
+    # Lamp power in Watts
+    lamp_power: Mapped[Optional[float]]
     # Power Supply Current in amperes
     psu_current: Mapped[Optional[float]]
     # Monocromator slit micrometer apertue, in mm
@@ -116,7 +123,13 @@ class LicaSetup(Model):
     files: Mapped[List["LicaFile"]] = relationship(back_populates="setup")
 
     def __repr__(self) -> str:
-        return f"LicaSetup(name={self.name}, psu={self.psu_current}, slit={self.monochromator_slit}, input={self.input_slit})"
+        return (
+            f"LicaSetup(name={self.name}, "
+            f"psu_current={self.psu_current}, "
+            f"monochromator_slit={self.monochromator_slit}, "
+            f"input_slit={self.input_slit}, "
+            f"lamp_power={self.input_slit})"
+        )
 
 
 class LicaFile(Model):
@@ -132,7 +145,7 @@ class LicaFile(Model):
     creation_date: Mapped[int]
     digest: Mapped[str] = mapped_column(String(128), unique=True)
     contents: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
-    # This isnot a real column, it is meant for the ORM
+    # This is not a real column, it is meant for the ORM
     setup: Mapped[Optional["LicaSetup"]] = relationship(back_populates="files")
 
     def __repr__(self) -> str:
