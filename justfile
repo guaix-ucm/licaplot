@@ -544,12 +544,12 @@ nsspec:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_124720_stars618.ecsv -l stars618 -xhl 900 -sf ${dir}/stars618.png
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_132917_ultimo.ecsv -l Newest -xhl 900 -sf ${dir}/newest.png
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_134342_sp740.ecsv -l UVIR740 -xhl 900 -sf ${dir}/uvir740.png
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_141128_stars200-300.ecsv -l stars200-300 -xhl 900  -sf ${dir}/stars200-300.png
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_142514_origen.ecsv -l Oldest -xhl 900 -sf ${dir}/oldest.png
-    uv run lica-nssky --console --trace plot -i ${dir}/20260615_130127_cut750.ecsv -l UVIR750 -xhl 900 -sf ${dir}/uvir750.png
+    uv run lica-nssky --console --trace single -xhl 900 -l stars618 -sf ${dir}/stars618.png -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace single -xhl 900 -l Newest   -sf ${dir}/newest.png -i ${dir}/20260615_132917_ultimo.ecsv
+    uv run lica-nssky --console --trace single -xhl 900 -l UVIR740  -sf ${dir}/uvir740.png -i ${dir}/20260615_134342_sp740.ecsv
+    uv run lica-nssky --console --trace single -xhl 900 -l stars200-300 -sf ${dir}/stars200-300.png -i ${dir}/20260615_141128_stars200-300.ecsv
+    uv run lica-nssky --console --trace single -xhl 900 -l Oldest -sf ${dir}/oldest.png -i ${dir}/20260615_142514_origen.ecsv
+    uv run lica-nssky --console --trace single -xhl 900 -l UVIR750 -sf ${dir}/uvir750.png -i ${dir}/20260615_130127_cut750.ecsv
 
 # =============================
 # Generic data reduction recipe

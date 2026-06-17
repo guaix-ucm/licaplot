@@ -129,8 +129,9 @@ class NightSky(StrEnum):
 def plot_filter(
     wavelength: FloatArray,
     transmittance: FloatArray,
-    irradiance: FloatArray,
     label: str,
+    irradiance: FloatArray,
+    site: str,
     save_path: str = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
@@ -139,7 +140,7 @@ def plot_filter(
         transmittance,
         label=label,
     )
-    axes.plot(wavelength, irradiance, label="CAHA Night Sky", alpha=0.3)
+    axes.plot(wavelength, irradiance, label=site, alpha=0.3)
     for x, color in ((740, "red"), (750,"black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
@@ -150,6 +151,42 @@ def plot_filter(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} filter transmittance and natural sky emissions")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
+def plot_filters(
+    wavelength: FloatArray,
+    transmittances: Sequence[FloatArray],
+    labels: Sequence[str],
+    irradiances: Sequence[FloatArray],
+    sites: Sequence[str],
+    save_path: str = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+
+    for transmittance, label in zip(transmittances, labels):
+        axes.plot(
+            wavelength,
+            transmittance,
+            label=label,
+        )
+    for irradiance, site in zip(irradiances, sites):
+        axes.plot(wavelength, irradiance, label=site, alpha=0.3)
+
+    for x, color in ((740, "red"), (750,"black")):
+        axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("Transmittance")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title(f"{", ".join(labels)} filter transmittances and natural sky emissions")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -176,8 +213,9 @@ def cli_plot_filter(args: Namespace) -> None:
     plot_filter(
         wavelength=wavelength,
         transmittance=table["Transmittance"],
-        irradiance=irrad_caha,
         label=" ".join(args.label),
+        irradiance=irrad_caha,
+        site="CAHA night sky",
         save_path=args.save_figure_path,
     )
 
@@ -185,7 +223,7 @@ def cli_plot_filter(args: Namespace) -> None:
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_plot = subparser.add_parser(
-        "plot",
+        "single",
         parents=[
             prs.ifile(),
             prs.label("plotting"),
