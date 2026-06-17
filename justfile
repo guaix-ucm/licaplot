@@ -526,10 +526,10 @@ uvir-reduce:
 
     uv run lica-filters --console --trace classif filter --tag A --label stars618 -i ${dir}/20260615_124720_stars618.txt
     uv run lica-filters --console --trace classif filter --tag B --label UVIR750 -i ${dir}/20260615_130127_cut750.txt
-    uv run lica-filters --console --trace classif filter --tag B --label Newest -i ${dir}/20260615_132917_ultimo.txt
+    uv run lica-filters --console --trace classif filter --tag B --label "Newest filter" -i ${dir}/20260615_132917_ultimo.txt
     uv run lica-filters --console --trace classif filter --tag C --label UVIR740 -i ${dir}/20260615_134342_sp740.txt
     uv run lica-filters --console --trace classif filter --tag C --label stars200-300 -i ${dir}/20260615_141128_stars200-300.txt
-    uv run lica-filters --console --trace classif filter --tag C --label Oldest -i ${dir}/20260615_142514_origen.txt
+    uv run lica-filters --console --trace classif filter --tag C --label "Oldest filter" -i ${dir}/20260615_142514_origen.txt
 
     uv run lica-filters --console --trace process  -d ${dir} --save
 
@@ -539,6 +539,18 @@ uvir-plot:
     dir="data/filters/UVIR_cut"
 
     uv run lica-plot --console --trace single tables column --title "UV/IR filter comparison" -% -ycn 5 --lines -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_130127_cut750.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
+
+nsspec:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_124720_stars618.ecsv -l stars618 -xhl 900 -sf ${dir}/stars618.png
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_132917_ultimo.ecsv -l Newest -xhl 900 -sf ${dir}/newest.png
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_134342_sp740.ecsv -l UVIR740 -xhl 900 -sf ${dir}/uvir740.png
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_141128_stars200-300.ecsv -l stars200-300 -xhl 900  -sf ${dir}/stars200-300.png
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_142514_origen.ecsv -l Oldest -xhl 900 -sf ${dir}/oldest.png
+    uv run lica-nssky --console --trace plot -i ${dir}/20260615_130127_cut750.ecsv -l UVIR750 -xhl 900 -sf ${dir}/uvir750.png
+
 # =============================
 # Generic data reduction recipe
 # =============================
