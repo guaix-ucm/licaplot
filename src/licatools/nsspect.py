@@ -12,7 +12,7 @@
 
 import csv
 import logging
-from argparse import Namespace, ArgumentParser
+from argparse import Namespace
 from enum import StrEnum
 from importlib.resources import files
 from functools import lru_cache
@@ -39,14 +39,6 @@ from lica.lab.photodiode import COL
 
 from ._version import __version__
 from .utils import parser as prs
-from .utils.processing import read_ecsv
-from .utils.mpl.plotter import (
-    ColNum,
-    BasicPlotter,
-    TablesFromFiles,
-    SingleTablesColumnBuilder,
-    Director,
-)
 
 # --------------
 # New Type Hints
@@ -219,10 +211,37 @@ def cli_plot_filter(args: Namespace) -> None:
         save_path=args.save_figure_path,
     )
 
+def cli_plot_filters(args: Namespace) -> None:
+    tables = list()
+    for input_file in args.input_file:
+        table: Table = astropy.io.ascii.read(input_file, format="ecsv")
+        mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
+        table = table[mask]
+        tables.append(table)
+    log.info("read %d tables", len(tables))
+    wavelength = tables[0][COL.WAVE]
+    irradiances = list()
+    for site in (CAHA_NIGHT_SKY_FILE,):
+        wave_site, irrad_site = get_emissions(site)
+        if site == CAHA_NIGHT_SKY_FILE:
+            wave_site = wave_site / 10  # from Amstrongs to nanomenters
+        # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
+        irrad_site = np.interp(x=wavelength, xp=wave_site, fp=irrad_site, left=0, right=0)
+        irrad_site = irrad_site / np.max(irrad_site)  # Normalize
+        irradiances.append(irrad_site)
+    plot_filters(
+        wavelength=wavelength,
+        transmittances=[t["Transmittance"] for t in tables],
+        labels=args.labels,
+        irradiances=irradiances,
+        sites=("CAHA night sky",),
+        save_path=args.save_figure_path,
+    )
+
 
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
-    parser_plot = subparser.add_parser(
+    parser_single = subparser.add_parser(
         "single",
         parents=[
             prs.ifile(),
@@ -232,7 +251,18 @@ def add_args(parser):
         ],
         help="Plot Filter trasmittance alongside with Night Sky spectra",
     )
-    parser_plot.set_defaults(func=cli_plot_filter)
+    parser_single.set_defaults(func=cli_plot_filter)
+    parser_multi = subparser.add_parser(
+        "multi",
+        parents=[
+            prs.ifiles(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+        ],
+        help="Plot Filters trasmittances alongside with Night Sky spectra",
+    )
+    parser_multi.set_defaults(func=cli_plot_filters)
 
 
 # ================

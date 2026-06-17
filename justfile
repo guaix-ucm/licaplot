@@ -551,6 +551,13 @@ nsspec:
     uv run lica-nssky --console --trace single -xhl 900 -l Oldest -sf ${dir}/oldest.png -i ${dir}/20260615_142514_origen.ecsv
     uv run lica-nssky --console --trace single -xhl 900 -l UVIR750 -sf ${dir}/uvir750.png -i ${dir}/20260615_130127_cut750.ecsv
 
+nsspec2:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace multi -xhl 900 -l stars618 stars200-300 oldest -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
+    
+
 # =============================
 # Generic data reduction recipe
 # =============================
