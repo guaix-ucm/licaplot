@@ -556,6 +556,13 @@ nsspec1:
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
     uv run lica-nssky --console --trace single -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+
+nsspecI:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace combi -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace combi -xhl 900 -l stars200-300.png -i ${dir}/20260615_141128_stars200-300.ecsv
    
 nsspec2:
     #!/usr/bin/env bash
