@@ -174,7 +174,7 @@ def plot_combi(
     save_path: str = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-    axes.plot(wavelength, response, label=f"label response")
+    axes.plot(wavelength, response, label=f"{label} response")
     axes.plot(wavelength, input_signal, label=site, alpha=0.3)
     axes.plot(wavelength, output, label=f"{site} by TESS-W", alpha=0.5)
     for x, color in ((740, "red"), (750, "black")):
