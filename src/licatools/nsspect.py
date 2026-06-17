@@ -16,7 +16,7 @@ from argparse import Namespace
 from enum import StrEnum
 from importlib.resources import files
 from functools import lru_cache
-from typing import TypeAlias, Sequence, Dict, Tuple
+from typing import TypeAlias, Sequence, Dict, Tuple, Optional
 
 # ---------------------
 # Third-party libraries
@@ -26,6 +26,7 @@ import numpy as np
 from numpy.typing import NDArray
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 import astropy
 from astropy.table import Table
@@ -163,6 +164,14 @@ def plot_filter(
         plt.show()
 
 
+def plot_box(
+    axes,
+    box: Optional[Tuple[str, float, float]] = None,
+) -> None:
+    props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+    axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+
+
 def plot_combi(
     wavelength: FloatArray,
     response: FloatArray,
@@ -176,7 +185,7 @@ def plot_combi(
     fig, axes = plt.subplots(1, 1)
     axes.plot(wavelength, response, label=f"{label} response")
     axes.plot(wavelength, input_signal, label=site, alpha=0.3)
-    axes.plot(wavelength, output, label=f"{site} by TESS-W", alpha=0.5)
+    axes.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
     for x, color in ((740, "red"), (750, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
@@ -187,6 +196,7 @@ def plot_combi(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} filter transmittance and natural sky emissions")
+    plot_box(axes, (f"mag = {mag:0.2f}", 0.8, 0.9))
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
