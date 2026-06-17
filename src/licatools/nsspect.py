@@ -11,7 +11,6 @@
 # -------------------
 
 import csv
-import itertools
 import logging
 from argparse import Namespace, ArgumentParser
 from enum import StrEnum
@@ -25,11 +24,11 @@ from typing import TypeAlias, Sequence, Dict, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import astropy
 from astropy.table import Table
-from astropy import visualization
 from lica.cli import execute
 
 from lica.lab.photodiode import COL
@@ -77,6 +76,8 @@ log = logging.getLogger(__name__)
 
 # Load global style sheets
 plt.style.use("licatools.resources.global")
+
+mpl.rcParams["legend.fontsize"] = "small"
 
 # -------------------
 # Auxiliary functions
@@ -139,7 +140,8 @@ def plot_filter(
         label=label,
     )
     axes.plot(wavelength, irradiance, label="CAHA Night Sky", alpha=0.3)
-
+    for x, color in ((740, "red"), (750,"black")):
+        axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
     axes.set_xlim(xlow, xhigh)
@@ -168,15 +170,15 @@ def cli_plot_filter(args: Namespace) -> None:
     wavelength = table[COL.WAVE]
     wave_caha, irrad_caha = get_emissions(CAHA_NIGHT_SKY_FILE)
     wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
-    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
+    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
     plot_filter(
         wavelength=wavelength,
         transmittance=table["Transmittance"],
         irradiance=irrad_caha,
         label=" ".join(args.label),
-        save_path=args.save_figure_path
+        save_path=args.save_figure_path,
     )
 
 
