@@ -563,7 +563,13 @@ nsspecI:
     dir="data/filters/UVIR_cut"
     uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
     uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars2xx -i ${dir}/20260615_141128_stars200-300.ecsv
-   
+
+nsspec-duo:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace duo -xll 380 -xhl 900 -l stars618 stars2xx -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv
+
 nsspec2:
     #!/usr/bin/env bash
     set -exuo pipefail

@@ -99,7 +99,7 @@ def resource(resource_name: str) -> dict[str, FloatArray]:
     return {k: np.array(v, dtype=np.float64) for k, v in cols.items()}
 
 
-def get_emissions(filename: str) -> Tuple[FloatArray, FloatArray]:
+def get_night_sky_resource(filename: str) -> Tuple[FloatArray, FloatArray]:
     """
     Obtiene el array numpy correspondiente con las lineas de emision del cielo nocturno deseado
     """
@@ -107,12 +107,34 @@ def get_emissions(filename: str) -> Tuple[FloatArray, FloatArray]:
     return result["Wavelength"], result["Irradiance"]
 
 
-def get_tsl237_qe() -> Tuple[FloatArray, FloatArray]:
+def get_tsl237_qe_resource() -> Tuple[FloatArray, FloatArray]:
     """
     Obtiene el array numpy de la QE del TSL237 (medida en laboratorio)
     """
     result = resource(TSL237_QE)
     return result["Wavelength"], result["QE"]
+
+
+def caha_night_sky(wavelength: FloatArray) -> FloatArray:
+    """
+    Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
+    """
+    log.info("reading night sky emissions from %s", CAHA_NIGHT_SKY_FILE)
+    wave_caha, irrad_caha = get_night_sky_resource(CAHA_NIGHT_SKY_FILE)
+    wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
+    # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
+    irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
+    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
+    return irrad_caha
+
+def tsl237_qe(wavelength: FloatArray) -> FloatArray:
+    """
+    Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
+    """
+    log.info("reading TSL237 sensor QE")
+    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
+    qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
+    return qe_tsl237
 
 
 # -----------------
@@ -200,7 +222,7 @@ def plot_combi(
     xhigh = np.ceil(np.max(wavelength))
     axes.set_xlim(xlow, xhigh)
     axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Transmittance")
+    axes.set_ylabel("Response (norm.)")
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} filter transmittance and natural sky emissions")
@@ -212,6 +234,38 @@ def plot_combi(
     else:
         plt.show()
 
+def plot_combi_duo(
+    wavelength: FloatArray,
+    responses: Sequence[FloatArray],
+    labels: Sequence[str],
+    input_signal: FloatArray,
+    site: str,
+    outputs: Sequence[FloatArray],
+    mags: Sequence[FloatArray],
+    save_path: str = None,
+) -> None:
+    fig, axes = plt.subplots(2, 1)
+    for axe, response, output, label, mag in zip(axes, responses, outputs, labels, mags):
+        axe.plot(wavelength, response, label=f"{label} response")
+        axe.plot(wavelength, input_signal, label=site, alpha=0.3)
+        axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
+        for x, color in ((740, "red"), (750, "black")):
+            axe.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+        xlow = np.floor(np.min(wavelength))
+        xhigh = np.ceil(np.max(wavelength))
+        axe.set_xlim(xlow, xhigh)
+        axe.set_xlabel("Wavelength (nm)")
+        axe.set_ylabel("Response (norm.)")
+        axe.legend()
+        axe.grid(True, alpha=0.3)
+        axe.set_title(f"{label} filter transmittance and natural sky emissions")
+        plot_box(axe, (f"mag = {mag:0.2f}", 0.05, 0.95))
+        plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
 
 def plot_filters(
     wavelength: FloatArray,
@@ -263,14 +317,9 @@ def cli_plot_filter(args: Namespace) -> None:
     mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
     table = table[mask]
     wavelength = table[COL.WAVE]  # Common wavelength array for all
-    log.info("reading night sky emissions from %s", CAHA_NIGHT_SKY_FILE)
-    wave_caha, irrad_caha = get_emissions(CAHA_NIGHT_SKY_FILE)
-    wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
-    # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-    irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
-    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
+    irrad_caha = caha_night_sky(wavelength)
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe()
+    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
     qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
 
     plot_filter(
@@ -295,7 +344,7 @@ def cli_plot_filters(args: Namespace) -> None:
     wavelength = tables[0][COL.WAVE]
     irradiances = list()
     for site in (CAHA_NIGHT_SKY_FILE,):
-        wave_site, irrad_site = get_emissions(site)
+        wave_site, irrad_site = get_night_sky_resource(site)
         if site == CAHA_NIGHT_SKY_FILE:
             wave_site = wave_site / 10  # from Amstrongs to nanomenters
         # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
@@ -303,7 +352,7 @@ def cli_plot_filters(args: Namespace) -> None:
         irrad_site = irrad_site / np.max(irrad_site)  # Normalize
         irradiances.append(irrad_site)
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe()
+    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
     qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
     plot_filters(
         wavelength=wavelength,
@@ -316,22 +365,16 @@ def cli_plot_filters(args: Namespace) -> None:
     )
 
 
+
 def cli_plot_combi(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="ecsv")
     mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
     table = table[mask]
     wavelength = table[COL.WAVE]  # Common wavelength array for all
-    log.info("reading night sky emissions from %s", CAHA_NIGHT_SKY_FILE)
-    wave_caha, irrad_caha = get_emissions(CAHA_NIGHT_SKY_FILE)
-    wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
-    # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-    irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
-    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
-    log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe()
-    qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
-    response = table["Transmittance"] * qe_tsl237
+    irrad_caha = caha_night_sky(wavelength)
+    qe = tsl237_qe(wavelength)
+    response = table["Transmittance"] * qe
     output = irrad_caha * response
     flux = integrate.simpson(output, x=wavelength)
     mag = 20.50 - 2.5 * np.log10(flux)
@@ -342,7 +385,6 @@ def cli_plot_combi(args: Namespace) -> None:
         flux,
         mag,
     )
-
     plot_combi(
         wavelength=wavelength,
         response=response,
@@ -351,6 +393,47 @@ def cli_plot_combi(args: Namespace) -> None:
         site="CAHA night sky",
         output=output,
         mag=mag,
+        save_path=args.save_figure_path,
+    )
+
+def cli_plot_combi_duo(args: Namespace) -> None:
+    assert len(args.input_file) == 2 , "only two input files allowed"
+    tables = list()
+    for input_file in args.input_file:
+        log.info("reading filter data %s", input_file)
+        table: Table = astropy.io.ascii.read(input_file, format="ecsv")
+        mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
+        table = table[mask]
+        tables.append(table)
+    wavelength = tables[0][COL.WAVE]  # Common wavelength array for all
+    irrad_caha = caha_night_sky(wavelength)
+    qe = tsl237_qe(wavelength)
+    outputs = list()
+    responses = list()
+    magnitudes = list()
+    for table in tables:
+        response = table["Transmittance"] * qe
+        output = irrad_caha * response
+        outputs.append(output)
+        flux = integrate.simpson(output, x=wavelength)
+        mag = 20.50 - 2.5 * np.log10(flux)
+        log.info(
+            "Integrated flux over [%d nm-%d nm] interval gives %e (m=%0.3f)",
+            args.x_low,
+            args.x_high,
+            flux,
+            mag,
+        )
+        responses.append(response)
+        magnitudes.append(mag)
+    plot_combi_duo(
+        wavelength=wavelength,
+        responses=responses,
+        labels=args.labels,
+        input_signal=irrad_caha,
+        site="CAHA night sky",
+        outputs=outputs,
+        mags=magnitudes,
         save_path=args.save_figure_path,
     )
 
@@ -388,9 +471,21 @@ def add_args(parser):
             prs.savefig(),
             prs.xlim(),
         ],
-        help="Plot combined effects on Night Sky spectra",
+        help="Plot single TESS-W effects on Night Sky spectra",
     )
     parser_combi.set_defaults(func=cli_plot_combi)
+
+    parser_combi = subparser.add_parser(
+        "duo",
+        parents=[
+            prs.ifiles(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+        ],
+        help="Plot 2 TESS-W effects on Night Sky spectra",
+    )
+    parser_combi.set_defaults(func=cli_plot_combi_duo)
 
 
 # ================
