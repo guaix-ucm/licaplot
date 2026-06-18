@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 import astropy
 from astropy.table import Table
 from scipy import integrate
+from scipy.signal import find_peaks, peak_widths
 from lica.cli import execute
 
 from lica.lab.photodiode import COL
@@ -146,6 +147,63 @@ def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     responsivity = np.interp(x=wavelength, xp=wave_tsl237, fp=responsivity, left=0, right=0)
     qe = normalize(responsivity / wavelength)
     return qe
+
+
+# He probado con scipy find_peaks y peaks_width y no me ha funcionado bien
+# porque la curva tiene maximos locales por oscilaciones en la parte de arriba.
+# Asi que esta funcion mas manual funciona mejor
+def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
+    """
+    Calcula el Full Width Half Maximum (FWHM) y los puntos x donde una curva
+    cruza la mitad del máximo.
+
+    Parámetros:
+        x: array numpy con los valores del eje X
+        y: array numpy con los valores del eje Y (la curva)
+
+    Devuelve:
+        fwhm: ancho completo a mitad del máximo
+        x_left: punto x donde la curva cruza half_max por la izquierda
+        x_right: punto x donde la curva cruza half_max por la derecha
+    """
+    # Encontrar el máximo de la curva
+    half_max = np.max(y) / 2.0
+    # Encontrar el índice del máximo
+    peak_idx = np.argmax(y)
+    # Buscar el cruce por la izquierda (antes del pico)
+    # Encontrar donde y pasa de estar <= half_max a > half_max
+    y_left = y[0 : peak_idx + 1]
+    x_left_arr = x[0 : peak_idx + 1]
+    # Encontrar los dos puntos vecinos al cruce
+    left_above = np.where(y_left >= half_max)[0]
+    if len(left_above) == 0:
+        raise ValueError("No se encontró cruce por la izquierda")
+    i_left = left_above[0]  # primer punto >= half_max
+    if i_left == 0:
+        x_left = x_left_arr[0]
+    else:
+        # Interpolación lineal entre i_left-1 e i_left
+        y1, y2 = y_left[i_left - 1], y_left[i_left]
+        x1, x2 = x_left_arr[i_left - 1], x_left_arr[i_left]
+        x_left = x1 + (half_max - y1) * (x2 - x1) / (y2 - y1)
+    # Buscar el cruce por la derecha (despues del pico)
+    y_right = y[peak_idx:-1]
+    x_right_arr = x[peak_idx:-1]
+    # Encontrar donde y pasa de estar >= half_max a < half_max
+    right_above = np.where(y_right >= half_max)[0]
+    if len(right_above) == 0:
+        raise ValueError("No se encontró cruce por la derecha")
+    i_right = right_above[-1]  # último punto >= half_max
+    if i_right == len(y_right) - 1:
+        x_right = x_right_arr[-1]
+    else:
+        # Interpolación lineal entre i_right e i_right+1
+        y1, y2 = y_right[i_right], y_right[i_right + 1]
+        x1, x2 = x_right_arr[i_right], x_right_arr[i_right + 1]
+        x_right = x1 + (half_max - y1) * (x2 - x1) / (y2 - y1)
+    # Calculo del FWHM
+    fwhm = x_right - x_left
+    return fwhm, x_left, x_right
 
 
 # -----------------
@@ -393,6 +451,8 @@ def cli_plot_combi(args: Namespace) -> None:
         flux,
         mag,
     )
+    fwhm, xfw1, xfw2 = get_fwhm(wavelength, response)
+    log.info("FWHM = %f, from x1 = %s to x2 = %s", fwhm, xfw1, xfw2)
     plot_combi(
         wavelength=wavelength,
         response=response,
@@ -433,6 +493,8 @@ def cli_plot_combi_duo(args: Namespace) -> None:
             flux,
             mag,
         )
+        fwhm, xfw1, xfw2 = get_fwhm(wavelength, response)
+        log.info("FWHM = %f, from x1 = %s to x2 = %s", fwhm, xfw1, xfw2)
         responses.append(response)
         magnitudes.append(mag)
     plot_combi_duo(
