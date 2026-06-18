@@ -142,7 +142,7 @@ def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
     """
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, responsivity = get_tsl237_responsivity_resource()
+    wave_tsl237, responsivity = get_tsl237_responsivity_resource(lica=False)
     responsivity = np.interp(x=wavelength, xp=wave_tsl237, fp=responsivity, left=0, right=0)
     qe = normalize(responsivity / wavelength)
     return qe
@@ -180,7 +180,7 @@ def plot_filter(
     )
     axes.plot(wavelength, irradiance, label=site, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
-    for x, color in ((740, "red"), (750, "black")):
+    for x, color in ((740, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
@@ -228,7 +228,7 @@ def plot_combi(
     axes.plot(wavelength, response, label=f"{label} response")
     axes.plot(wavelength, input_signal, label=site, alpha=0.3)
     axes.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
-    for x, color in ((740, "red"), (750, "black")):
+    for x, color in ((740, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
@@ -262,7 +262,7 @@ def plot_combi_duo(
         axe.plot(wavelength, response, label=f"{label} response")
         axe.plot(wavelength, input_signal, label=site, alpha=0.3)
         axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
-        for x, color in ((740, "red"), (750, "black")):
+        for x, color in ((740, "red"), (720, "black")):
             axe.axvline(x, linestyle=":", label=f"{x} nm", color=color)
         xlow = np.floor(np.min(wavelength))
         xhigh = np.ceil(np.max(wavelength))
@@ -302,7 +302,7 @@ def plot_filters(
         axes.plot(wavelength, irradiance, label=site, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
 
-    for x, color in ((740, "red"), (750, "black")):
+    for x, color in ((740, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
