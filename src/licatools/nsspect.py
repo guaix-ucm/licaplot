@@ -176,7 +176,7 @@ def plot_filter(
     axes.set_ylabel("Transmittance")
     axes.legend()
     axes.grid(True, alpha=0.3)
-    axes.set_title(f"{label} filter transmittance and natural sky emissions")
+    axes.set_title(f"{label} response and natural sky emissions")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -224,7 +224,7 @@ def plot_combi(
     axes.set_ylabel("Response (norm.)")
     axes.legend()
     axes.grid(True, alpha=0.3)
-    axes.set_title(f"{label} filter transmittance and natural sky emissions")
+    axes.set_title(f"{label} response and natural sky emissions")
     plot_box(axes, (f"mag = {mag:0.2f}", 0.05, 0.95))
     plt.tight_layout()
     if save_path is not None:
@@ -257,7 +257,7 @@ def plot_combi_duo(
         axe.set_ylabel("Response (norm.)")
         axe.legend()
         axe.grid(True, alpha=0.3)
-        axe.set_title(f"{label} filter transmittance and natural sky emissions")
+        axe.set_title(f"{label} response and natural sky emissions")
         plot_box(axe, (f"mag = {mag:0.2f}", 0.05, 0.95))
         plt.tight_layout()
     if save_path is not None:
@@ -296,7 +296,7 @@ def plot_filters(
     axes.set_ylabel("Transmittance")
     axes.legend()
     axes.grid(True, alpha=0.3)
-    axes.set_title(f"{', '.join(labels)} filter transmittances and natural sky emissions")
+    axes.set_title(f"{', '.join(labels)} response and natural sky emissions")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
