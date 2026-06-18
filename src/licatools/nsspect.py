@@ -26,7 +26,6 @@ import numpy as np
 from numpy.typing import NDArray
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 import astropy
 from astropy.table import Table
@@ -71,8 +70,8 @@ log = logging.getLogger(__name__)
 
 # Load global style sheets
 plt.style.use("licatools.resources.global")
+mpl.rcParams["legend.fontsize"] = "xx-small"
 
-mpl.rcParams["legend.fontsize"] = "small"
 
 # -------------------
 # Auxiliary functions
@@ -324,7 +323,7 @@ def cli_plot_filter(args: Namespace) -> None:
 
     plot_filter(
         wavelength=wavelength,
-        transmittance=table["Transmittance"],
+        transmittance=table[COL.TRANS],
         label=" ".join(args.label),
         irradiance=irrad_caha,
         site="CAHA night sky",
@@ -374,7 +373,7 @@ def cli_plot_combi(args: Namespace) -> None:
     wavelength = table[COL.WAVE]  # Common wavelength array for all
     irrad_caha = caha_night_sky(wavelength)
     qe = tsl237_qe(wavelength)
-    response = table["Transmittance"] * qe
+    response = table[COL.TRANS] * qe
     output = irrad_caha * response
     flux = integrate.simpson(output, x=wavelength)
     mag = 20.50 - 2.5 * np.log10(flux)
@@ -412,7 +411,7 @@ def cli_plot_combi_duo(args: Namespace) -> None:
     responses = list()
     magnitudes = list()
     for table in tables:
-        response = table["Transmittance"] * qe
+        response = table[COL.TRANS] * qe
         output = irrad_caha * response
         outputs.append(output)
         flux = integrate.simpson(output, x=wavelength)
