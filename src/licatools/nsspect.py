@@ -169,7 +169,15 @@ def plot_box(
     box: Optional[Tuple[str, float, float]] = None,
 ) -> None:
     props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
-    axes.text(x=box[1], y=box[2], s=box[0], transform=axes.transAxes, va="top", bbox=props)
+    axes.text(
+        x=box[1],
+        y=box[2],
+        s=box[0],
+        transform=axes.transAxes,
+        va="top",
+        bbox=props,
+        fontsize="x-small",
+    )
 
 
 def plot_combi(
@@ -196,7 +204,7 @@ def plot_combi(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} filter transmittance and natural sky emissions")
-    plot_box(axes, (f"mag = {mag:0.2f}", 0.8, 0.9))
+    plot_box(axes, (f"mag = {mag:0.2f}", 0.05, 0.95))
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)

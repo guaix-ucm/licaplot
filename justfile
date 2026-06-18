@@ -555,20 +555,20 @@ nsspec1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace single -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace single -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
 
 nsspecI:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace combi -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
-    uv run lica-nssky --console --trace combi -xhl 900 -l stars2xx -i ${dir}/20260615_141128_stars200-300.ecsv
+    uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars2xx -i ${dir}/20260615_141128_stars200-300.ecsv
    
 nsspec2:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace multi -xhl 900 -l stars618 tars200-300.png oldest -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
+    uv run lica-nssky --console --trace multi -xll 380 -xhl 900 -l stars618 tars200-300.png oldest -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
     
 
 # =============================
