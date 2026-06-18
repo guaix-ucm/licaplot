@@ -55,7 +55,8 @@ IntArray: TypeAlias = NDArray[np.int64]
 
 LICA_PKG = "licatools.resources.data"
 CAHA_NIGHT_SKY_FILE = "caha_night_spec.tsv"
-TSL237_QE = "TSL237_QE.tsv"
+TSL237_RESP_LICA = "TSL237_responsivity_LICA.tsv"
+TSL237_RESP_DATA = "TSL237_responsivity_datasheet.csv"
 
 # -----------------------
 # Module global variables
@@ -79,12 +80,12 @@ mpl.rcParams["legend.fontsize"] = "xx-small"
 
 
 @lru_cache(maxsize=None)
-def resource(resource_name: str) -> dict[str, FloatArray]:
+def resource(resource_name: str, delimiter="\t") -> dict[str, FloatArray]:
     """
     Transforma todos los arrays en una estructura de datos conveniente y la cachea
     """
     reso = files(LICA_PKG).joinpath(resource_name).read_text(encoding="utf-8").splitlines()
-    rows = csv.DictReader(reso, delimiter="\t")
+    rows = csv.DictReader(reso, delimiter=delimiter)
     cols: Dict[str, list] = {}
     for row in rows:
         # inicualizar listas de valores la primera vez
@@ -95,7 +96,7 @@ def resource(resource_name: str) -> dict[str, FloatArray]:
             if v.strip():  # Solo si hay un valor
                 cols[k].append(float(v))
     # Convertir cada lista a np.ndarray[float64]
-    return {k: np.array(v, dtype=np.float64) for k, v in cols.items()}
+    return {k.strip(): np.array(v, dtype=np.float64) for k, v in cols.items()}
 
 
 def get_night_sky_resource(filename: str) -> Tuple[FloatArray, FloatArray]:
@@ -106,12 +107,17 @@ def get_night_sky_resource(filename: str) -> Tuple[FloatArray, FloatArray]:
     return result["Wavelength"], result["Irradiance"]
 
 
-def get_tsl237_qe_resource() -> Tuple[FloatArray, FloatArray]:
+def get_tsl237_responsivity_resource(lica: bool = True) -> Tuple[FloatArray, FloatArray]:
     """
-    Obtiene el array numpy de la QE del TSL237 (medida en laboratorio)
+    Obtiene el array numpy de la QE del TSL237
     """
-    result = resource(TSL237_QE)
-    return result["Wavelength"], result["QE"]
+    if lica:
+        result = resource(TSL237_RESP_LICA) # Medida en laboratorio
+        return result["Wavelength [nm]"], result["Responsivity (normalized)"]
+    else:
+        result = resource(TSL237_RESP_DATA, delimiter=",")
+        return result["Wavelength [nm]"], result["Responsivity (normalized)"]
+
 
 
 def caha_night_sky(wavelength: FloatArray) -> FloatArray:
@@ -126,15 +132,15 @@ def caha_night_sky(wavelength: FloatArray) -> FloatArray:
     irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
     return irrad_caha
 
+
 def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     """
     Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
     """
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
+    wave_tsl237, qe_tsl237 = get_tsl237_responsivity_resource()
     qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
     return qe_tsl237
-
 
 # -----------------
 # Auxiliary classes
@@ -145,9 +151,9 @@ class NightSky(StrEnum):
     CAHA = "Calar Alto"
 
 
-# -------------------
-# Auxiliary functions
-# -------------------
+# ------------------
+# Plotting functions
+# ------------------
 
 
 def plot_filter(
@@ -163,6 +169,7 @@ def plot_filter(
     axes.plot(
         wavelength,
         transmittance,
+        marker="o",
         label=label,
     )
     axes.plot(wavelength, irradiance, label=site, alpha=0.3)
@@ -233,6 +240,7 @@ def plot_combi(
     else:
         plt.show()
 
+
 def plot_combi_duo(
     wavelength: FloatArray,
     responses: Sequence[FloatArray],
@@ -265,6 +273,7 @@ def plot_combi_duo(
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
     else:
         plt.show()
+
 
 def plot_filters(
     wavelength: FloatArray,
@@ -317,17 +326,14 @@ def cli_plot_filter(args: Namespace) -> None:
     table = table[mask]
     wavelength = table[COL.WAVE]  # Common wavelength array for all
     irrad_caha = caha_night_sky(wavelength)
-    log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
-    qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
-
+    qe = tsl237_qe(wavelength)
     plot_filter(
         wavelength=wavelength,
         transmittance=table[COL.TRANS],
         label=" ".join(args.label),
         irradiance=irrad_caha,
         site="CAHA night sky",
-        qe=qe_tsl237,
+        qe=qe,
         save_path=args.save_figure_path,
     )
 
@@ -350,19 +356,16 @@ def cli_plot_filters(args: Namespace) -> None:
         irrad_site = np.interp(x=wavelength, xp=wave_site, fp=irrad_site, left=0, right=0)
         irrad_site = irrad_site / np.max(irrad_site)  # Normalize
         irradiances.append(irrad_site)
-    log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_qe_resource()
-    qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
+    qe_tsl237 = tsl237_qe(wavelength)
     plot_filters(
         wavelength=wavelength,
-        transmittances=[t["Transmittance"] for t in tables],
+        transmittances=[t[COL.TRANS] for t in tables],
         labels=args.labels,
         irradiances=irradiances,
         sites=("CAHA night sky",),
         qe=qe_tsl237,
         save_path=args.save_figure_path,
     )
-
 
 
 def cli_plot_combi(args: Namespace) -> None:
@@ -395,8 +398,9 @@ def cli_plot_combi(args: Namespace) -> None:
         save_path=args.save_figure_path,
     )
 
+
 def cli_plot_combi_duo(args: Namespace) -> None:
-    assert len(args.input_file) == 2 , "only two input files allowed"
+    assert len(args.input_file) == 2, "only two input files allowed"
     tables = list()
     for input_file in args.input_file:
         log.info("reading filter data %s", input_file)
