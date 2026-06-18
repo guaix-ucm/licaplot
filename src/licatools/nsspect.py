@@ -79,6 +79,11 @@ mpl.rcParams["legend.fontsize"] = "xx-small"
 # -------------------
 
 
+def normalize(x: FloatArray) -> FloatArray:
+    """Normalize an array wrt its max value."""
+    return x / np.max(x)
+
+
 @lru_cache(maxsize=None)
 def resource(resource_name: str, delimiter="\t") -> dict[str, FloatArray]:
     """
@@ -112,12 +117,11 @@ def get_tsl237_responsivity_resource(lica: bool = True) -> Tuple[FloatArray, Flo
     Obtiene el array numpy de la QE del TSL237
     """
     if lica:
-        result = resource(TSL237_RESP_LICA) # Medida en laboratorio
+        result = resource(TSL237_RESP_LICA)  # Medida en laboratorio
         return result["Wavelength [nm]"], result["Responsivity (normalized)"]
     else:
         result = resource(TSL237_RESP_DATA, delimiter=",")
         return result["Wavelength [nm]"], result["Responsivity (normalized)"]
-
 
 
 def caha_night_sky(wavelength: FloatArray) -> FloatArray:
@@ -129,7 +133,7 @@ def caha_night_sky(wavelength: FloatArray) -> FloatArray:
     wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
-    irrad_caha = irrad_caha / np.max(irrad_caha)  # Normalize
+    irrad_caha = normalize(irrad_caha)  # Normalize
     return irrad_caha
 
 
@@ -138,9 +142,11 @@ def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
     """
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, qe_tsl237 = get_tsl237_responsivity_resource()
-    qe_tsl237 = np.interp(x=wavelength, xp=wave_tsl237, fp=qe_tsl237, left=0, right=0)
-    return qe_tsl237
+    wave_tsl237, responsivity = get_tsl237_responsivity_resource()
+    responsivity = np.interp(x=wavelength, xp=wave_tsl237, fp=responsivity, left=0, right=0)
+    qe = normalize(responsivity / wavelength)
+    return qe
+
 
 # -----------------
 # Auxiliary classes
@@ -232,7 +238,7 @@ def plot_combi(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} response and natural sky emissions")
-    plot_box(axes, (f"mag = {mag:0.2f}", 0.05, 0.95))
+    plot_box(axes, (f"mag = {mag:0.2f}", 0.8, 0.5))
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -266,7 +272,7 @@ def plot_combi_duo(
         axe.legend()
         axe.grid(True, alpha=0.3)
         axe.set_title(f"{label} response and natural sky emissions")
-        plot_box(axe, (f"mag = {mag:0.2f}", 0.05, 0.95))
+        plot_box(axe, (f"mag = {mag:0.2f}", 0.8, 0.5))
         plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -354,7 +360,7 @@ def cli_plot_filters(args: Namespace) -> None:
             wave_site = wave_site / 10  # from Amstrongs to nanomenters
         # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
         irrad_site = np.interp(x=wavelength, xp=wave_site, fp=irrad_site, left=0, right=0)
-        irrad_site = irrad_site / np.max(irrad_site)  # Normalize
+        irrad_site = normalize(irrad_site)
         irradiances.append(irrad_site)
     qe_tsl237 = tsl237_qe(wavelength)
     plot_filters(
