@@ -150,7 +150,7 @@ def madrid_old_night_sky(wavelength: FloatArray) -> FloatArray:
     """
     log.info("reading night sky emissions from %s", MADRID_2014_SKY_FILE)
     result = resource(MADRID_2014_SKY_FILE, delimiter=",")
-    wave, irrad = result["Wavelength [nm]"], result["Irradiance (after midnight)"]
+    wave, irrad = result["Wavelength [nm]"], result["Irradiance (before midnight)"]
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
     irrad = normalize(irrad)  # Normalize
@@ -471,7 +471,7 @@ def cli_plot_filter(args: Namespace) -> None:
         transmittance=table[COL.TRANS],
         label=" ".join(args.label),
         irradiance=irrad,
-        sky_label=f"{args.sky} night sky",
+        sky_label=f"{args.sky}",
         qe=qe,
         save_path=args.save_figure_path,
     )
@@ -503,7 +503,7 @@ def cli_plot_filters(args: Namespace) -> None:
         transmittances=[t[COL.TRANS] for t in tables],
         labels=args.labels,
         irradiances=irradiances,
-        sky_labels=(f"{args.sky} night sky",),
+        sky_labels=(f"{args.sky}",),
         qe=qe_tsl237,
         save_path=args.save_figure_path,
     )
@@ -535,7 +535,7 @@ def cli_plot_combi(args: Namespace) -> None:
         response=response,
         label=" ".join(args.label),
         input_signal=irrad,
-        sky_label=f"{args.sky} night sky",
+        sky_label=f"{args.sky}",
         output=output,
         mag=mag,
         fwhm=(fwhm, xfw1, xfw2),
@@ -580,7 +580,7 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         responses=responses,
         labels=args.labels,
         input_signal=irrad,
-        sky_label=f"{args.sky} night sky",
+        sky_label=f"{args.sky}",
         outputs=outputs,
         mags=magnitudes,
         fwhms=fwhms,
