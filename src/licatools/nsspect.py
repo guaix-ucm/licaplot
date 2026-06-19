@@ -12,7 +12,7 @@
 
 import csv
 import logging
-from argparse import Namespace
+from argparse import Namespace, ArgumentParser
 from enum import StrEnum
 from importlib.resources import files
 from functools import lru_cache
@@ -213,7 +213,8 @@ def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
 
 
 class NightSky(StrEnum):
-    CAHA = "Calar Alto"
+    CAHA = "CAHA"
+    MADRID = "Madrid"
 
 
 # ------------------
@@ -226,7 +227,7 @@ def plot_filter(
     transmittance: FloatArray,
     label: str,
     irradiance: FloatArray,
-    site: str,
+    sky_label: NightSky,
     qe: FloatArray,
     save_path: str = None,
 ) -> None:
@@ -237,7 +238,7 @@ def plot_filter(
         marker="o",
         label=label,
     )
-    axes.plot(wavelength, irradiance, label=site, alpha=0.3)
+    axes.plot(wavelength, irradiance, label=sky_label, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
     for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
@@ -278,7 +279,7 @@ def plot_combi(
     response: FloatArray,
     label: str,
     input_signal: FloatArray,
-    site: str,
+    sky_label: NightSky,
     output: FloatArray,
     mag: float,
     fwhm: Tuple[float, float, float],
@@ -297,8 +298,8 @@ def plot_combi(
     rr = np.insert(rr, -1, 0.5)
     axes.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
     # Señal de entrada y salida
-    axes.plot(wavelength, input_signal, label=site, alpha=0.3)
-    axes.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
+    axes.plot(wavelength, input_signal, label=sky_label, alpha=0.3)
+    axes.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
     # pinta lineas verticales interesantes
     for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
@@ -324,7 +325,7 @@ def plot_combi_stacked(
     responses: Sequence[FloatArray],
     labels: Sequence[str],
     input_signal: FloatArray,
-    site: str,
+    sky_label: NightSky,
     outputs: Sequence[FloatArray],
     mags: Sequence[FloatArray],
     fwhms: Sequence[Tuple[float, float, float]],
@@ -338,8 +339,8 @@ def plot_combi_stacked(
         # Respuesta espectral del sensor TSL237
         axe.plot(wavelength, response, label=f"{label} spectral resp.")
         # Señal de entrada y salida
-        axe.plot(wavelength, input_signal, label=site, alpha=0.3)
-        axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
+        axe.plot(wavelength, input_signal, label=sky_label, alpha=0.3)
+        axe.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
         fwhm, xfw1, xfw2 = fwhm  # unpack tuple
         xfw2 = int(round(xfw2, 0))
         if xfw2 != REF_CUTOFF:
@@ -377,7 +378,7 @@ def plot_filters(
     transmittances: Sequence[FloatArray],
     labels: Sequence[str],
     irradiances: Sequence[FloatArray],
-    sites: Sequence[str],
+    sky_labels: Sequence[str],
     qe: FloatArray,
     save_path: str = None,
 ) -> None:
@@ -389,8 +390,8 @@ def plot_filters(
             transmittance,
             label=label,
         )
-    for irradiance, site in zip(irradiances, sites):
-        axes.plot(wavelength, irradiance, label=site, alpha=0.3)
+    for irradiance, sky_label in zip(irradiances, sky_labels):
+        axes.plot(wavelength, irradiance, label=sky_label, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
 
     for x, color in ((REF_CUTOFF, "red"), (720, "black")):
@@ -429,7 +430,7 @@ def cli_plot_filter(args: Namespace) -> None:
         transmittance=table[COL.TRANS],
         label=" ".join(args.label),
         irradiance=irrad_caha,
-        site="CAHA night sky",
+        sky_label="CAHA night sky",
         qe=qe,
         save_path=args.save_figure_path,
     )
@@ -445,21 +446,23 @@ def cli_plot_filters(args: Namespace) -> None:
     log.info("read %d tables", len(tables))
     wavelength = tables[0][COL.WAVE]
     irradiances = list()
-    for site in (CAHA_NIGHT_SKY_FILE,):
-        wave_site, irrad_site = get_night_sky_resource(site)
-        if site == CAHA_NIGHT_SKY_FILE:
-            wave_site = wave_site / 10  # from Amstrongs to nanomenters
+    for sky_label in (CAHA_NIGHT_SKY_FILE,):
+        wave_sky_label, irrad_sky_label = get_night_sky_resource(sky_label)
+        if sky_label == CAHA_NIGHT_SKY_FILE:
+            wave_sky_label = wave_sky_label / 10  # from Amstrongs to nanomenters
         # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-        irrad_site = np.interp(x=wavelength, xp=wave_site, fp=irrad_site, left=0, right=0)
-        irrad_site = normalize(irrad_site)
-        irradiances.append(irrad_site)
+        irrad_sky_label = np.interp(
+            x=wavelength, xp=wave_sky_label, fp=irrad_sky_label, left=0, right=0
+        )
+        irrad_sky_label = normalize(irrad_sky_label)
+        irradiances.append(irrad_sky_label)
     qe_tsl237 = tsl237_qe(wavelength)
     plot_filters(
         wavelength=wavelength,
         transmittances=[t[COL.TRANS] for t in tables],
         labels=args.labels,
         irradiances=irradiances,
-        sites=("CAHA night sky",),
+        sky_labels=("CAHA night sky",),
         qe=qe_tsl237,
         save_path=args.save_figure_path,
     )
@@ -491,7 +494,7 @@ def cli_plot_combi(args: Namespace) -> None:
         response=response,
         label=" ".join(args.label),
         input_signal=irrad_caha,
-        site="CAHA night sky",
+        sky_label=f"{args.sky} night sky",
         output=output,
         mag=mag,
         fwhm=(fwhm, xfw1, xfw2),
@@ -536,12 +539,24 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         responses=responses,
         labels=args.labels,
         input_signal=irrad_caha,
-        site="CAHA night sky",
+        sky_label=f"{args.sky} night sky",
         outputs=outputs,
         mags=magnitudes,
         fwhms=fwhms,
         save_path=args.save_figure_path,
     )
+
+
+def sky() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--sky",
+        type=NightSky,
+        default=NightSky.CAHA,
+        help="Night Sky to load, defaults to %(default)s",
+    )
+    return parser
 
 
 def add_args(parser):
@@ -576,6 +591,7 @@ def add_args(parser):
             prs.label("plotting"),
             prs.savefig(),
             prs.xlim(),
+            sky(),
         ],
         help="Plot single TESS-W effects on Night Sky spectra",
     )
@@ -588,6 +604,7 @@ def add_args(parser):
             prs.labels("plotting"),
             prs.savefig(),
             prs.xlim(),
+            sky(),
         ],
         help="Plot 2 TESS-W effects on Night Sky spectra",
     )
