@@ -561,7 +561,7 @@ nsspec-combi1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace combi --sky CAHA -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace combi --sky "Madrid (2020)" -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
 
 
 nsspec-combi2:

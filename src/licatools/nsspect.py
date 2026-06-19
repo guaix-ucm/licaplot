@@ -95,8 +95,6 @@ class NightSky(StrEnum):
 
 def normalize(x: FloatArray) -> FloatArray:
     """Normalize an array wrt its max value."""
-    log.info("normalizing array %s", x.shape)
-    log.info("normalizing min, max %s, %s", np.min(x), np.max(x))
     return x / np.max(x)
 
 
@@ -335,7 +333,7 @@ def plot_combi(
     rr = np.insert(rr, -1, 0.5)
     axes.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
     # Señal de entrada y salida
-    axes.plot(wavelength, input_signal, label=sky_label, alpha=0.3)
+    axes.plot(wavelength, input_signal, label=f"{sky_label} night sky", alpha=0.3)
     axes.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
     # pinta lineas verticales interesantes
     xfw2 = int(round(xfw2, 0))
@@ -382,7 +380,7 @@ def plot_combi_stacked(
         # Respuesta espectral del sensor TSL237
         axe.plot(wavelength, response, label=f"{label} spectral resp.")
         # Señal de entrada y salida
-        axe.plot(wavelength, input_signal, label=sky_label, alpha=0.3)
+        axe.plot(wavelength, input_signal, label=f"{sky_label} night sky", alpha=0.3)
         axe.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
         fwhm, xfw1, xfw2 = fwhm  # unpack tuple
         xfw2 = int(round(xfw2, 0))
