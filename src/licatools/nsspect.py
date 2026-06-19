@@ -30,7 +30,6 @@ import matplotlib.pyplot as plt
 import astropy
 from astropy.table import Table
 from scipy import integrate
-from scipy.signal import find_peaks, peak_widths
 from lica.cli import execute
 
 from lica.lab.photodiode import COL
@@ -58,6 +57,8 @@ LICA_PKG = "licatools.resources.data"
 CAHA_NIGHT_SKY_FILE = "caha_night_spec.tsv"
 TSL237_RESP_LICA = "TSL237_responsivity_LICA.tsv"
 TSL237_RESP_DATA = "TSL237_responsivity_datasheet.csv"
+
+REF_CUTOFF = 740  # theoretical UV/IR cutoff filter
 
 # -----------------------
 # Module global variables
@@ -238,7 +239,7 @@ def plot_filter(
     )
     axes.plot(wavelength, irradiance, label=site, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
-    for x, color in ((740, "red"), (720, "black")):
+    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
@@ -299,7 +300,7 @@ def plot_combi(
     axes.plot(wavelength, input_signal, label=site, alpha=0.3)
     axes.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
     # pinta lineas verticales interesantes
-    for x, color in ((740, "red"), (720, "black")):
+    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
@@ -335,21 +336,22 @@ def plot_combi_stacked(
         axes, responses, outputs, labels, mags, fwhms
     ):
         # Respuesta espectral del sensor TSL237
-        response_plot = axe.plot(wavelength, response, label=f"{label} response")
-        color = response_plot[0].get_color()
-        # sobreimpone la curva de FWHM sobre la respuesta espectral, mismo color
-        fwhm, xfw1, xfw2 = fwhm  # unpack tuple
-        mask = (xfw1 <= wavelength) & (wavelength <= xfw2)
-        ww = np.insert(wavelength[mask], 0, xfw1)
-        ww = np.insert(ww, -1, xfw2)
-        rr = np.insert(response[mask], 0, 0.5)
-        rr = np.insert(rr, -1, 0.5)
-        axe.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
+        axe.plot(wavelength, response, label=f"{label} response")
         # Señal de entrada y salida
         axe.plot(wavelength, input_signal, label=site, alpha=0.3)
         axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
-        for x, color in ((740, "red"), (720, "black")):
-            axe.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+        fwhm, xfw1, xfw2 = fwhm  # unpack tuple
+        xfw2 = int(round(xfw2, 0))
+        if xfw2 != REF_CUTOFF:
+            axe.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
+            axe.axvline(xfw2, linestyle=":", label=f"{xfw2} nm (fwhm boundary)", color="black")
+        else:
+            axe.axvline(
+                REF_CUTOFF,
+                linestyle=":",
+                label=f"{REF_CUTOFF} nm (ref. + fwhm boundary)",
+                color="red",
+            )
         xlow = np.floor(np.min(wavelength))
         xhigh = np.ceil(np.max(wavelength))
         axe.set_xlim(xlow, xhigh)
@@ -388,7 +390,7 @@ def plot_filters(
         axes.plot(wavelength, irradiance, label=site, alpha=0.3)
     axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
 
-    for x, color in ((740, "red"), (720, "black")):
+    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
