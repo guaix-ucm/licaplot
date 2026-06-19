@@ -555,26 +555,27 @@ nsspec1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace single -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
+    uv run lica-nssky --console --trace single --sky "Madrid (2020)" -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
 
-nsspec-combi:
+nsspec-combi1:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
-    #uv run lica-nssky --console --trace combi -xll 380 -xhl 900 -l stars2xx -i ${dir}/20260615_141128_stars200-300.ecsv
+    uv run lica-nssky --console --trace combi --sky CAHA -xll 380 -xhl 900 -l stars618 -i ${dir}/20260615_124720_stars618.ecsv
 
-nsspec-duo:
+
+nsspec-combi2:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace stacked -xll 380 -xhl 900 -l stars618 stars2xx -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv
+    uv run lica-nssky --console --trace combi --sky CAHA -xll 380 -xhl 900 -l stars15xx -i ${dir}/20260615_132917_ultimo.ecsv 
+
 
 nsspec-trio:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace stacked -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+    uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
 
 # =============================
 # Generic data reduction recipe

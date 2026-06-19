@@ -55,6 +55,8 @@ IntArray: TypeAlias = NDArray[np.int64]
 
 LICA_PKG = "licatools.resources.data"
 CAHA_NIGHT_SKY_FILE = "caha_night_spec.tsv"
+MADRID_2014_SKY_FILE = "UCM-SAND_1_2_spectra_201404.csv"
+MADRID_2020_SKY_FILE = "Madrid_sky_spectrum_alpy_20200518.csv"
 TSL237_RESP_LICA = "TSL237_responsivity_LICA.tsv"
 TSL237_RESP_DATA = "TSL237_responsivity_datasheet.csv"
 
@@ -70,10 +72,20 @@ log = logging.getLogger(__name__)
 # Matplotlib styles
 # -----------------
 
-
 # Load global style sheets
 plt.style.use("licatools.resources.global")
 mpl.rcParams["legend.fontsize"] = "xx-small"
+
+
+# -----
+# Enums
+# -----
+
+
+class NightSky(StrEnum):
+    CAHA = "CAHA"
+    MADRID_OLD = "Madrid (2014)"
+    MADRID_NEW = "Madrid (2020)"
 
 
 # -------------------
@@ -83,11 +95,13 @@ mpl.rcParams["legend.fontsize"] = "xx-small"
 
 def normalize(x: FloatArray) -> FloatArray:
     """Normalize an array wrt its max value."""
+    log.info("normalizing array %s", x.shape)
+    log.info("normalizing min, max %s, %s", np.min(x), np.max(x))
     return x / np.max(x)
 
 
 @lru_cache(maxsize=None)
-def resource(resource_name: str, delimiter="\t") -> dict[str, FloatArray]:
+def resource(resource_name: str, delimiter: str) -> dict[str, FloatArray]:
     """
     Transforma todos los arrays en una estructura de datos conveniente y la cachea
     """
@@ -106,20 +120,12 @@ def resource(resource_name: str, delimiter="\t") -> dict[str, FloatArray]:
     return {k.strip(): np.array(v, dtype=np.float64) for k, v in cols.items()}
 
 
-def get_night_sky_resource(filename: str) -> Tuple[FloatArray, FloatArray]:
-    """
-    Obtiene el array numpy correspondiente con las lineas de emision del cielo nocturno deseado
-    """
-    result = resource(filename)
-    return result["Wavelength"], result["Irradiance"]
-
-
 def get_tsl237_responsivity_resource(lica: bool = False) -> Tuple[FloatArray, FloatArray]:
     """
     Obtiene el array numpy de la QE del TSL237
     """
     if lica:
-        result = resource(TSL237_RESP_LICA)  # Medida en laboratorio
+        result = resource(TSL237_RESP_LICA, delimiter="\t")  # Medida en laboratorio
         return result["Wavelength [nm]"], result["Responsivity (normalized)"]
     else:
         result = resource(TSL237_RESP_DATA, delimiter=",")
@@ -131,12 +137,53 @@ def caha_night_sky(wavelength: FloatArray) -> FloatArray:
     Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
     """
     log.info("reading night sky emissions from %s", CAHA_NIGHT_SKY_FILE)
-    wave_caha, irrad_caha = get_night_sky_resource(CAHA_NIGHT_SKY_FILE)
-    wave_caha = wave_caha / 10  # from Amstrongs to nanomenters
+    result = resource(CAHA_NIGHT_SKY_FILE, delimiter="\t")
+    wave, irrad = result["Wavelength"], result["Irradiance"]
+    wave = wave / 10  # from Amstrongs to nanomenters
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-    irrad_caha = np.interp(x=wavelength, xp=wave_caha, fp=irrad_caha, left=0, right=0)
-    irrad_caha = normalize(irrad_caha)  # Normalize
-    return irrad_caha
+    irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
+    irrad = normalize(irrad)  # Normalize
+    return irrad
+
+
+def madrid_old_night_sky(wavelength: FloatArray) -> FloatArray:
+    """
+    Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
+    """
+    log.info("reading night sky emissions from %s", MADRID_2014_SKY_FILE)
+    result = resource(MADRID_2014_SKY_FILE, delimiter=",")
+    wave, irrad = result["Wavelength [nm]"], result["Irradiance (after midnight)"]
+    # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
+    irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
+    irrad = normalize(irrad)  # Normalize
+    return irrad
+
+
+def madrid_new_night_sky(wavelength: FloatArray) -> FloatArray:
+    """
+    Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
+    """
+    log.info("reading night sky emissions from %s", MADRID_2020_SKY_FILE)
+    result = resource(MADRID_2020_SKY_FILE, delimiter=",")
+    log.info(result)
+    wave, irrad = result["Wavelength [nm]"], result["Irradiance"]
+    # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
+    irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
+    log.info(irrad)
+    irrad = normalize(irrad)  # Normalize
+    return irrad
+
+
+def night_sky(wavelength: FloatArray, selector: NightSky) -> FloatArray:
+    if selector == NightSky.CAHA:
+        irrad = caha_night_sky(wavelength)
+    elif selector == NightSky.MADRID_OLD:
+        irrad = madrid_old_night_sky(wavelength)
+    elif selector == NightSky.MADRID_NEW:
+        irrad = madrid_new_night_sky(wavelength)
+    else:
+        raise NotImplementedError(f"{selector} not yet available")
+    return irrad
 
 
 def tsl237_qe(wavelength: FloatArray) -> FloatArray:
@@ -205,16 +252,6 @@ def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
     # Calculo del FWHM
     fwhm = x_right - x_left
     return fwhm, x_left, x_right
-
-
-# -----------------
-# Auxiliary classes
-# -----------------
-
-
-class NightSky(StrEnum):
-    CAHA = "CAHA"
-    MADRID = "Madrid"
 
 
 # ------------------
@@ -301,8 +338,14 @@ def plot_combi(
     axes.plot(wavelength, input_signal, label=sky_label, alpha=0.3)
     axes.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
     # pinta lineas verticales interesantes
-    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
-        axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+    xfw2 = int(round(xfw2, 0))
+    if xfw2 != REF_CUTOFF:
+        axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
+        axes.axvline(xfw2, linestyle=":", label=f"{xfw2} nm (fwhm boundary)", color="black")
+    else:
+        axes.axvline(
+            REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref. + fwhm boundary)", color="red"
+        )
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
     axes.set_xlim(xlow, xhigh)
@@ -423,14 +466,14 @@ def cli_plot_filter(args: Namespace) -> None:
     mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
     table = table[mask]
     wavelength = table[COL.WAVE]  # Common wavelength array for all
-    irrad_caha = caha_night_sky(wavelength)
+    irrad = night_sky(wavelength, args.sky)
     qe = tsl237_qe(wavelength)
     plot_filter(
         wavelength=wavelength,
         transmittance=table[COL.TRANS],
         label=" ".join(args.label),
-        irradiance=irrad_caha,
-        sky_label="CAHA night sky",
+        irradiance=irrad,
+        sky_label=f"{args.sky} night sky",
         qe=qe,
         save_path=args.save_figure_path,
     )
@@ -462,7 +505,7 @@ def cli_plot_filters(args: Namespace) -> None:
         transmittances=[t[COL.TRANS] for t in tables],
         labels=args.labels,
         irradiances=irradiances,
-        sky_labels=("CAHA night sky",),
+        sky_labels=(f"{args.sky} night sky",),
         qe=qe_tsl237,
         save_path=args.save_figure_path,
     )
@@ -474,10 +517,10 @@ def cli_plot_combi(args: Namespace) -> None:
     mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
     table = table[mask]
     wavelength = table[COL.WAVE]  # Common wavelength array for all
-    irrad_caha = caha_night_sky(wavelength)
+    irrad = night_sky(wavelength, args.sky)
     qe = tsl237_qe(wavelength)
     response = table[COL.TRANS] * qe
-    output = irrad_caha * response
+    output = irrad * response
     flux = integrate.simpson(output, x=wavelength)
     mag = 20.50 - 2.5 * np.log10(flux)
     log.info(
@@ -493,7 +536,7 @@ def cli_plot_combi(args: Namespace) -> None:
         wavelength=wavelength,
         response=response,
         label=" ".join(args.label),
-        input_signal=irrad_caha,
+        input_signal=irrad,
         sky_label=f"{args.sky} night sky",
         output=output,
         mag=mag,
@@ -511,12 +554,12 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         table = table[mask]
         tables.append(table)
     wavelength = tables[0][COL.WAVE]  # Common wavelength array for all
-    irrad_caha = caha_night_sky(wavelength)
+    irrad = night_sky(wavelength, args.sky)
     qe = tsl237_qe(wavelength)
     outputs, responses, magnitudes, fwhms = list(), list(), list(), list()
     for table in tables:
         response = table[COL.TRANS] * qe
-        output = irrad_caha * response
+        output = irrad * response
         flux = integrate.simpson(output, x=wavelength)
         mag = 20.50 - 2.5 * np.log10(flux)
         log.info(
@@ -538,7 +581,7 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         wavelength=wavelength,
         responses=responses,
         labels=args.labels,
-        input_signal=irrad_caha,
+        input_signal=irrad,
         sky_label=f"{args.sky} night sky",
         outputs=outputs,
         mags=magnitudes,
@@ -568,6 +611,7 @@ def add_args(parser):
             prs.label("plotting"),
             prs.savefig(),
             prs.xlim(),
+            sky(),
         ],
         help="Plot Filter trasmittance alongside with Night Sky spectra",
     )
@@ -579,6 +623,7 @@ def add_args(parser):
             prs.labels("plotting"),
             prs.savefig(),
             prs.xlim(),
+            sky(),
         ],
         help="Plot Filters trasmittances alongside with Night Sky spectra",
     )
