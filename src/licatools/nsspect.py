@@ -280,12 +280,25 @@ def plot_combi(
     site: str,
     output: FloatArray,
     mag: float,
+    fwhm: Tuple[float, float, float],
     save_path: str = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-    axes.plot(wavelength, response, label=f"{label} response")
+    # Respuesta espectral del sensor TSL237
+    response_plot = axes.plot(wavelength, response, label=f"{label} response")
+    color = response_plot[0].get_color()
+    # sobreimpone la curva de FWHM sobre la respuesta espectral, mismo color
+    fwhm, xfw1, xfw2 = fwhm  # unpack tuple
+    mask = (xfw1 <= wavelength) & (wavelength <= xfw2)
+    ww = np.insert(wavelength[mask], 0, xfw1)
+    ww = np.insert(ww, -1, xfw2)
+    rr = np.insert(response[mask], 0, 0.5)
+    rr = np.insert(rr, -1, 0.5)
+    axes.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
+    # Señal de entrada y salida
     axes.plot(wavelength, input_signal, label=site, alpha=0.3)
     axes.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
+    # pinta lineas verticales interesantes
     for x, color in ((740, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
@@ -296,7 +309,7 @@ def plot_combi(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{label} response and natural sky emissions")
-    plot_box(axes, (f"mag = {mag:0.2f}", 0.8, 0.5))
+    plot_box(axes, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.45))
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -305,7 +318,7 @@ def plot_combi(
         plt.show()
 
 
-def plot_combi_duo(
+def plot_combi_stacked(
     wavelength: FloatArray,
     responses: Sequence[FloatArray],
     labels: Sequence[str],
@@ -313,11 +326,26 @@ def plot_combi_duo(
     site: str,
     outputs: Sequence[FloatArray],
     mags: Sequence[FloatArray],
+    fwhms: Sequence[Tuple[float, float, float]],
     save_path: str = None,
 ) -> None:
-    fig, axes = plt.subplots(2, 1)
-    for axe, response, output, label, mag in zip(axes, responses, outputs, labels, mags):
-        axe.plot(wavelength, response, label=f"{label} response")
+    N = len(labels)
+    fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
+    for axe, response, output, label, mag, fwhm in zip(
+        axes, responses, outputs, labels, mags, fwhms
+    ):
+        # Respuesta espectral del sensor TSL237
+        response_plot = axe.plot(wavelength, response, label=f"{label} response")
+        color = response_plot[0].get_color()
+        # sobreimpone la curva de FWHM sobre la respuesta espectral, mismo color
+        fwhm, xfw1, xfw2 = fwhm  # unpack tuple
+        mask = (xfw1 <= wavelength) & (wavelength <= xfw2)
+        ww = np.insert(wavelength[mask], 0, xfw1)
+        ww = np.insert(ww, -1, xfw2)
+        rr = np.insert(response[mask], 0, 0.5)
+        rr = np.insert(rr, -1, 0.5)
+        axe.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
+        # Señal de entrada y salida
         axe.plot(wavelength, input_signal, label=site, alpha=0.3)
         axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
         for x, color in ((740, "red"), (720, "black")):
@@ -330,7 +358,7 @@ def plot_combi_duo(
         axe.legend()
         axe.grid(True, alpha=0.3)
         axe.set_title(f"{label} response and natural sky emissions")
-        plot_box(axe, (f"mag = {mag:0.2f}", 0.8, 0.5))
+        plot_box(axe, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
         plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -461,12 +489,12 @@ def cli_plot_combi(args: Namespace) -> None:
         site="CAHA night sky",
         output=output,
         mag=mag,
+        fwhm=(fwhm, xfw1, xfw2),
         save_path=args.save_figure_path,
     )
 
 
-def cli_plot_combi_duo(args: Namespace) -> None:
-    assert len(args.input_file) == 2, "only two input files allowed"
+def cli_plot_combi_stacked(args: Namespace) -> None:
     tables = list()
     for input_file in args.input_file:
         log.info("reading filter data %s", input_file)
@@ -477,13 +505,10 @@ def cli_plot_combi_duo(args: Namespace) -> None:
     wavelength = tables[0][COL.WAVE]  # Common wavelength array for all
     irrad_caha = caha_night_sky(wavelength)
     qe = tsl237_qe(wavelength)
-    outputs = list()
-    responses = list()
-    magnitudes = list()
+    outputs, responses, magnitudes, fwhms = list(), list(), list(), list()
     for table in tables:
         response = table[COL.TRANS] * qe
         output = irrad_caha * response
-        outputs.append(output)
         flux = integrate.simpson(output, x=wavelength)
         mag = 20.50 - 2.5 * np.log10(flux)
         log.info(
@@ -495,9 +520,11 @@ def cli_plot_combi_duo(args: Namespace) -> None:
         )
         fwhm, xfw1, xfw2 = get_fwhm(wavelength, response)
         log.info("FWHM = %f, from x1 = %s to x2 = %s", fwhm, xfw1, xfw2)
+        outputs.append(output)
         responses.append(response)
         magnitudes.append(mag)
-    plot_combi_duo(
+        fwhms.append((fwhm, xfw1, xfw2))
+    plot_combi_stacked(
         wavelength=wavelength,
         responses=responses,
         labels=args.labels,
@@ -505,6 +532,7 @@ def cli_plot_combi_duo(args: Namespace) -> None:
         site="CAHA night sky",
         outputs=outputs,
         mags=magnitudes,
+        fwhms=fwhms,
         save_path=args.save_figure_path,
     )
 
@@ -547,7 +575,7 @@ def add_args(parser):
     parser_combi.set_defaults(func=cli_plot_combi)
 
     parser_combi = subparser.add_parser(
-        "duo",
+        "stacked",
         parents=[
             prs.ifiles(),
             prs.labels("plotting"),
@@ -556,7 +584,7 @@ def add_args(parser):
         ],
         help="Plot 2 TESS-W effects on Night Sky spectra",
     )
-    parser_combi.set_defaults(func=cli_plot_combi_duo)
+    parser_combi.set_defaults(func=cli_plot_combi_stacked)
 
 
 # ================
