@@ -114,7 +114,7 @@ def get_night_sky_resource(filename: str) -> Tuple[FloatArray, FloatArray]:
     return result["Wavelength"], result["Irradiance"]
 
 
-def get_tsl237_responsivity_resource(lica: bool = True) -> Tuple[FloatArray, FloatArray]:
+def get_tsl237_responsivity_resource(lica: bool = False) -> Tuple[FloatArray, FloatArray]:
     """
     Obtiene el array numpy de la QE del TSL237
     """
@@ -144,7 +144,7 @@ def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     Lee el recurso y lo remuestrea a las longitudes de onda de trabajo
     """
     log.info("reading TSL237 sensor QE")
-    wave_tsl237, responsivity = get_tsl237_responsivity_resource(lica=False)
+    wave_tsl237, responsivity = get_tsl237_responsivity_resource()
     responsivity = np.interp(x=wavelength, xp=wave_tsl237, fp=responsivity, left=0, right=0)
     qe = normalize(responsivity / wavelength)
     return qe
@@ -286,7 +286,7 @@ def plot_combi(
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     # Respuesta espectral del sensor TSL237
-    response_plot = axes.plot(wavelength, response, label=f"{label} response")
+    response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
     color = response_plot[0].get_color()
     # sobreimpone la curva de FWHM sobre la respuesta espectral, mismo color
     fwhm, xfw1, xfw2 = fwhm  # unpack tuple
@@ -336,7 +336,7 @@ def plot_combi_stacked(
         axes, responses, outputs, labels, mags, fwhms
     ):
         # Respuesta espectral del sensor TSL237
-        axe.plot(wavelength, response, label=f"{label} response")
+        axe.plot(wavelength, response, label=f"{label} spectral resp.")
         # Señal de entrada y salida
         axe.plot(wavelength, input_signal, label=site, alpha=0.3)
         axe.plot(wavelength, output, label=f"{site} by {label}", alpha=0.5)
@@ -360,7 +360,10 @@ def plot_combi_stacked(
         axe.legend()
         axe.grid(True, alpha=0.3)
         axe.set_title(f"{label} response and natural sky emissions")
-        plot_box(axe, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
+        if mag == 0:
+            plot_box(axe, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
+        else:
+            plot_box(axe, (f"\u0394mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
         plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -526,6 +529,8 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         responses.append(response)
         magnitudes.append(mag)
         fwhms.append((fwhm, xfw1, xfw2))
+    # convert to delta magnitudes wrt. the first item in the list
+    magnitudes = [m - magnitudes[0] for m in magnitudes]
     plot_combi_stacked(
         wavelength=wavelength,
         responses=responses,
