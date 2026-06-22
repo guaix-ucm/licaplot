@@ -532,7 +532,7 @@ def cli_plot_combi(args: Namespace) -> None:
         mag,
     )
     fwhm, xfw1, xfw2 = get_fwhm(wavelength, response)
-    log.info("FWHM = %f, from x1 = %s to x2 = %s", fwhm, xfw1, xfw2)
+    log.info("FWHM = %0.2f, from x1 = %0.2f to x2 = %0.2f", fwhm, xfw1, xfw2)
     plot_combi(
         wavelength=wavelength,
         response=response,
@@ -571,7 +571,7 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
             mag,
         )
         fwhm, xfw1, xfw2 = get_fwhm(wavelength, response)
-        log.info("FWHM = %f, from x1 = %s to x2 = %s", fwhm, xfw1, xfw2)
+        log.info("FWHM = %0.2f, from x1 = %0.2f to x2 = %0.2f", fwhm, xfw1, xfw2)
         outputs.append(output)
         responses.append(response)
         magnitudes.append(mag)
