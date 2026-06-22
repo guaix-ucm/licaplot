@@ -551,6 +551,14 @@ nsspec:
     uv run lica-nssky --console --trace single -xhl 900 -l Oldest -sf ${dir}/oldest.png -i ${dir}/20260615_142514_origen.ecsv
     uv run lica-nssky --console --trace single -xhl 900 -l UVIR750 -sf ${dir}/uvir750.png -i ${dir}/20260615_130127_cut750.ecsv
 
+nsspec-sky:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace sky --sky "Madrid (2020)" -xhl 900
+    uv run lica-nssky --console --trace sky --sky "Madrid (2014)" -xhl 900
+
+
 nsspec1:
     #!/usr/bin/env bash
     set -exuo pipefail

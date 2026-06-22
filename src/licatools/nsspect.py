@@ -141,8 +141,12 @@ def caha_night_sky(wavelength: FloatArray) -> FloatArray:
     result = resource(CAHA_NIGHT_SKY_FILE, delimiter="\t")
     wave, irrad = result["Wavelength"], result["Irradiance"]
     wave = wave / 10  # from Amstrongs to nanomenters
+    log.info("[CAHA] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
+    log.info(
+        "[CAHA] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+    )
     irrad = normalize(irrad)  # Normalize
     return irrad
 
@@ -154,8 +158,12 @@ def madrid_old_night_sky(wavelength: FloatArray) -> FloatArray:
     log.info("reading night sky emissions from %s", MADRID_2014_SKY_FILE)
     result = resource(MADRID_2014_SKY_FILE, delimiter=",")
     wave, irrad = result["Wavelength [nm]"], result["Irradiance (before midnight)"]
+    log.info("[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
+    log.info(
+        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+    )
     irrad = normalize(irrad)  # Normalize
     return irrad
 
@@ -166,13 +174,83 @@ def madrid_new_night_sky(wavelength: FloatArray) -> FloatArray:
     """
     log.info("reading night sky emissions from %s", MADRID_2020_SKY_FILE)
     result = resource(MADRID_2020_SKY_FILE, delimiter=",")
-    log.info(result)
     wave, irrad = result["Wavelength [nm]"], result["Irradiance"]
+    log.info("[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-    irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
-    log.info(irrad)
+    idx = np.argsort(wave)  # ahy que ordenar por orden ascendente de wavelenght
+    xp = result["Wavelength [nm]"][idx]
+    fp = irrad[idx]
+    irrad = np.interp(x=wavelength, xp=xp, fp=fp, left=0, right=0)
+    log.info(
+        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+    )
     irrad = normalize(irrad)  # Normalize
     return irrad
+
+
+def sand_night_sky(wavelength=None) -> FloatArray:
+    """
+    Lee el recurso, sin normalizar
+    """
+    log.info("reading Madrid (SAND) sky emissions from %s", MADRID_2014_SKY_FILE)
+    result = resource(MADRID_2014_SKY_FILE, delimiter=",")
+    wave, irrad_bfr, irrad_aft = (
+        result["Wavelength [nm]"],
+        result["Irradiance (before midnight)"],
+        result["Irradiance (after midnight)"],
+    )
+    log.info("[SAND] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
+    if wavelength is None:
+        return (
+            wave,
+            irrad_bfr,
+            irrad_aft,
+        )
+    else:
+        irrad_bfr = np.interp(
+            x=wavelength,
+            xp=wave,
+            fp=irrad_bfr,
+            left=0,
+            right=0,
+        )
+        irrad_aft = np.interp(
+            x=wavelength,
+            xp=wave,
+            fp=irrad_aft,
+            left=0,
+            right=0,
+        )
+        log.info(
+            "[SAND] Resampled wavelength range = [%0.2f nm - %0.2f nm]",
+            np.min(wavelength),
+            np.max(wavelength),
+        )
+        return wavelength, irrad_bfr, irrad_aft
+
+
+def alpy_night_sky(wavelength=None) -> FloatArray:
+    """
+    Lee el recurso, sin normalizar
+    """
+    log.info("reading Madrid (ALPY) sky emissions from %s", MADRID_2020_SKY_FILE)
+    result = resource(MADRID_2020_SKY_FILE, delimiter=",")
+    wave, irr = result["Wavelength [nm]"], result["Irradiance"]
+    log.info("[ALPY] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
+    if wavelength is None:
+        return wave, irr
+    else:
+        # El fichero viene ordenado por longitud de onda descendiente
+        idx = np.argsort(result["Wavelength [nm]"])
+        xp = result["Wavelength [nm]"][idx]
+        fp = result["Irradiance"][idx]
+        irrad = np.interp(x=wavelength, xp=xp, fp=fp, left=0, right=0)
+        log.info(
+            "[ALPY] Resampled wavelength range = [%0.2f nm - %0.2f nm]",
+            np.min(wavelength),
+            np.max(wavelength),
+        )
+        return wavelength, irrad
 
 
 def night_sky(wavelength: FloatArray, selector: NightSky) -> FloatArray:
@@ -456,6 +534,62 @@ def plot_filters(
         plt.show()
 
 
+def plot_alpy_sky(
+    wavelength: FloatArray,
+    sky_data: FloatArray,
+    sky_label: str,
+    save_path: str = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    # datos del cielo nocturno
+    axes.plot(wavelength, sky_data, label=f"ALPY {sky_label}", alpha=0.5)
+    # pinta lineas verticales interesantes
+    axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("Night sky")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title(f"{sky_label} natural sky emissions")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
+
+def plot_sand_sky(
+    wavelength: FloatArray,
+    sky_data_bfr: FloatArray,
+    sky_data_aft: FloatArray,
+    sky_label: str,
+    save_path: str = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    # datos del cielo nocturno
+    axes.plot(wavelength, sky_data_bfr, label=f"SAND (before midnight) {sky_label}", alpha=0.5)
+    axes.plot(wavelength, sky_data_aft, label=f"SAND (after midnight) {sky_label}", alpha=0.5)
+    # pinta lineas verticales interesantes
+    axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("Night sky")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title(f"{sky_label} natural sky emissions")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -476,38 +610,6 @@ def cli_plot_filter(args: Namespace) -> None:
         irradiance=irrad,
         sky_label=f"{args.sky}",
         qe=qe,
-        save_path=args.save_figure_path,
-    )
-
-
-def cli_plot_filters(args: Namespace) -> None:
-    tables = list()
-    for input_file in args.input_file:
-        table: Table = astropy.io.ascii.read(input_file, format="ecsv")
-        mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
-        table = table[mask]
-        tables.append(table)
-    log.info("read %d tables", len(tables))
-    wavelength = tables[0][COL.WAVE]
-    irradiances = list()
-    for sky_label in (CAHA_NIGHT_SKY_FILE,):
-        wave_sky_label, irrad_sky_label = get_night_sky_resource(sky_label)
-        if sky_label == CAHA_NIGHT_SKY_FILE:
-            wave_sky_label = wave_sky_label / 10  # from Amstrongs to nanomenters
-        # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
-        irrad_sky_label = np.interp(
-            x=wavelength, xp=wave_sky_label, fp=irrad_sky_label, left=0, right=0
-        )
-        irrad_sky_label = normalize(irrad_sky_label)
-        irradiances.append(irrad_sky_label)
-    qe_tsl237 = tsl237_qe(wavelength)
-    plot_filters(
-        wavelength=wavelength,
-        transmittances=[t[COL.TRANS] for t in tables],
-        labels=args.labels,
-        irradiances=irradiances,
-        sky_labels=(f"{args.sky}",),
-        qe=qe_tsl237,
         save_path=args.save_figure_path,
     )
 
@@ -591,20 +693,80 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
     )
 
 
+def cli_plot_sky(args: Namespace) -> None:
+    if args.sky is not None:
+        log.info("reading %s sky data", args.sky)
+        wavelength = np.arange(args.x_low, args.x_high + 2, 2)
+        if args.sky == NightSky.MADRID_OLD:
+            wavelength, sky_bfr, skyd_aft = sand_night_sky(wavelength=wavelength)
+            plot_sand_sky(
+                wavelength=wavelength,
+                sky_data_bfr=sky_bfr,
+                sky_data_aft=skyd_aft,
+                sky_label=f"{args.sky}",
+                save_path=args.save_figure_path,
+            )
+        else:
+            wavelength, sky = alpy_night_sky(wavelength=wavelength)
+            plot_alpy_sky(
+                wavelength=wavelength,
+                sky_data=sky,
+                sky_label=f"{args.sky}",
+                save_path=args.save_figure_path,
+            )
+    else:
+        log.info("reading %s raw sky data", args.raw_sky)
+        if args.raw_sky == NightSky.MADRID_OLD:
+            wavelength, sky_bfr, skyd_aft = sand_night_sky()
+            plot_sand_sky(
+                wavelength=wavelength,
+                sky_data_bfr=sky_bfr,
+                sky_data_aft=skyd_aft,
+                sky_label=f"{args.raw_sky}",
+                save_path=args.save_figure_path,
+            )
+        else:
+            wavelength, sky = alpy_night_sky()
+            plot_alpy_sky(
+                wavelength=wavelength,
+                sky_data=sky,
+                sky_label=f"{args.raw_sky}",
+                save_path=args.save_figure_path,
+            )
+
+
 def sky() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--sky",
         type=NightSky,
-        default=NightSky.CAHA,
-        help="Night Sky to load, defaults to %(default)s",
+        default=None,
+        help="Night Sky to load (interpolated to monochormator range), defaults to %(default)s",
+    )
+    group.add_argument(
+        "--raw-sky",
+        type=NightSky,
+        default=None,
+        help="Night Sky to load (not interpolated to monochromator range), defaults to %(default)s",
     )
     return parser
 
 
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
+    parser_sky = subparser.add_parser(
+        "sky",
+        parents=[
+            prs.label("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+            sky(),
+        ],
+        help="Plot selected Night Sky spectrum",
+    )
+    parser_sky.set_defaults(func=cli_plot_sky)
     parser_single = subparser.add_parser(
         "single",
         parents=[
@@ -614,22 +776,9 @@ def add_args(parser):
             prs.xlim(),
             sky(),
         ],
-        help="Plot Filter trasmittance alongside with Night Sky spectra",
+        help="Plot filter trasmittance alongside with Night Sky spectrum",
     )
     parser_single.set_defaults(func=cli_plot_filter)
-    parser_multi = subparser.add_parser(
-        "multi",
-        parents=[
-            prs.ifiles(),
-            prs.labels("plotting"),
-            prs.savefig(),
-            prs.xlim(),
-            sky(),
-        ],
-        help="Plot Filters trasmittances alongside with Night Sky spectra",
-    )
-    parser_multi.set_defaults(func=cli_plot_filters)
-
     parser_combi = subparser.add_parser(
         "combi",
         parents=[
@@ -639,7 +788,7 @@ def add_args(parser):
             prs.xlim(),
             sky(),
         ],
-        help="Plot single TESS-W effects on Night Sky spectra",
+        help="Plot single TESS-W effects on a selected Night Sky spectrum",
     )
     parser_combi.set_defaults(func=cli_plot_combi)
 
@@ -652,7 +801,7 @@ def add_args(parser):
             prs.xlim(),
             sky(),
         ],
-        help="Plot 2 TESS-W effects on Night Sky spectra",
+        help="Plot several TESS-W effects on a selected Night Sky spectrum",
     )
     parser_combi.set_defaults(func=cli_plot_combi_stacked)
 
