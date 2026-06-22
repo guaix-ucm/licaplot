@@ -95,6 +95,9 @@ class NightSky(StrEnum):
 
 def normalize(x: FloatArray) -> FloatArray:
     """Normalize an array wrt its max value."""
+    maxi = np.max(x)
+    if maxi == 0.0:
+        raise ValueError("array full of zeros")
     return x / np.max(x)
 
 
