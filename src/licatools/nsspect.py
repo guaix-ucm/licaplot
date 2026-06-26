@@ -145,7 +145,9 @@ def caha_night_sky(wavelength: FloatArray) -> FloatArray:
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
     log.info(
-        "[CAHA] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+        "[CAHA] Resampled wavelength range = [%0.2f nm - %0.2f nm]",
+        np.min(wavelength),
+        np.max(wavelength),
     )
     irrad = normalize(irrad)  # Normalize
     return irrad
@@ -158,11 +160,15 @@ def madrid_old_night_sky(wavelength: FloatArray) -> FloatArray:
     log.info("reading night sky emissions from %s", MADRID_2014_SKY_FILE)
     result = resource(MADRID_2014_SKY_FILE, delimiter=",")
     wave, irrad = result["Wavelength [nm]"], result["Irradiance (before midnight)"]
-    log.info("[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
+    log.info(
+        "[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave)
+    )
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     irrad = np.interp(x=wavelength, xp=wave, fp=irrad, left=0, right=0)
     log.info(
-        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]",
+        np.min(wavelength),
+        np.max(wavelength),
     )
     irrad = normalize(irrad)  # Normalize
     return irrad
@@ -175,14 +181,18 @@ def madrid_new_night_sky(wavelength: FloatArray) -> FloatArray:
     log.info("reading night sky emissions from %s", MADRID_2020_SKY_FILE)
     result = resource(MADRID_2020_SKY_FILE, delimiter=",")
     wave, irrad = result["Wavelength [nm]"], result["Irradiance"]
-    log.info("[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave))
+    log.info(
+        "[MADRID] Original wavelength range = [%0.2f nm - %0.2f nm]", np.min(wave), np.max(wave)
+    )
     # Interpola la respuesta espectral del cielo al rango donde se ha medido el filtro
     idx = np.argsort(wave)  # ahy que ordenar por orden ascendente de wavelenght
     xp = result["Wavelength [nm]"][idx]
     fp = irrad[idx]
     irrad = np.interp(x=wavelength, xp=xp, fp=fp, left=0, right=0)
     log.info(
-        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]", np.min(wavelength), np.max(wavelength)
+        "[MADRID] Resampled wavelength range = [%0.2f nm - %0.2f nm]",
+        np.min(wavelength),
+        np.max(wavelength),
     )
     irrad = normalize(irrad)  # Normalize
     return irrad
@@ -449,15 +459,17 @@ def plot_combi_stacked(
     input_signal: FloatArray,
     sky_label: NightSky,
     outputs: Sequence[FloatArray],
-    mags: Sequence[FloatArray],
+    mag_diffs: Sequence[FloatArray],
+    base_magnitude: float,
     fwhms: Sequence[Tuple[float, float, float]],
     save_path: str = None,
 ) -> None:
     N = len(labels)
     fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
-    for axe, response, output, label, mag, fwhm in zip(
-        axes, responses, outputs, labels, mags, fwhms
+    for axe, response, output, label, mag_diff, fwhm in zip(
+        axes, responses, outputs, labels, mag_diffs, fwhms
     ):
+        mag = base_magnitude + mag_diff
         # Respuesta espectral del sensor TSL237
         axe.plot(wavelength, response, label=f"{label} spectral resp.")
         # Señal de entrada y salida
@@ -483,10 +495,10 @@ def plot_combi_stacked(
         axe.legend()
         axe.grid(True, alpha=0.3)
         axe.set_title(f"{label} response and natural sky emissions")
-        if mag == 0:
+        if mag_diff == 0:
             plot_box(axe, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
         else:
-            plot_box(axe, (f"\u0394mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
+            plot_box(axe, (f"\u0394mag = {mag_diff:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
         plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -679,7 +691,7 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         magnitudes.append(mag)
         fwhms.append((fwhm, xfw1, xfw2))
     # convert to delta magnitudes wrt. the first item in the list
-    magnitudes = [m - magnitudes[0] for m in magnitudes]
+    mag_diffs = [m - magnitudes[0] for m in magnitudes]
     plot_combi_stacked(
         wavelength=wavelength,
         responses=responses,
@@ -687,7 +699,8 @@ def cli_plot_combi_stacked(args: Namespace) -> None:
         input_signal=irrad,
         sky_label=f"{args.sky}",
         outputs=outputs,
-        mags=magnitudes,
+        mag_diffs=mag_diffs,
+        base_magnitude=args.magnitude,
         fwhms=fwhms,
         save_path=args.save_figure_path,
     )
@@ -754,6 +767,19 @@ def sky() -> ArgumentParser:
     return parser
 
 
+def mag() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--mag",
+        dest="magnitude",
+        type=float,
+        default=21.5,
+        help="Typical base NSB, defaults to %(default)s",
+    )
+    return parser
+
+
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_sky = subparser.add_parser(
@@ -800,6 +826,7 @@ def add_args(parser):
             prs.savefig(),
             prs.xlim(),
             sky(),
+            mag(),
         ],
         help="Plot several TESS-W effects on a selected Night Sky spectrum",
     )
