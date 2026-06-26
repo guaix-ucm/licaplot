@@ -354,8 +354,8 @@ def plot_filter(
     label: str,
     irradiance: FloatArray,
     sky_label: NightSky,
-    qe: FloatArray,
-    save_path: str = None,
+    qe: Optional[FloatArray] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     axes.plot(
@@ -365,7 +365,8 @@ def plot_filter(
         label=label,
     )
     axes.plot(wavelength, irradiance, label=sky_label, alpha=0.3)
-    axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
+    if qe is not None:
+        axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
     for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
     xlow = np.floor(np.min(wavelength))
@@ -409,7 +410,7 @@ def plot_combi(
     output: FloatArray,
     mag: float,
     fwhm: Tuple[float, float, float],
-    save_path: str = None,
+    save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     # Respuesta espectral del sensor TSL237
@@ -462,7 +463,7 @@ def plot_combi_stacked(
     mag_diffs: Sequence[FloatArray],
     base_magnitude: float,
     fwhms: Sequence[Tuple[float, float, float]],
-    save_path: str = None,
+    save_path: Optional[str] = None,
 ) -> None:
     N = len(labels)
     fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
@@ -511,22 +512,21 @@ def plot_filters(
     wavelength: FloatArray,
     transmittances: Sequence[FloatArray],
     labels: Sequence[str],
-    irradiances: Sequence[FloatArray],
-    sky_labels: Sequence[str],
-    qe: FloatArray,
-    save_path: str = None,
+    irradiance: FloatArray,
+    sky_label: Sequence[str],
+    qe: Optional[FloatArray] = None,
+    save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-
     for transmittance, label in zip(transmittances, labels):
         axes.plot(
             wavelength,
             transmittance,
             label=label,
         )
-    for irradiance, sky_label in zip(irradiances, sky_labels):
-        axes.plot(wavelength, irradiance, label=sky_label, alpha=0.3)
-    axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
+    axes.plot(wavelength, irradiance, label=sky_label, color="black", alpha=0.3)
+    if qe is not None:
+        axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
 
     for x, color in ((REF_CUTOFF, "red"), (720, "black")):
         axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
@@ -537,7 +537,7 @@ def plot_filters(
     axes.set_ylabel("Transmittance")
     axes.legend()
     axes.grid(True, alpha=0.3)
-    axes.set_title(f"{', '.join(labels)} response and natural sky emissions")
+    axes.set_title("several TESS-W filters response and natural sky emissions")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -550,7 +550,7 @@ def plot_alpy_sky(
     wavelength: FloatArray,
     sky_data: FloatArray,
     sky_label: str,
-    save_path: str = None,
+    save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     # datos del cielo nocturno
@@ -578,7 +578,7 @@ def plot_sand_sky(
     sky_data_bfr: FloatArray,
     sky_data_aft: FloatArray,
     sky_label: str,
-    save_path: str = None,
+    save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     # datos del cielo nocturno
@@ -622,6 +622,28 @@ def cli_plot_filter(args: Namespace) -> None:
         irradiance=irrad,
         sky_label=f"{args.sky}",
         qe=qe,
+        save_path=args.save_figure_path,
+    )
+
+
+def cli_plot_filters(args: Namespace) -> None:
+    tables = list()
+    for path in args.input_file:
+        log.info("reading filter data %s", args.input_file)
+        table: Table = astropy.io.ascii.read(path, format="ecsv")
+        mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
+        table = table[mask]
+        tables.append(table)
+    wavelength = tables[0][COL.WAVE]  # Common wavelength array for all
+    irrad = night_sky(wavelength, args.sky)
+    qe = tsl237_qe(wavelength)
+    plot_filters(
+        wavelength=wavelength,
+        transmittances=[t[COL.TRANS] for t in tables],
+        labels=args.labels,
+        irradiance=irrad,
+        sky_label=f"{args.sky}",
+        qe=None,
         save_path=args.save_figure_path,
     )
 
@@ -805,6 +827,18 @@ def add_args(parser):
         help="Plot filter trasmittance alongside with Night Sky spectrum",
     )
     parser_single.set_defaults(func=cli_plot_filter)
+    parser_multi = subparser.add_parser(
+        "multi",
+        parents=[
+            prs.ifiles(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+            sky(),
+        ],
+        help="Plot several filter trasmittances alongside with Night Sky spectrum",
+    )
+    parser_multi.set_defaults(func=cli_plot_filters)
     parser_combi = subparser.add_parser(
         "combi",
         parents=[

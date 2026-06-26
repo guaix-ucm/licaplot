@@ -551,6 +551,12 @@ nsspec:
     uv run lica-nssky --console --trace single -xhl 900 -l Oldest -sf ${dir}/oldest.png -i ${dir}/20260615_142514_origen.ecsv
     uv run lica-nssky --console --trace single -xhl 900 -l UVIR750 -sf ${dir}/uvir750.png -i ${dir}/20260615_130127_cut750.ecsv
 
+nsspec-filters:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace multi -xll 380 -xhl 900 --sky CAHA -l stars618 stars15xx sp740 stars2xx stars0xx sp750 -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv ${dir}/20260615_130127_cut750.ecsv
+
 nsspec-sky:
     #!/usr/bin/env bash
     set -exuo pipefail
