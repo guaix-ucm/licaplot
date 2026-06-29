@@ -545,6 +545,41 @@ def plot_filters(
     else:
         plt.show()
 
+def plot_filters_skies(
+    wavelength: FloatArray,
+    transmittances: Sequence[FloatArray],
+    labels: Sequence[str],
+    irradiances: Sequence[FloatArray],
+    sky_labels: Sequence[str],
+    qe: Optional[FloatArray] = None,
+    save_path: Optional[str] = None,
+) -> None:
+    N = len(sky_labels)
+    fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
+    for axe, irradiance, sky_label in zip(axes, irradiances, sky_labels):
+        for transmittance, label in zip(transmittances, labels):
+            axe.plot(wavelength, transmittance,label=label)
+        if qe is not None:
+            axe.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
+        for x, color in ((REF_CUTOFF, "red"), (720, "black")):
+            axe.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+        axe.plot(wavelength, irradiance, label=sky_label, color="black", alpha=0.3)
+        xlow = np.floor(np.min(wavelength))
+        xhigh = np.ceil(np.max(wavelength))
+        axe.set_xlim(xlow, xhigh)
+        axe.set_xlabel("Wavelength (nm)")
+        axe.set_ylabel("Transmittance")
+        axe.legend()
+        axe.grid(True, alpha=0.3)
+        axe.set_title(f"TESS-W filters response and {sky_label} sky emissions")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+    
+
 
 def plot_alpy_sky(
     wavelength: FloatArray,
@@ -646,6 +681,29 @@ def cli_plot_filters(args: Namespace) -> None:
         qe=None,
         save_path=args.save_figure_path,
     )
+
+
+def cli_plot_filters_skies(args: Namespace) -> None:
+    tables = list()
+    for path in args.input_file:
+        log.info("reading filter data %s", args.input_file)
+        table: Table = astropy.io.ascii.read(path, format="ecsv")
+        mask = (args.x_low <= table[COL.WAVE]) & (table[COL.WAVE] <= args.x_high)
+        table = table[mask]
+        tables.append(table)
+    wavelength = tables[0][COL.WAVE]  # Common wavelength array for all
+    qe = tsl237_qe(wavelength)
+    irrads = [night_sky(wavelength, sky) for sky in args.sky]   
+    plot_filters_skies(
+        wavelength=wavelength,
+        transmittances=[t[COL.TRANS] for t in tables],
+        labels=args.labels,
+        irradiances=irrads,
+        sky_labels=args.sky,
+        qe=None,
+        save_path=args.save_figure_path,
+    )
+
 
 
 def cli_plot_combi(args: Namespace) -> None:
@@ -788,6 +846,25 @@ def sky() -> ArgumentParser:
     )
     return parser
 
+def skies() -> ArgumentParser:
+    """Common options for plotting"""
+    parser = ArgumentParser(add_help=False)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--sky",
+        type=NightSky,
+        nargs="+",
+        default=None,
+        help="Night Skies to load (interpolated to monochormator range), defaults to %(default)s",
+    )
+    group.add_argument(
+        "--raw-sky",
+        type=NightSky,
+        nargs="+",
+        default=None,
+        help="Night Sky to load (not interpolated to monochromator range), defaults to %(default)s",
+    )
+    return parser
 
 def mag() -> ArgumentParser:
     """Common options for plotting"""
@@ -839,6 +916,20 @@ def add_args(parser):
         help="Plot several filter trasmittances alongside with Night Sky spectrum",
     )
     parser_multi.set_defaults(func=cli_plot_filters)
+
+    parser_multiskies = subparser.add_parser(
+        "multiskies",
+        parents=[
+            prs.ifiles(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+            skies(),
+        ],
+        help="Plot several filter trasmittances alongside with several Night Sky spectra",
+    )
+    parser_multiskies.set_defaults(func=cli_plot_filters_skies)
+
     parser_combi = subparser.add_parser(
         "combi",
         parents=[

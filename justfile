@@ -559,6 +559,14 @@ nsspec-filters:
     uv run lica-nssky --console --trace multi -xll 380 -xhl 900 --sky CAHA -l stars618 stars15xx sp740 stars2xx stars0xx -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
     uv run lica-nssky --console --trace multi -xll 380 -xhl 900 --sky "Madrid (2014)" -l stars618 stars15xx sp740 stars2xx stars0xx -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
 
+nsspec-filters-skies:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    #uv run lica-nssky --console --trace multi -xll 380 -xhl 900 --sky CAHA -l stars618 stars15xx sp740 stars2xx stars0xx sp750 -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv ${dir}/20260615_130127_cut750.ecsv
+    uv run lica-nssky --console --trace multiskies -xll 380 -xhl 900 --sky CAHA "Madrid (2014)" -l stars618 stars15xx sp740 stars2xx stars0xx -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_134342_sp740.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_142514_origen.ecsv
+
+
 nsspec-sky:
     #!/usr/bin/env bash
     set -exuo pipefail
@@ -591,7 +599,8 @@ nsspec-trio:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+    uv run lica-nssky --console --trace stacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+    uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
 
 # =============================
 # Generic data reduction recipe
