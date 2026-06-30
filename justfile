@@ -602,6 +602,26 @@ nsspec-trio:
     uv run lica-nssky --console --trace stacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
     uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
 
+fov1 label="stars237":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw/fov"
+    label={{label}}
+    uv run lica-fov --console --trace single --up -l ${label} -i ${dir}/${label}.csv
+
+fov2 labels="stars237 stars630":
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw/fov"
+    labels={{labels}}
+    files=""
+    for label in $labels
+    do
+        files="${files} ${dir}/${label}.csv"
+    done
+    uv run lica-fov --console --trace multi --up -l ${labels} -i ${files}
+
+
 # =============================
 # Generic data reduction recipe
 # =============================
