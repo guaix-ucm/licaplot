@@ -33,6 +33,7 @@ from scipy import integrate
 from lica.cli import execute
 
 from lica.lab.photodiode import COL
+from lica.validators import vfile
 
 # ------------------------
 # Own modules and packages
@@ -469,19 +470,59 @@ def plot_fov_single(
     if freq_up is not None:
         mask = ~(freq_up.mask)
         axes.plot(angle_up[mask], freq_up[mask], marker="o", label=f"{phot_name} up")
-        axes.plot(angle_up, dark_freq_up, marker="o", label=f"{phot_name} up [dark]")
+        axes.plot(angle_up, dark_freq_up, marker="v", label=f"{phot_name} up [dark]", alpha=0.5)
     if freq_side is not None:
         mask = ~(freq_side.mask)
         axes.plot(angle_side[mask], freq_side[mask], marker="o", label=f"{phot_name} side")
-        axes.plot(angle_side, dark_freq_side, marker="o", label=f"{phot_name} side [dark]")
+        axes.plot(
+            angle_side, dark_freq_side, marker="^", label=f"{phot_name} side [dark]", alpha=0.5
+        )
     xlow = np.floor(min(np.min(angle_up), np.min(angle_side)))
     xhigh = np.ceil(max(np.max(angle_up), np.max(angle_side)))
     axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Angle (º)")
+    axes.set_xlabel("Angle (Deg)")
     axes.set_ylabel("Signal (Hz)")
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title(f"{phot_name} Field of View")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
+
+def plot_fov_stacked(
+    phot_names: Sequence[str],
+    fov_tables: Sequence[Table],
+    save_path: Optional[str] = None,
+) -> None:
+    N = 2
+    cols_up = (Col.ANGLE_UP, Col.FREQ_UP, Col.DARK_FREQ_UP)
+    cols_side = (Col.ANGLE_SIDE, Col.FREQ_SIDE, Col.DARK_FREQ_SIDE)
+    fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
+    for axe, cols, tag in zip(axes, (cols_up, cols_side), ("up", "side")):
+        for phot_name, table in zip(phot_names, fov_tables):
+            mask = ~(table[cols[1]].mask)
+            axe.plot(
+                table[cols[0]][mask], table[cols[1]][mask], marker="o", label=f"{phot_name} {tag}"
+            )
+            axe.plot(
+                table[cols[0]],
+                table[cols[2]],
+                marker="v",
+                label=f"{phot_name} {tag} [dark]",
+                alpha=0.5,
+            )
+        xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
+        xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
+        axe.set_xlim(xlow, xhigh)
+        axe.set_xlabel("Angle (Deg)")
+        axe.set_ylabel("Signal (Hz)")
+        axe.legend()
+        axe.grid(True, alpha=0.3)
+        axe.set_title(f"{tag.title()} Field of View")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -498,22 +539,29 @@ def plot_fov_single(
 def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="csv")
+    freq_up = None if args.side else table[Col.FREQ_UP]
+    freq_side = None if args.up else table[Col.FREQ_SIDE]
     plot_fov_single(
         phot_name=" ".join(args.label),
         angle_up=table[Col.ANGLE_UP],
-        freq_up=table[Col.FREQ_UP],
-        dark_freq_up=table[Col.DARK_FREQ_SIDE],
+        freq_up=freq_up,
+        dark_freq_up=table[Col.DARK_FREQ_UP],
         angle_side=table[Col.ANGLE_SIDE],
-        freq_side=table[Col.FREQ_SIDE],
+        freq_side=freq_side,
         dark_freq_side=table[Col.DARK_FREQ_SIDE],
     )
 
 
-def cli_plot_fov_multi(args: Namespace) -> None:
-    pass
-
-
 def cli_plot_fov_stacked(args: Namespace) -> None:
+    log.info("reading FoV data from files %s", args.input_file)
+    tables = [astropy.io.ascii.read(path, format="csv") for path in args.input_file]
+    plot_fov_stacked(
+        phot_names=args.labels,
+        fov_tables=tables,
+    )
+
+
+def cli_plot_fov_multi(args: Namespace) -> None:
     pass
 
 
@@ -536,6 +584,36 @@ def choices2() -> ArgumentParser:
     return parser
 
 
+def ifiles() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        type=vfile,
+        required=True,
+        nargs="+",
+        metavar="<File>",
+        help="CSV/ECSV input files",
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        type=str,
+        default=",",
+        help="CSV column delimiter. (defaults to %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        default=None,
+        nargs="+",
+        metavar="<NAME>",
+        help="Optional ordered list of CSV column names, if necessary (default %(default)s)",
+    )
+    return parser
+
+
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
     parser_single = subparser.add_parser(
@@ -552,7 +630,7 @@ def add_args(parser):
     parser_multi = subparser.add_parser(
         "multi",
         parents=[
-            prs.ifiles(),
+            ifiles(),
             prs.labels("plotting"),
             prs.savefig(),
             choices2(),
@@ -564,10 +642,9 @@ def add_args(parser):
     parser_combi = subparser.add_parser(
         "stacked",
         parents=[
-            prs.ifiles(),
+            ifiles(),
             prs.labels("plotting"),
             prs.savefig(),
-            choices2(),
         ],
         help="Plot several TESS-W Fov curves in diifferent graphics",
     )

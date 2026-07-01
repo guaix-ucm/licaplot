@@ -607,19 +607,19 @@ fov1 label="stars237":
     set -exuo pipefail
     dir="data/tessw/fov"
     label={{label}}
-    uv run lica-fov --console --trace single --up -l ${label} -i ${dir}/${label}.csv
+    uv run lica-fov --console --trace single --both -l ${label} -i ${dir}/${label}.csv
 
 fov2 labels="stars237 stars630":
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/tessw/fov"
-    labels={{labels}}
+    labels="{{labels}}"
     files=""
     for label in $labels
     do
         files="${files} ${dir}/${label}.csv"
     done
-    uv run lica-fov --console --trace multi --up -l ${labels} -i ${files}
+    uv run lica-fov --console --trace stacked -l ${labels} -i ${files}
 
 
 # =============================
