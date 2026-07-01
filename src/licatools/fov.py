@@ -75,19 +75,19 @@ mpl.rcParams["legend.fontsize"] = "xx-small"
 # Enums
 # -----
 
-class FovColumns(Enum):
-    ANGLE_UP = "Angle up(º)"
-    FREQ_UP ="up light (Hz)"
-    MAG_UP="up light (mag)"
-    NOTES_UP="Notas up"
-    DARK_FREQ_UP="up dark (Hz)"
-    DARK_MAG_UP="up dark (mag)"
-    ANGLE_SIDE="Angle side(º)"
-    FREQ_SIDE="side light (Hz)"
-    MAG_SIDE="light mag"
-    NOTES_SIDE="Notas side"
-    DARK_FREQ_SIDE="side dark (Hz)"
-    DARK_MAG_SIDE="side dark (mag)"
+class Col(StrEnum):
+    ANGLE_UP = "Angle [up] (º)"
+    FREQ_UP ="Light [up] (Hz)"
+    MAG_UP="Light [up] (mag)"
+    NOTES_UP="Notes [up]"
+    DARK_FREQ_UP="Dark [up] (Hz)"
+    DARK_MAG_UP="Dark [up] (mag)"
+    ANGLE_SIDE="Angle [side] (º)"
+    FREQ_SIDE="Light [side] (Hz)"
+    MAG_SIDE="Light [side] (mag)"
+    NOTES_SIDE="Notes [side] "
+    DARK_FREQ_SIDE="Dark [side] (Hz)"
+    DARK_MAG_SIDE="Dark [side] (mag)"
 
 # -------------------
 # Auxiliary functions
@@ -101,27 +101,6 @@ def normalize(x: FloatArray) -> FloatArray:
         raise ValueError("array full of zeros")
     return x / np.max(x)
 
-
-@lru_cache(maxsize=None)
-def fov_dataset(path: str, delimiter: str) -> dict[str, FloatArray]:
-    """
-    Transforma todos los arrays en una estructura de datos conveniente y la cachea
-    """
-    with open(path, "r", newline='') as csvfile:
-        rows = csv.DictReader(csvfile, delimiter=delimiter)
-        cols: Dict[str, list] = {}
-        for row in rows:
-            # inicualizar listas de valores la primera vez
-            if not cols:
-                cols = {k: [] for k in row.keys()}
-            # Añadir cada valor convertido a float
-            for k, v in row.items():
-                if v.strip():  # Solo si hay un valor
-                    cols[k].append(float(v))
-                else:
-                    cols[k].append(np.nan)
-    # Convertir cada lista a np.ndarray[float64]
-    return {k.strip(): np.array(v, dtype=np.float64) for k, v in cols.items()}
 
 
 # He probado con scipy find_peaks y peaks_width y no me ha funcionado bien
@@ -475,6 +454,36 @@ def plot_sand_sky(
         plt.show()
 
 
+def plot_fov_single(
+    phot_name: str,
+    angle_up: FloatArray,
+    freq_up: FloatArray,
+    angle_side: FloatArray,
+    freq_side: FloatArray,
+    dark_freq_up: FloatArray,
+    dark_freq_side: FloatArray,
+    save_path: Optional[str] = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    axes.plot(angle_up, freq_up, marker="o", label=f"{phot_name} up")
+    axes.plot(angle_side, freq_side, marker="o", label=f"{phot_name} side")
+    axes.plot(angle_up, dark_freq_up, marker="o", label=f"{phot_name} up [dark]")
+    axes.plot(angle_side, dark_freq_side, marker="o", label=f"{phot_name} side [dark]")
+    xlow = np.floor(min(np.min(angle_up), np.min(angle_side)))
+    xhigh = np.ceil(max(np.max(angle_up), np.max(angle_side)))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Angle (º)")
+    axes.set_ylabel("Signal (Hz)")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title(f"{phot_name} Field of View")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -482,7 +491,16 @@ def plot_sand_sky(
 
 def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
-    dataset = fov_dataset(args.input_file, delimiter=",")
+    table: Table = astropy.io.ascii.read(args.input_file, format="csv")
+    plot_fov_single(
+        phot_name = args.label,
+        angle_up = table[Col.ANGLE_UP],
+        freq_up = table[Col.FREQ_UP],
+        dark_freq_up =table[Col.DARK_FREQ_SIDE],
+        angle_side = table[Col.ANGLE_SIDE],
+        freq_side =table[Col.FREQ_SIDE],
+        dark_freq_side = table[Col.DARK_FREQ_SIDE],
+        )
 
 
 def cli_plot_fov_multi(args: Namespace) -> None:
@@ -500,7 +518,7 @@ def choices3() -> ArgumentParser:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--up', action='store_true', help="Up FoV curve only")
     group.add_argument('--side', action='store_true', help="Side FoV curve only")
-    group.add_argument('--both', action='store_true', help="Both up & side FoV curves")
+    group.add_argument('--both', action='store_true', help="Both [up] & [side]  FoV curves")
     return parser
 
 def choices2() -> ArgumentParser:
