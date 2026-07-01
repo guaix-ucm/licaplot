@@ -75,19 +75,21 @@ mpl.rcParams["legend.fontsize"] = "xx-small"
 # Enums
 # -----
 
+
 class Col(StrEnum):
     ANGLE_UP = "Angle [up] (º)"
-    FREQ_UP ="Light [up] (Hz)"
-    MAG_UP="Light [up] (mag)"
-    NOTES_UP="Notes [up]"
-    DARK_FREQ_UP="Dark [up] (Hz)"
-    DARK_MAG_UP="Dark [up] (mag)"
-    ANGLE_SIDE="Angle [side] (º)"
-    FREQ_SIDE="Light [side] (Hz)"
-    MAG_SIDE="Light [side] (mag)"
-    NOTES_SIDE="Notes [side] "
-    DARK_FREQ_SIDE="Dark [side] (Hz)"
-    DARK_MAG_SIDE="Dark [side] (mag)"
+    FREQ_UP = "Light [up] (Hz)"
+    MAG_UP = "Light [up] (mag)"
+    NOTES_UP = "Notes [up]"
+    DARK_FREQ_UP = "Dark [up] (Hz)"
+    DARK_MAG_UP = "Dark [up] (mag)"
+    ANGLE_SIDE = "Angle [side] (º)"
+    FREQ_SIDE = "Light [side] (Hz)"
+    MAG_SIDE = "Light [side] (mag)"
+    NOTES_SIDE = "Notes [side] "
+    DARK_FREQ_SIDE = "Dark [side] (Hz)"
+    DARK_MAG_SIDE = "Dark [side] (mag)"
+
 
 # -------------------
 # Auxiliary functions
@@ -100,7 +102,6 @@ def normalize(x: FloatArray) -> FloatArray:
     if maxi == 0.0:
         raise ValueError("array full of zeros")
     return x / np.max(x)
-
 
 
 # He probado con scipy find_peaks y peaks_width y no me ha funcionado bien
@@ -362,6 +363,7 @@ def plot_filters(
     else:
         plt.show()
 
+
 def plot_filters_skies(
     wavelength: FloatArray,
     transmittances: Sequence[FloatArray],
@@ -375,7 +377,7 @@ def plot_filters_skies(
     fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
     for axe, irradiance, sky_label in zip(axes, irradiances, sky_labels):
         for transmittance, label in zip(transmittances, labels):
-            axe.plot(wavelength, transmittance,label=label)
+            axe.plot(wavelength, transmittance, label=label)
         if qe is not None:
             axe.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
         for x, color in ((REF_CUTOFF, "red"), (720, "black")):
@@ -395,7 +397,6 @@ def plot_filters_skies(
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
     else:
         plt.show()
-    
 
 
 def plot_alpy_sky(
@@ -465,10 +466,14 @@ def plot_fov_single(
     save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-    axes.plot(angle_up, freq_up, marker="o", label=f"{phot_name} up")
-    axes.plot(angle_side, freq_side, marker="o", label=f"{phot_name} side")
-    axes.plot(angle_up, dark_freq_up, marker="o", label=f"{phot_name} up [dark]")
-    axes.plot(angle_side, dark_freq_side, marker="o", label=f"{phot_name} side [dark]")
+    if freq_up is not None:
+        mask = ~(freq_up.mask)
+        axes.plot(angle_up[mask], freq_up[mask], marker="o", label=f"{phot_name} up")
+        axes.plot(angle_up, dark_freq_up, marker="o", label=f"{phot_name} up [dark]")
+    if freq_side is not None:
+        mask = ~(freq_side.mask)
+        axes.plot(angle_side[mask], freq_side[mask], marker="o", label=f"{phot_name} side")
+        axes.plot(angle_side, dark_freq_side, marker="o", label=f"{phot_name} side [dark]")
     xlow = np.floor(min(np.min(angle_up), np.min(angle_side)))
     xhigh = np.ceil(max(np.max(angle_up), np.max(angle_side)))
     axes.set_xlim(xlow, xhigh)
@@ -484,6 +489,7 @@ def plot_fov_single(
     else:
         plt.show()
 
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -493,14 +499,14 @@ def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="csv")
     plot_fov_single(
-        phot_name = args.label,
-        angle_up = table[Col.ANGLE_UP],
-        freq_up = table[Col.FREQ_UP],
-        dark_freq_up =table[Col.DARK_FREQ_SIDE],
-        angle_side = table[Col.ANGLE_SIDE],
-        freq_side =table[Col.FREQ_SIDE],
-        dark_freq_side = table[Col.DARK_FREQ_SIDE],
-        )
+        phot_name=" ".join(args.label),
+        angle_up=table[Col.ANGLE_UP],
+        freq_up=table[Col.FREQ_UP],
+        dark_freq_up=table[Col.DARK_FREQ_SIDE],
+        angle_side=table[Col.ANGLE_SIDE],
+        freq_side=table[Col.FREQ_SIDE],
+        dark_freq_side=table[Col.DARK_FREQ_SIDE],
+    )
 
 
 def cli_plot_fov_multi(args: Namespace) -> None:
@@ -511,22 +517,22 @@ def cli_plot_fov_stacked(args: Namespace) -> None:
     pass
 
 
-
 def choices3() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--up', action='store_true', help="Up FoV curve only")
-    group.add_argument('--side', action='store_true', help="Side FoV curve only")
-    group.add_argument('--both', action='store_true', help="Both [up] & [side]  FoV curves")
+    group.add_argument("--up", action="store_true", help="Up FoV curve only")
+    group.add_argument("--side", action="store_true", help="Side FoV curve only")
+    group.add_argument("--both", action="store_true", help="Both [up] & [side]  FoV curves")
     return parser
+
 
 def choices2() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--up', action='store_true', help="Up FoV curve only")
-    group.add_argument('--side', action='store_true', help="Side FoV curve only")
+    group.add_argument("--up", action="store_true", help="Up FoV curve only")
+    group.add_argument("--side", action="store_true", help="Side FoV curve only")
     return parser
 
 
