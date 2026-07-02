@@ -10,13 +10,10 @@
 # System wide imports
 # -------------------
 
-import csv
 import logging
 from argparse import Namespace, ArgumentParser
 from enum import StrEnum
-from importlib.resources import files
-from functools import lru_cache
-from typing import TypeAlias, Sequence, Dict, Tuple, Optional
+from typing import TypeAlias, Sequence, Tuple, Optional
 
 # ---------------------
 # Third-party libraries
@@ -24,15 +21,14 @@ from typing import TypeAlias, Sequence, Dict, Tuple, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from numpy.polynomial.polynomial import Polynomial
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import astropy
-from astropy.table import Table
-from scipy import integrate
+from astropy.table import Table, Column
 from lica.cli import execute
 
-from lica.lab.photodiode import COL
 from lica.validators import vfile
 
 # ------------------------
@@ -175,6 +171,22 @@ def plot_box(
     )
 
 
+def dark_fit(x: Column, y: Column) -> Tuple[FloatArray, FloatArray, float]:
+    # quita los puntos (x,y) cuyas medidas y estan vacias
+    mask = ~(y.mask)
+    x = x[mask]
+    y = y[mask]
+    # Crea un polinomio por ajuste de minimos cuadrados
+    P = Polynomial.fit(x, y, deg=2)
+    y_pred = P(x)
+    sum_resid = np.sum((y - y_pred) ** 2)
+    sum_total = np.sum((y - y.mean()) ** 2)
+    r2 = 1 - sum_resid / sum_total
+    xx = np.linspace(np.min(x), np.max(x))
+    return xx, P(xx), r2
+
+
+
 def plot_fov_single(
     phot_name: str,
     table: Table,
@@ -184,34 +196,48 @@ def plot_fov_single(
 ) -> None:
     fig, axes = plt.subplots(1, 1)
     # response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
-    # color = response_plot[0].get_color()
+    # color = response_plot[0].get_color()q
     if freq_up:
+        angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_UP], table[Col.DARK_FREQ_UP])
+        log.info("Fitted R^2 = %f", r2)
+        # Plot the FoV
         mask = ~(table[Col.FREQ_UP].mask)
         axes.plot(
             table[Col.ANGLE_UP][mask], table[Col.FREQ_UP][mask], marker="o", label=f"{phot_name} up"
         )
-        axes.plot(
+        # Plot the Dark room FoV
+        result = axes.plot(
             table[Col.ANGLE_UP],
             table[Col.DARK_FREQ_UP],
             marker="v",
             label=f"{phot_name} up [dark]",
             alpha=0.5,
+            linewidth=0,
         )
+        # Plot the dark fitted line
+        axes.plot(angles, fitted_dark, alpha=0.5, color=result[0].get_color())
     if freq_side is not None:
+        angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
+        log.info("Fitted R^2 = %f", r2)
         mask = ~(table[Col.FREQ_SIDE].mask)
+        # Plot the FoV
         axes.plot(
             table[Col.ANGLE_SIDE][mask],
             table[Col.FREQ_SIDE][mask],
             marker="o",
             label=f"{phot_name} side",
         )
-        axes.plot(
+        # Plot the Dark room FoV
+        result = axes.plot(
             table[Col.ANGLE_SIDE],
             table[Col.DARK_FREQ_SIDE],
             marker="^",
             label=f"{phot_name} side [dark]",
             alpha=0.5,
+            linewidth=0,
         )
+        # Plot the dark fitted line
+        axes.plot(angles, fitted_dark, alpha=0.5, color=result[0].get_color())
     xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
     xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
     axes.set_xlim(xlow, xhigh)
@@ -291,10 +317,6 @@ def cli_plot_fov_stacked(args: Namespace) -> None:
         phot_names=args.labels,
         fov_tables=tables,
     )
-
-
-def cli_plot_fov_multi(args: Namespace) -> None:
-    pass
 
 
 def choices3() -> ArgumentParser:
