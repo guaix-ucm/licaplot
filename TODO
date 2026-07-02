@@ -3,4 +3,9 @@ Hamamatsu
 pipeline doesn't work? => check
 * update README
 
-*
+FOV
+===
+* Revisar las etiquetas del modo single
+* añadir el modelo gauss puro
+* hacer elegible modelos entre -gh y -gs
+* pasar todas las rutinas de fitting y demas a un modulo comun
