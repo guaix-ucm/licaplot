@@ -338,19 +338,18 @@ def plot_fov_single(
         x = table[Col.ANGLE_UP][mask]
         y1 = table[Col.FREQ_UP][mask]
         y2 = table[Col.DARK_FREQ_UP][mask]
-        axes.plot(x, y1, marker="o", linewidth=0, label=f"{phot_name} up")
+        axes.plot(x, y1, marker="o", linewidth=0, label="light data, up position")
         # Plot the Dark room FoV
         result = axes.plot(
-            x, y2, marker="v", label=f"{phot_name} up [dark]", alpha=0.5, linewidth=0
+            x, y2, marker="v", label="dark data, up position", alpha=0.5, linewidth=0
         )
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
         # detect peak
         peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
-        for peak in peaks:
-            axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak up")
         assert len(peaks) == 1
         peak = peaks[0]
+        axes.axvline(x[peak], linestyle=":", label="peak, up position")
         fwhm, _, _ = get_fwhm(x, y1)
         y_fit, _ = gauss_hermite_fit(
             x,
@@ -360,7 +359,7 @@ def plot_fov_single(
             h3=0,
             h4=0,
         )
-        axes.plot(x, y_fit, label=f"{phot_name} up, fitted")
+        axes.plot(x, y_fit, label="fitted model, up position")
         fwhm_up, _, _ = get_fwhm(x, y1)
         log.info("FWHM = %f", fwhm_up)
 
@@ -374,17 +373,17 @@ def plot_fov_single(
         y1 = table[Col.FREQ_SIDE][mask]
         y2 = table[Col.DARK_FREQ_SIDE][mask]
         # Plot the FoV
-        axes.plot(x, y1, marker="o", linewidth=0, label=f"{phot_name} side")
+        axes.plot(x, y1, marker="o", linewidth=0, label="light data, side position")
         # Plot the Dark room FoV
         result = axes.plot(
-            x, y2, marker="^", label=f"{phot_name} side [dark]", alpha=0.5, linewidth=0
+            x, y2, marker="^", label="dark data, side position", alpha=0.5, linewidth=0
         )
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
         # detect peak
         peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
         for peak in peaks:
-            axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak side")
+            axes.axvline(x[peak], linestyle=":", label="peak, side position")
         fwhm, _, _ = get_fwhm(x, y1)
         y_fit, _ = gauss_hermite_fit(
             x,
@@ -394,7 +393,7 @@ def plot_fov_single(
             h3=0,
             h4=0,
         )
-        axes.plot(x, y_fit, label=f"{phot_name} side, fitted")
+        axes.plot(x, y_fit, label="fitted model, side position")
         fwhm_side, _, _ = get_fwhm(x, y1)
         log.info("FWHM = %f", fwhm_side)
     if freq_up and freq_side:
