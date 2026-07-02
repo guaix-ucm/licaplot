@@ -23,6 +23,7 @@ from typing import TypeAlias, Sequence, Tuple, Optional
 import numpy as np
 from numpy.typing import NDArray
 from numpy.polynomial.polynomial import Polynomial
+from numpy.polynomial.polynomial import polyval
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -181,8 +182,6 @@ def detect_peaks(
         width=width,  #
         height=height,  # Umbral mínimo
     )
-    # Initial parameter list estimation for later curve fitting
-    p0 = [float(np.median(smoothed_y)), 0.0]  # b0 (global background), b1 (slope)=0.0,
     log.info("Found %d peaks", len(peaks))
     for peak in peaks:
         log.info("Detected peak at x = %.2f", x[peak])
@@ -192,15 +191,15 @@ def detect_peaks(
 def gauss_hermite_fit(
     x: FloatArray,
     y: FloatArray,
-    p0: Sequence[float],
-    h3: float = 0,  # h3 = h4 = 0 -> gauss puro.
-    h4: float = 0,  # Aunque no tienen cota, usar valores pequeños < 1
-    sigma: float = 1.0,  # Initial sigma for gauss part
-    error_y: FloatArray = None,  # Estimacion de error de los puntos y
+    p0_bg: Sequence[float],  # backgroud polynomial coeffs in increasing order
+    p0_peaks: Sequence[float],  # GH initial estimation [A1, mu1, sigma1, h3_1, h4_1, ...]
+    h3: float = 0.0,
+    h4: float = 0.0,
+    error_y: FloatArray = None,
     maxfev: int = 25000,
 ) -> tuple[FloatArray, FloatArray]:
     """
-    Ajuste de fondo cuadraticos + suma de perfiles Gauss-Hermite.
+    Ajuste de fondo polinomico + suma de perfiles Gauss-Hermite.
 
     Cada componente se parametriza como:
         A * exp(-0.5 * u^2) * [1 + h3*H3(u) + h4*H4(u)]
@@ -227,29 +226,28 @@ def gauss_hermite_fit(
         H4 = (4 * u**4 - 12 * u**2 + 3) / np.sqrt(24)
         return A * np.exp(-0.5 * u**2) * (1.0 + h3 * H3 + h4 * H4)
 
-    def model_gh(x: FloatArray, b0: float, b1: float, b2: float, *params: float) -> FloatArray:
-        """quadraict background model plus a list of Gauss-Hermite functions"""
-        y_fit = b0 + b1 * x + b2 * x**2
-        i = 0
-        while i < len(params):
-            A, mu, sigma, h3, h4 = params[i : i + 5]
-            y_fit += gauss_hermite(x, A, mu, sigma, h3, h4)
-            i += 5
+    def model_gh(x: FloatArray, *params: float) -> FloatArray:
+        bg = np.asarray(params[: p0_bg.size], dtype=float)
+        peak_params = params[p0_bg.size :]
+        y_fit = polyval(x, bg)
+        for A, mu, sigma, h3i, h4i in itertools.batched(peak_params, 5):
+            y_fit += gauss_hermite(x, A, mu, sigma, h3i, h4i)
         return y_fit
 
-    log.info("Fitting Gauss-Hermite models + quadratic background %s", Polynomial(p0))
-    A0 = np.max(y)
-    mu0 = x[np.argmax(y)]
-    sigma0 = np.std(y)
-    p0_gh = p0.tolist() + [A0, mu0, sigma0, h3, h4]
-    log.info("p0_gh = %s", p0_gh)
+    log.info("Fitting Gauss-Hermite models + background %s", Polynomial(p0_bg))
+    if len(p0_peaks) % 5 != 0:
+        raise ValueError("p0_peaksmust be multple of 5: [A, mu, sigma, h3, h4] per peak.")
+    p0 = np.concatenate([p0_bg, p0_peaks]).tolist()
+    log.info("p0 = %s", p0)
+    p0_bg = np.asarray(p0_bg, dtype=float)
+    p0_peaks = np.asarray(p0_peaks, dtype=float)
     try:
         popt_gh, _ = curve_fit(
             model_gh,
             x,
             y,
             sigma=error_y,
-            p0=p0_gh,
+            p0=p0,
             maxfev=maxfev,
             bounds=(-np.inf, np.inf),
         )
@@ -259,11 +257,11 @@ def gauss_hermite_fit(
     except Exception as e:
         log.error("Gauss-Hermite fit error: %s", e)
         raise
-    log.info("Global constant [b0]: %.2e", p0[0])
-    log.info("Global slope [b1]: %.2e", p0[1])
-    log.info("Global q.slope [b2]: %.2e", p0[2])
-    comps = popt_gh[3:]
-    for A, mu, sigma, h3, h4 in itertools.batched(comps, 5):
+
+    bg_opt = popt_gh[: p0_bg.size]
+    peak_opt = popt_gh[p0_bg.size :]
+    log.info("Background coefficients: %s", Polynomial(bg_opt))
+    for A, mu, sigma, h3, h4 in itertools.batched(peak_opt, 5):
         log.info(
             "Component at λ=%.2f: sigma=%.3f, h3=%.3f, h4=%.3f",
             mu,
@@ -340,7 +338,7 @@ def plot_fov_single(
         x = table[Col.ANGLE_UP][mask]
         y1 = table[Col.FREQ_UP][mask]
         y2 = table[Col.DARK_FREQ_UP][mask]
-        axes.plot(x, y1, marker="X", linewidth=0, label=f"{phot_name} up")
+        axes.plot(x, y1, marker="o", linewidth=0, label=f"{phot_name} up")
         # Plot the Dark room FoV
         result = axes.plot(
             x, y2, marker="v", label=f"{phot_name} up [dark]", alpha=0.5, linewidth=0
@@ -351,18 +349,32 @@ def plot_fov_single(
         peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
         for peak in peaks:
             axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak up")
-        y_fit, _ = gauss_hermite_fit(x, y1, p0, h3=0, h4=0)
-        axes.plot(x, y_fit, marker="o", label=f"{phot_name} up, fitted")
+        assert len(peaks) == 1
+        peak = peaks[0]
+        fwhm, _, _ = get_fwhm(x, y1)
+        y_fit, _ = gauss_hermite_fit(
+            x,
+            y1,
+            p0_bg=p0.tolist()[:2],
+            p0_peaks=[y1[peak], x[peak], fwhm / 2.355, 0, 0],
+            h3=0,
+            h4=0,
+        )
+        axes.plot(x, y_fit, label=f"{phot_name} up, fitted")
+        fwhm_up, _, _ = get_fwhm(x, y1)
+        log.info("FWHM = %f", fwhm_up)
 
     if freq_side:
-        angles, fitted_dark, r2, p0 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
+        angles, fitted_dark, r2, p0 = dark_fit(
+            table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE], deg=2
+        )
         log.info("Fitted R^2 = %f", r2)
         mask = ~(table[Col.FREQ_SIDE].mask)
         x = table[Col.ANGLE_SIDE][mask]
         y1 = table[Col.FREQ_SIDE][mask]
         y2 = table[Col.DARK_FREQ_SIDE][mask]
         # Plot the FoV
-        axes.plot(x, y1, marker="o", label=f"{phot_name} side")
+        axes.plot(x, y1, marker="o", linewidth=0, label=f"{phot_name} side")
         # Plot the Dark room FoV
         result = axes.plot(
             x, y2, marker="^", label=f"{phot_name} side [dark]", alpha=0.5, linewidth=0
@@ -370,9 +382,28 @@ def plot_fov_single(
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
         # detect peak
-        peaks, _ = detect_peaks(x, y1, height=1.5, distance=10.0)
+        peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
         for peak in peaks:
             axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak side")
+        fwhm, _, _ = get_fwhm(x, y1)
+        y_fit, _ = gauss_hermite_fit(
+            x,
+            y1,
+            p0_bg=p0.tolist()[:2],
+            p0_peaks=[y1[peak], x[peak], fwhm / 2.355, 0, 0],
+            h3=0,
+            h4=0,
+        )
+        axes.plot(x, y_fit, label=f"{phot_name} side, fitted")
+        fwhm_side, _, _ = get_fwhm(x, y1)
+        log.info("FWHM = %f", fwhm_side)
+    if freq_up and freq_side:
+        plot_box(axes, (f"FWHM(up)={fwhm_up:0.1f}\nFWHM(side)={fwhm_side:0.1f}", 0.1, 0.8))
+    elif freq_up:
+        plot_box(axes, (f"FWHM(up)={fwhm_up:0.1f}", 0.1, 0.8))
+    elif freq_side:
+        plot_box(axes, (f"FWHM(side)={fwhm_side:0.1f}", 0.1, 0.8))
+
     xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
     xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
     axes.set_xlim(xlow, xhigh)
