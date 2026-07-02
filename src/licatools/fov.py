@@ -319,6 +319,9 @@ def choices3() -> ArgumentParser:
     group.add_argument(
         "--both", action="store_true", default=False, help="Both [up] & [side]  FoV curves"
     )
+    parser.add_argument(
+        "-ax", "--axis", action="store_true", default=False, help="Plot optical axis"
+    )
     return parser
 
 
