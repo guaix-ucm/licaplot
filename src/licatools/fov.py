@@ -97,14 +97,6 @@ class Col(StrEnum):
 # -------------------
 
 
-def normalize(x: FloatArray) -> FloatArray:
-    """Normalize an array wrt its max value."""
-    maxi = np.max(x)
-    if maxi == 0.0:
-        raise ValueError("array full of zeros")
-    return x / np.max(x)
-
-
 # He probado con scipy find_peaks y peaks_width y no me ha funcionado bien
 # porque la curva tiene maximos locales por oscilaciones en la parte de arriba.
 # Asi que esta funcion mas manual funciona mejor
@@ -167,43 +159,6 @@ def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
 # ------------------
 
 
-def plot_filter(
-    wavelength: FloatArray,
-    transmittance: FloatArray,
-    label: str,
-    irradiance: FloatArray,
-    sky_label: str,
-    qe: Optional[FloatArray] = None,
-    save_path: Optional[str] = None,
-) -> None:
-    fig, axes = plt.subplots(1, 1)
-    axes.plot(
-        wavelength,
-        transmittance,
-        marker="o",
-        label=label,
-    )
-    axes.plot(wavelength, irradiance, label=sky_label, alpha=0.3)
-    if qe is not None:
-        axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
-    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
-        axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
-    xlow = np.floor(np.min(wavelength))
-    xhigh = np.ceil(np.max(wavelength))
-    axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Transmittance")
-    axes.legend()
-    axes.grid(True, alpha=0.3)
-    axes.set_title(f"{label} response and natural sky emissions")
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
 def plot_box(
     axes,
     box: Optional[Tuple[str, float, float]] = None,
@@ -220,265 +175,45 @@ def plot_box(
     )
 
 
-def plot_combi(
-    wavelength: FloatArray,
-    response: FloatArray,
-    label: str,
-    input_signal: FloatArray,
-    sky_label: str,
-    output: FloatArray,
-    mag: float,
-    fwhm: Tuple[float, float, float],
-    save_path: Optional[str] = None,
-) -> None:
-    fig, axes = plt.subplots(1, 1)
-    # Respuesta espectral del sensor TSL237
-    response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
-    color = response_plot[0].get_color()
-    # sobreimpone la curva de FWHM sobre la respuesta espectral, mismo color
-    fwhm, xfw1, xfw2 = fwhm  # unpack tuple
-    mask = (xfw1 <= wavelength) & (wavelength <= xfw2)
-    ww = np.insert(wavelength[mask], 0, xfw1)
-    ww = np.insert(ww, -1, xfw2)
-    rr = np.insert(response[mask], 0, 0.5)
-    rr = np.insert(rr, -1, 0.5)
-    axes.plot(ww, rr, linewidth=5, color=color, label="FWHM line", alpha=0.5)
-    # Señal de entrada y salida
-    axes.plot(wavelength, input_signal, label=f"{sky_label} night sky", alpha=0.3)
-    axes.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
-    # pinta lineas verticales interesantes
-    xfw2 = int(round(xfw2, 0))
-    if xfw2 != REF_CUTOFF:
-        axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
-        axes.axvline(xfw2, linestyle=":", label=f"{xfw2} nm (fwhm boundary)", color="black")
-    else:
-        axes.axvline(
-            REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref. + fwhm boundary)", color="red"
-        )
-    xlow = np.floor(np.min(wavelength))
-    xhigh = np.ceil(np.max(wavelength))
-    axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Response (norm.)")
-    axes.legend()
-    axes.grid(True, alpha=0.3)
-    axes.set_title(f"{label} response and natural sky emissions")
-    plot_box(axes, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.45))
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
-def plot_combi_stacked(
-    wavelength: FloatArray,
-    responses: Sequence[FloatArray],
-    labels: Sequence[str],
-    input_signal: FloatArray,
-    sky_label: str,
-    outputs: Sequence[FloatArray],
-    mag_diffs: Sequence[FloatArray],
-    base_magnitude: float,
-    fwhms: Sequence[Tuple[float, float, float]],
-    save_path: Optional[str] = None,
-) -> None:
-    N = len(labels)
-    fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
-    for axe, response, output, label, mag_diff, fwhm in zip(
-        axes, responses, outputs, labels, mag_diffs, fwhms
-    ):
-        mag = base_magnitude + mag_diff
-        # Respuesta espectral del sensor TSL237
-        axe.plot(wavelength, response, label=f"{label} spectral resp.")
-        # Señal de entrada y salida
-        axe.plot(wavelength, input_signal, label=f"{sky_label} night sky", alpha=0.3)
-        axe.plot(wavelength, output, label=f"{sky_label} by {label}", alpha=0.5)
-        fwhm, xfw1, xfw2 = fwhm  # unpack tuple
-        xfw2 = int(round(xfw2, 0))
-        if xfw2 != REF_CUTOFF:
-            axe.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
-            axe.axvline(xfw2, linestyle=":", label=f"{xfw2} nm (fwhm boundary)", color="black")
-        else:
-            axe.axvline(
-                REF_CUTOFF,
-                linestyle=":",
-                label=f"{REF_CUTOFF} nm (ref. + fwhm boundary)",
-                color="red",
-            )
-        xlow = np.floor(np.min(wavelength))
-        xhigh = np.ceil(np.max(wavelength))
-        axe.set_xlim(xlow, xhigh)
-        axe.set_xlabel("Wavelength (nm)")
-        axe.set_ylabel("Response (norm.)")
-        axe.legend()
-        axe.grid(True, alpha=0.3)
-        axe.set_title(f"{label} response and natural sky emissions")
-        if mag_diff == 0:
-            plot_box(axe, (f"mag = {mag:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
-        else:
-            plot_box(axe, (f"\u0394mag = {mag_diff:0.2f}\nFWHM = {fwhm:0.0f} nm", 0.83, 0.40))
-        plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
-def plot_filters(
-    wavelength: FloatArray,
-    transmittances: Sequence[FloatArray],
-    labels: Sequence[str],
-    irradiance: FloatArray,
-    sky_label: Sequence[str],
-    qe: Optional[FloatArray] = None,
-    save_path: Optional[str] = None,
-) -> None:
-    fig, axes = plt.subplots(1, 1)
-    for transmittance, label in zip(transmittances, labels):
-        axes.plot(
-            wavelength,
-            transmittance,
-            label=label,
-        )
-    axes.plot(wavelength, irradiance, label=sky_label, color="black", alpha=0.3)
-    if qe is not None:
-        axes.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
-
-    for x, color in ((REF_CUTOFF, "red"), (720, "black")):
-        axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
-    xlow = np.floor(np.min(wavelength))
-    xhigh = np.ceil(np.max(wavelength))
-    axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Transmittance")
-    axes.legend()
-    axes.grid(True, alpha=0.3)
-    axes.set_title("several TESS-W filters response and natural sky emissions")
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
-def plot_filters_skies(
-    wavelength: FloatArray,
-    transmittances: Sequence[FloatArray],
-    labels: Sequence[str],
-    irradiances: Sequence[FloatArray],
-    sky_labels: Sequence[str],
-    qe: Optional[FloatArray] = None,
-    save_path: Optional[str] = None,
-) -> None:
-    N = len(sky_labels)
-    fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
-    for axe, irradiance, sky_label in zip(axes, irradiances, sky_labels):
-        for transmittance, label in zip(transmittances, labels):
-            axe.plot(wavelength, transmittance, label=label)
-        if qe is not None:
-            axe.plot(wavelength, qe, label="TSL237 QE", linestyle="-.", color="black", alpha=0.5)
-        for x, color in ((REF_CUTOFF, "red"), (720, "black")):
-            axe.axvline(x, linestyle=":", label=f"{x} nm", color=color)
-        axe.plot(wavelength, irradiance, label=sky_label, color="black", alpha=0.3)
-        xlow = np.floor(np.min(wavelength))
-        xhigh = np.ceil(np.max(wavelength))
-        axe.set_xlim(xlow, xhigh)
-        axe.set_xlabel("Wavelength (nm)")
-        axe.set_ylabel("Transmittance")
-        axe.legend()
-        axe.grid(True, alpha=0.3)
-        axe.set_title(f"TESS-W filters response and {sky_label} sky emissions")
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
-def plot_alpy_sky(
-    wavelength: FloatArray,
-    sky_data: FloatArray,
-    sky_label: str,
-    save_path: Optional[str] = None,
-) -> None:
-    fig, axes = plt.subplots(1, 1)
-    # datos del cielo nocturno
-    axes.plot(wavelength, sky_data, label=f"ALPY {sky_label}", alpha=0.5)
-    # pinta lineas verticales interesantes
-    axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
-    xlow = np.floor(np.min(wavelength))
-    xhigh = np.ceil(np.max(wavelength))
-    axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Night sky")
-    axes.legend()
-    axes.grid(True, alpha=0.3)
-    axes.set_title(f"{sky_label} natural sky emissions")
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
-def plot_sand_sky(
-    wavelength: FloatArray,
-    sky_data_bfr: FloatArray,
-    sky_data_aft: FloatArray,
-    sky_label: str,
-    save_path: Optional[str] = None,
-) -> None:
-    fig, axes = plt.subplots(1, 1)
-    # datos del cielo nocturno
-    axes.plot(wavelength, sky_data_bfr, label=f"SAND (before midnight) {sky_label}", alpha=0.5)
-    axes.plot(wavelength, sky_data_aft, label=f"SAND (after midnight) {sky_label}", alpha=0.5)
-    # pinta lineas verticales interesantes
-    axes.axvline(REF_CUTOFF, linestyle=":", label=f"{REF_CUTOFF} nm (ref.)", color="red")
-    xlow = np.floor(np.min(wavelength))
-    xhigh = np.ceil(np.max(wavelength))
-    axes.set_xlim(xlow, xhigh)
-    axes.set_xlabel("Wavelength (nm)")
-    axes.set_ylabel("Night sky")
-    axes.legend()
-    axes.grid(True, alpha=0.3)
-    axes.set_title(f"{sky_label} natural sky emissions")
-    plt.tight_layout()
-    if save_path is not None:
-        log.info("saving figure to %s", save_path)
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    else:
-        plt.show()
-
-
 def plot_fov_single(
     phot_name: str,
-    angle_up: FloatArray,
-    freq_up: FloatArray,
-    angle_side: FloatArray,
-    freq_side: FloatArray,
-    dark_freq_up: FloatArray,
-    dark_freq_side: FloatArray,
+    table: Table,
+    freq_up: bool,
+    freq_side: bool,
     save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-    if freq_up is not None:
-        mask = ~(freq_up.mask)
-        axes.plot(angle_up[mask], freq_up[mask], marker="o", label=f"{phot_name} up")
-        axes.plot(angle_up, dark_freq_up, marker="v", label=f"{phot_name} up [dark]", alpha=0.5)
-    if freq_side is not None:
-        mask = ~(freq_side.mask)
-        axes.plot(angle_side[mask], freq_side[mask], marker="o", label=f"{phot_name} side")
+    # response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
+    # color = response_plot[0].get_color()
+    if freq_up:
+        mask = ~(table[Col.FREQ_UP].mask)
         axes.plot(
-            angle_side, dark_freq_side, marker="^", label=f"{phot_name} side [dark]", alpha=0.5
+            table[Col.ANGLE_UP][mask], table[Col.FREQ_UP][mask], marker="o", label=f"{phot_name} up"
         )
-    xlow = np.floor(min(np.min(angle_up), np.min(angle_side)))
-    xhigh = np.ceil(max(np.max(angle_up), np.max(angle_side)))
+        axes.plot(
+            table[Col.ANGLE_UP],
+            table[Col.DARK_FREQ_UP],
+            marker="v",
+            label=f"{phot_name} up [dark]",
+            alpha=0.5,
+        )
+    if freq_side is not None:
+        mask = ~(table[Col.FREQ_SIDE].mask)
+        axes.plot(
+            table[Col.ANGLE_SIDE][mask],
+            table[Col.FREQ_SIDE][mask],
+            marker="o",
+            label=f"{phot_name} side",
+        )
+        axes.plot(
+            table[Col.ANGLE_SIDE],
+            table[Col.DARK_FREQ_SIDE],
+            marker="^",
+            label=f"{phot_name} side [dark]",
+            alpha=0.5,
+        )
+    xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
+    xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
     axes.set_xlim(xlow, xhigh)
     axes.set_xlabel("Angle (Deg)")
     axes.set_ylabel("Signal (Hz)")
@@ -539,16 +274,13 @@ def plot_fov_stacked(
 def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="csv")
-    freq_up = None if args.side else table[Col.FREQ_UP]
-    freq_side = None if args.up else table[Col.FREQ_SIDE]
+    freq_up = False if args.side else True
+    freq_side = False if args.up else True
     plot_fov_single(
         phot_name=" ".join(args.label),
-        angle_up=table[Col.ANGLE_UP],
+        table=table,
         freq_up=freq_up,
-        dark_freq_up=table[Col.DARK_FREQ_UP],
-        angle_side=table[Col.ANGLE_SIDE],
         freq_side=freq_side,
-        dark_freq_side=table[Col.DARK_FREQ_SIDE],
     )
 
 
@@ -572,15 +304,6 @@ def choices3() -> ArgumentParser:
     group.add_argument("--up", action="store_true", help="Up FoV curve only")
     group.add_argument("--side", action="store_true", help="Side FoV curve only")
     group.add_argument("--both", action="store_true", help="Both [up] & [side]  FoV curves")
-    return parser
-
-
-def choices2() -> ArgumentParser:
-    """Common options for plotting"""
-    parser = ArgumentParser(add_help=False)
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--up", action="store_true", help="Up FoV curve only")
-    group.add_argument("--side", action="store_true", help="Side FoV curve only")
     return parser
 
 
@@ -627,18 +350,6 @@ def add_args(parser):
         help="Plot single TESS-W FoV curves",
     )
     parser_single.set_defaults(func=cli_plot_fov_single)
-    parser_multi = subparser.add_parser(
-        "multi",
-        parents=[
-            ifiles(),
-            prs.labels("plotting"),
-            prs.savefig(),
-            choices2(),
-        ],
-        help="Plot several TESS-W Fov curves in the same graphics",
-    )
-    parser_multi.set_defaults(func=cli_plot_fov_multi)
-
     parser_combi = subparser.add_parser(
         "stacked",
         parents=[
