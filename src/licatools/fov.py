@@ -215,7 +215,7 @@ def plot_fov_single(
             linewidth=0,
         )
         # Plot the dark fitted line
-        axes.plot(angles, fitted_dark, alpha=0.5, color=result[0].get_color())
+        axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
     if freq_side is not None:
         angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
         log.info("Fitted R^2 = %f", r2)
@@ -237,7 +237,7 @@ def plot_fov_single(
             linewidth=0,
         )
         # Plot the dark fitted line
-        axes.plot(angles, fitted_dark, alpha=0.5, color=result[0].get_color())
+        axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
     xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
     xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
     axes.set_xlim(xlow, xhigh)
@@ -265,17 +265,20 @@ def plot_fov_stacked(
     fig, axes = plt.subplots(N, 1, figsize=(12, 4 * N))
     for axe, cols, tag in zip(axes, (cols_up, cols_side), ("up", "side")):
         for phot_name, table in zip(phot_names, fov_tables):
+            angles, fitted_dark, r2 = dark_fit(table[cols[0]], table[cols[2]])
             mask = ~(table[cols[1]].mask)
             axe.plot(
                 table[cols[0]][mask], table[cols[1]][mask], marker="o", label=f"{phot_name} {tag}"
             )
-            axe.plot(
+            result = axe.plot(
                 table[cols[0]],
                 table[cols[2]],
                 marker="v",
                 label=f"{phot_name} {tag} [dark]",
                 alpha=0.5,
             )
+            # Plot the dark fitted line
+            axe.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
         xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
         xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
         axe.set_xlim(xlow, xhigh)
