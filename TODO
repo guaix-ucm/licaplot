@@ -5,7 +5,5 @@ pipeline doesn't work? => check
 
 FOV
 ===
-* Revisar las etiquetas del modo single
-* añadir el modelo gauss puro
-* hacer elegible modelos entre -gh y -gs
-* pasar todas las rutinas de fitting y demas a un modulo comun
+* plot optical axis or not
+* refactor plotting functionss to use dataclasses -> processing done outside, as always
