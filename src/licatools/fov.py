@@ -11,6 +11,7 @@
 # -------------------
 
 import logging
+import itertools
 from argparse import Namespace, ArgumentParser
 from enum import StrEnum
 from typing import TypeAlias, Sequence, Tuple, Optional
@@ -28,6 +29,7 @@ import matplotlib.pyplot as plt
 import astropy
 from astropy.table import Table, Column
 from scipy.signal import find_peaks, savgol_filter
+from scipy.optimize import curve_fit
 
 from lica.cli import execute
 from lica.validators import vfile
@@ -154,13 +156,13 @@ def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
 def detect_peaks(
     x: FloatArray,
     y: FloatArray,
-    prominence: float,
-    distance: int,
+    prominence=None,
+    distance=None,
+    width=None,
+    height=None,
     window_length: int = 9,
     polyorder: int = 2,  # smoothing polynomial order
-    width: int = 2,  # ancho minimo en pixeles
-    height: float = 0.5e-10,
-) -> tuple[IntArray, FloatSeq]:
+) -> IntArray:
     """
     Detecta picos automáticamente y estima parámetros iniciales.
 
@@ -183,13 +185,104 @@ def detect_peaks(
     p0 = [float(np.median(smoothed_y)), 0.0]  # b0 (global background), b1 (slope)=0.0,
     log.info("Found %d peaks", len(peaks))
     for peak in peaks:
-        ilow = max(0, int(peak) - window_length)
-        ihigh = min(len(smoothed_y), int(peak) + window_length)
-        local_bg = float(np.median(smoothed_y[ilow:ihigh]))
-        amplitude = float(smoothed_y[peak] - local_bg)
-        p0.extend([amplitude, float(x[peak])])
         log.info("Detected peak at x = %.2f", x[peak])
-    return peaks, p0
+    return peaks
+
+
+def gauss_hermite_fit(
+    x: FloatArray,
+    y: FloatArray,
+    p0: Sequence[float],
+    h3: float = 0,  # h3 = h4 = 0 -> gauss puro.
+    h4: float = 0,  # Aunque no tienen cota, usar valores pequeños < 1
+    sigma: float = 1.0,  # Initial sigma for gauss part
+    error_y: FloatArray = None,  # Estimacion de error de los puntos y
+    maxfev: int = 25000,
+) -> tuple[FloatArray, FloatArray]:
+    """
+    Ajuste de fondo cuadraticos + suma de perfiles Gauss-Hermite.
+
+    Cada componente se parametriza como:
+        A * exp(-0.5 * u^2) * [1 + h3*H3(u) + h4*H4(u)]
+
+    donde:
+        u = (x - mu) / sigma
+        H3(u) = (1 / sqrt(6)) * (2*sqrt(2)*u^3 - 3*sqrt(2)*u)
+        H4(u) = (1 / sqrt(24)) * (4*u^4 - 12*u^2 + 3)
+
+    Si h3 = h4 = 0, el perfil se reduce a una gaussiana.
+    """
+
+    def gauss_hermite(
+        x: FloatArray,
+        A: float,
+        mu: float,
+        sigma: float,
+        h3: float,
+        h4: float,
+    ) -> FloatArray:
+        """Single Gauss-Hermite function"""
+        u = (x - mu) / sigma
+        H3 = (2 * np.sqrt(2) * u**3 - 3 * np.sqrt(2) * u) / np.sqrt(6)
+        H4 = (4 * u**4 - 12 * u**2 + 3) / np.sqrt(24)
+        return A * np.exp(-0.5 * u**2) * (1.0 + h3 * H3 + h4 * H4)
+
+    def model_gh(x: FloatArray, b0: float, b1: float, b2: float, *params: float) -> FloatArray:
+        """quadraict background model plus a list of Gauss-Hermite functions"""
+        y_fit = b0 + b1 * x + b2 * x**2
+        i = 0
+        while i < len(params):
+            A, mu, sigma, h3, h4 = params[i : i + 5]
+            y_fit += gauss_hermite(x, A, mu, sigma, h3, h4)
+            i += 5
+        return y_fit
+
+    log.info("Fitting Gauss-Hermite models + quadratic background %s", Polynomial(p0))
+    A0 = np.max(y)
+    mu0 = x[np.argmax(y)]
+    sigma0 = np.std(y)
+    p0_gh = p0.tolist() + [A0, mu0, sigma0, h3, h4]
+    log.info("p0_gh = %s", p0_gh)
+    try:
+        popt_gh, _ = curve_fit(
+            model_gh,
+            x,
+            y,
+            sigma=error_y,
+            p0=p0_gh,
+            maxfev=maxfev,
+            bounds=(-np.inf, np.inf),
+        )
+        log.info("popt_gh = %s", popt_gh)
+        y_fit_gh = model_gh(x, *popt_gh)
+        residuals = y - y_fit_gh
+    except Exception as e:
+        log.error("Gauss-Hermite fit error: %s", e)
+        raise
+    log.info("Global constant [b0]: %.2e", p0[0])
+    log.info("Global slope [b1]: %.2e", p0[1])
+    log.info("Global q.slope [b2]: %.2e", p0[2])
+    comps = popt_gh[3:]
+    for A, mu, sigma, h3, h4 in itertools.batched(comps, 5):
+        log.info(
+            "Component at λ=%.2f: sigma=%.3f, h3=%.3f, h4=%.3f",
+            mu,
+            sigma,
+            h3,
+            h4,
+        )
+    log.info(f"RMS residuals: {np.sqrt(np.mean(residuals**2)):.3e}")
+    log.info(f"Residuals lineal drift: {np.polyfit(x, residuals, 2)[0]:.3e}")
+    if error_y is not None:
+        """
+        If χ²/dof ≈1 then reasonable fit 
+        If χ²/dof >> 1 model doesn't explain well the observed data
+        If χ²/dof << 1 model then probably error overstimation.
+        """
+        dof = len(x) - len(popt_gh)
+        log.info(f"χ²/DoF: {np.sum((residuals / error_y) ** 2) / dof:.3e}")
+
+    return y_fit_gh, residuals
 
 
 # ------------------
@@ -213,20 +306,20 @@ def plot_box(
     )
 
 
-def dark_fit(x: Column, y: Column) -> Tuple[FloatArray, FloatArray, float]:
+def dark_fit(x: Column, y: Column, deg: int) -> Tuple[FloatArray, FloatArray, float]:
     """hace una estimacion polinomica (grado2)de la señal de oscuridad total de la habitacion"""
     # quita los puntos (x,y) cuyas medidas y estan vacias
     mask = ~(y.mask)
     x = x[mask]
     y = y[mask]
     # Crea un polinomio por ajuste de minimos cuadrados
-    P = Polynomial.fit(x, y, deg=2)
+    P = Polynomial.fit(x, y, deg=deg)
     y_pred = P(x)
     sum_resid = np.sum((y - y_pred) ** 2)
     sum_total = np.sum((y - y.mean()) ** 2)
     r2 = 1 - sum_resid / sum_total
     xx = np.linspace(np.min(x), np.max(x))
-    return xx, P(xx), r2
+    return xx, P(xx), r2, P.coef
 
 
 def plot_fov_single(
@@ -240,14 +333,14 @@ def plot_fov_single(
     # response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
     # color = response_plot[0].get_color()q
     if freq_up:
-        angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_UP], table[Col.DARK_FREQ_UP])
+        angles, fitted_dark, r2, p0 = dark_fit(table[Col.ANGLE_UP], table[Col.DARK_FREQ_UP], deg=2)
         log.info("Fitted R^2 = %f", r2)
         # Plot the FoV
         mask = ~(table[Col.FREQ_UP].mask)
         x = table[Col.ANGLE_UP][mask]
         y1 = table[Col.FREQ_UP][mask]
         y2 = table[Col.DARK_FREQ_UP][mask]
-        axes.plot(x, y1, marker="o", label=f"{phot_name} up")
+        axes.plot(x, y1, marker="X", linewidth=0, label=f"{phot_name} up")
         # Plot the Dark room FoV
         result = axes.plot(
             x, y2, marker="v", label=f"{phot_name} up [dark]", alpha=0.5, linewidth=0
@@ -255,32 +348,31 @@ def plot_fov_single(
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
         # detect peak
+        peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
+        for peak in peaks:
+            axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak up")
+        y_fit, _ = gauss_hermite_fit(x, y1, p0, h3=0, h4=0)
+        axes.plot(x, y_fit, marker="o", label=f"{phot_name} up, fitted")
 
-    if freq_side is not None:
-        angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
+    if freq_side:
+        angles, fitted_dark, r2, p0 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
         log.info("Fitted R^2 = %f", r2)
         mask = ~(table[Col.FREQ_SIDE].mask)
         x = table[Col.ANGLE_SIDE][mask]
         y1 = table[Col.FREQ_SIDE][mask]
         y2 = table[Col.DARK_FREQ_SIDE][mask]
         # Plot the FoV
-        axes.plot(
-            x,
-           y1,
-            marker="o",
-            label=f"{phot_name} side"
-        )
+        axes.plot(x, y1, marker="o", label=f"{phot_name} side")
         # Plot the Dark room FoV
         result = axes.plot(
-            x,
-            y2,
-            marker="^",
-            label=f"{phot_name} side [dark]",
-            alpha=0.5,
-            linewidth=0
+            x, y2, marker="^", label=f"{phot_name} side [dark]", alpha=0.5, linewidth=0
         )
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
+        # detect peak
+        peaks, _ = detect_peaks(x, y1, height=1.5, distance=10.0)
+        for peak in peaks:
+            axes.axvline(x[peak], linestyle=":", label=f"{phot_name} {x[peak]}º peak side")
     xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
     xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
     axes.set_xlim(xlow, xhigh)
@@ -346,8 +438,12 @@ def plot_fov_stacked(
 def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="csv")
-    freq_up = False if args.side else True
-    freq_side = False if args.up else True
+    # freq_up = False if args.side else True
+    # freq_side = False if args.up else True
+    log.info("args.up = %s, args.side = %s, args.both=%s", args.up, args.side, args.both)
+    freq_up = True if args.up or args.both else False
+    freq_side = True if args.side or args.both else False
+    log.info("freq_up = %s, freq_side = %s", freq_up, freq_side)
     plot_fov_single(
         phot_name=" ".join(args.label),
         table=table,
@@ -369,9 +465,11 @@ def choices3() -> ArgumentParser:
     """Common options for plotting"""
     parser = ArgumentParser(add_help=False)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--up", action="store_true", help="Up FoV curve only")
-    group.add_argument("--side", action="store_true", help="Side FoV curve only")
-    group.add_argument("--both", action="store_true", help="Both [up] & [side]  FoV curves")
+    group.add_argument("--up", action="store_true", default=False, help="Up FoV curve only")
+    group.add_argument("--side", action="store_true", default=False, help="Side FoV curve only")
+    group.add_argument(
+        "--both", action="store_true", default=False, help="Both [up] & [side]  FoV curves"
+    )
     return parser
 
 
