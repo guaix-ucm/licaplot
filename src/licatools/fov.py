@@ -27,8 +27,9 @@ import matplotlib.pyplot as plt
 
 import astropy
 from astropy.table import Table, Column
-from lica.cli import execute
+from scipy.signal import find_peaks, savgol_filter
 
+from lica.cli import execute
 from lica.validators import vfile
 
 # ------------------------
@@ -150,6 +151,47 @@ def get_fwhm(x: FloatArray, y: FloatArray) -> Tuple[float, float, float]:
     return fwhm, x_left, x_right
 
 
+def detect_peaks(
+    x: FloatArray,
+    y: FloatArray,
+    prominence: float,
+    distance: int,
+    window_length: int = 9,
+    polyorder: int = 2,  # smoothing polynomial order
+    width: int = 2,  # ancho minimo en pixeles
+    height: float = 0.5e-10,
+) -> tuple[IntArray, FloatSeq]:
+    """
+    Detecta picos automáticamente y estima parámetros iniciales.
+
+    La estructura de los parametros iniciales p0 del ajuste multigaussiano que devuelve es
+    p0 = [
+      b0 (fondo global), b1 (pendiente)=0.0,
+
+    ]
+    Devuelve un array de indices dende estan los picos asi como parametros iniciales para gaussian fitting
+    """
+    smoothed_y = savgol_filter(y, window_length=window_length, polyorder=polyorder)
+    peaks, _ = find_peaks(
+        smoothed_y,
+        prominence=prominence,
+        distance=distance,
+        width=width,  #
+        height=height,  # Umbral mínimo
+    )
+    # Initial parameter list estimation for later curve fitting
+    p0 = [float(np.median(smoothed_y)), 0.0]  # b0 (global background), b1 (slope)=0.0,
+    log.info("Found %d peaks", len(peaks))
+    for peak in peaks:
+        ilow = max(0, int(peak) - window_length)
+        ihigh = min(len(smoothed_y), int(peak) + window_length)
+        local_bg = float(np.median(smoothed_y[ilow:ihigh]))
+        amplitude = float(smoothed_y[peak] - local_bg)
+        p0.extend([amplitude, float(x[peak])])
+        log.info("Detected peak at x = %.2f", x[peak])
+    return peaks, p0
+
+
 # ------------------
 # Plotting functions
 # ------------------
@@ -172,6 +214,7 @@ def plot_box(
 
 
 def dark_fit(x: Column, y: Column) -> Tuple[FloatArray, FloatArray, float]:
+    """hace una estimacion polinomica (grado2)de la señal de oscuridad total de la habitacion"""
     # quita los puntos (x,y) cuyas medidas y estan vacias
     mask = ~(y.mask)
     x = x[mask]
@@ -184,7 +227,6 @@ def dark_fit(x: Column, y: Column) -> Tuple[FloatArray, FloatArray, float]:
     r2 = 1 - sum_resid / sum_total
     xx = np.linspace(np.min(x), np.max(x))
     return xx, P(xx), r2
-
 
 
 def plot_fov_single(
@@ -202,39 +244,40 @@ def plot_fov_single(
         log.info("Fitted R^2 = %f", r2)
         # Plot the FoV
         mask = ~(table[Col.FREQ_UP].mask)
-        axes.plot(
-            table[Col.ANGLE_UP][mask], table[Col.FREQ_UP][mask], marker="o", label=f"{phot_name} up"
-        )
+        x = table[Col.ANGLE_UP][mask]
+        y1 = table[Col.FREQ_UP][mask]
+        y2 = table[Col.DARK_FREQ_UP][mask]
+        axes.plot(x, y1, marker="o", label=f"{phot_name} up")
         # Plot the Dark room FoV
         result = axes.plot(
-            table[Col.ANGLE_UP],
-            table[Col.DARK_FREQ_UP],
-            marker="v",
-            label=f"{phot_name} up [dark]",
-            alpha=0.5,
-            linewidth=0,
+            x, y2, marker="v", label=f"{phot_name} up [dark]", alpha=0.5, linewidth=0
         )
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
+        # detect peak
+
     if freq_side is not None:
         angles, fitted_dark, r2 = dark_fit(table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE])
         log.info("Fitted R^2 = %f", r2)
         mask = ~(table[Col.FREQ_SIDE].mask)
+        x = table[Col.ANGLE_SIDE][mask]
+        y1 = table[Col.FREQ_SIDE][mask]
+        y2 = table[Col.DARK_FREQ_SIDE][mask]
         # Plot the FoV
         axes.plot(
-            table[Col.ANGLE_SIDE][mask],
-            table[Col.FREQ_SIDE][mask],
+            x,
+           y1,
             marker="o",
-            label=f"{phot_name} side",
+            label=f"{phot_name} side"
         )
         # Plot the Dark room FoV
         result = axes.plot(
-            table[Col.ANGLE_SIDE],
-            table[Col.DARK_FREQ_SIDE],
+            x,
+            y2,
             marker="^",
             label=f"{phot_name} side [dark]",
             alpha=0.5,
-            linewidth=0,
+            linewidth=0
         )
         # Plot the dark fitted line
         axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
