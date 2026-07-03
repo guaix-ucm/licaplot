@@ -14,6 +14,7 @@ import logging
 from argparse import Namespace, ArgumentParser
 from enum import StrEnum
 from typing import TypeAlias, Sequence, Tuple, Optional
+from dataclasses import dataclass
 
 # ---------------------
 # Third-party libraries
@@ -26,7 +27,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import astropy
-from astropy.table import Table, Column
+from astropy.table import Table
 
 from lica.cli import execute
 from lica.validators import vfile
@@ -110,119 +111,74 @@ def plot_box(
     )
 
 
-def dark_fit(x: Column, y: Column, deg: int) -> Tuple[FloatArray, FloatArray, float]:
-    """hace una estimacion polinomica (grado2)de la señal de oscuridad total de la habitacion"""
-    # quita los puntos (x,y) cuyas medidas y estan vacias
-    mask = ~(y.mask)
-    x = x[mask]
-    y = y[mask]
-    # Crea un polinomio por ajuste de minimos cuadrados
-    P = Polynomial.fit(x, y, deg=deg)
-    y_pred = P(x)
-    sum_resid = np.sum((y - y_pred) ** 2)
-    sum_total = np.sum((y - y.mean()) ** 2)
+def dark_fit(
+    angle: FloatArray, freq: FloatArray, deg: int
+) -> Tuple[FloatArray, float, Sequence[float]]:
+    """hace una estimacion polinomica de la señal de oscuridad total de la habitacion"""
+    P = Polynomial.fit(angle, freq, deg=deg)
+    fit_freq = P(angle)
+    sum_resid = np.sum((freq - fit_freq) ** 2)
+    sum_total = np.sum((freq - freq.mean()) ** 2)
     r2 = 1 - sum_resid / sum_total
-    xx = np.linspace(np.min(x), np.max(x))
-    return xx, P(xx), r2, P.coef
+    # dense_angle = np.linspace(np.min(angle), np.max(angle))
+    return fit_freq, r2, P.coef.tolist()
+
+
+@dataclass
+class FoVSingle:
+    orient: str  # Either "up" or "side"
+    pls_angle: FloatArray  # Point Light Source angles in degrees
+    pls_freq: FloatArray  # Point Light Source frequencies
+    dk_angle: FloatArray  # Dark room angles in degrees
+    dk_freq: FloatArray  # Dark room frequencies
+    peak: float | None  # FoV peak array position index
+    fwhm: float
+    fit_pls_freq: FloatArray  # Fitted Point Light Source frequencies
+    fit_dk_freq: FloatArray  # Fitted Dark room frequencies
 
 
 def plot_fov_single(
     phot_name: str,
-    table: Table,
-    freq_up: bool,
-    freq_side: bool,
-    bg_poly_order: int,
-    gauss_hermite: bool = False,
+    plot_specs: Sequence[FoVSingle],
     save_path: Optional[str] = None,
 ) -> None:
     fig, axes = plt.subplots(1, 1)
-    # response_plot = axes.plot(wavelength, response, label=f"{label} spectral resp.")
-    # color = response_plot[0].get_color()q
-    if freq_up:
-        angles, fitted_dark, r2, p0 = dark_fit(table[Col.ANGLE_UP], table[Col.DARK_FREQ_UP], deg=2)
-        log.info("Fitted R^2 = %f", r2)
-        # Plot the FoV
-        mask = ~(table[Col.FREQ_UP].mask)
-        x = table[Col.ANGLE_UP][mask]
-        y1 = table[Col.FREQ_UP][mask]
-        y2 = table[Col.DARK_FREQ_UP][mask]
-        axes.plot(x, y1, marker="o", linewidth=0, label="light data, up position")
+    for s in plot_specs:
+        axes.plot(
+            s.pls_angle,
+            s.pls_freq,
+            marker="o",
+            linewidth=0,
+            label=f"light data, {s.orient} position",
+        )
         # Plot the Dark room FoV
         result = axes.plot(
-            x, y2, marker="v", label="dark data, up position", alpha=0.5, linewidth=0
+            s.dk_angle,
+            s.dk_freq,
+            marker="v",
+            label=f"dark data, {s.orient} position",
+            alpha=0.5,
+            linewidth=0,
         )
+        # Plot the fitted model
+        axes.plot(s.pls_angle, s.fit_pls_freq, label=f"fitted model, {s.orient} position")
         # Plot the dark fitted line
-        axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
-        # detect peak
-        peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
-        assert len(peaks) == 1
-        peak = peaks[0]
-        axes.axvline(x[peak], linestyle=":", label="peak, up position")
-        fwhm, _, _ = get_fwhm(x, y1)
-        y_fit, _ = gauss_hermite_fit(
-            x,
-            y1,
-            p0_bg=p0.tolist()[:2],
-            p0_peaks=[y1[peak], x[peak], fwhm / 2.355, 0, 0],
-            h3=0,
-            h4=0,
+        axes.plot(s.dk_angle, s.fit_dk_freq, alpha=0.5, linewidth=0.5, color=result[0].get_color())
+        # Optionally, plot the peak
+        if s.peak is not None:
+            axes.axvline(s.pls_angle[s.peak], linestyle=":", label=f"peak, {s.orient} position")
+    s = plot_specs  # alias to shorten sentences below
+    if len(s) == 2:
+        plot_box(
+            axes,
+            (
+                f"FWHM({s[0].orient})={s[0].fwhm:0.0f}\nFWHM({s[1].orient})={s[1].fwhm:0.0f}",
+                0.1,
+                0.8,
+            ),
         )
-        axes.plot(x, y_fit, label="fitted model, up position")
-        fwhm_up, _, _ = get_fwhm(x, y1)
-        log.info("FWHM = %f", fwhm_up)
-
-    if freq_side:
-        angles, fitted_dark, r2, p0 = dark_fit(
-            table[Col.ANGLE_SIDE], table[Col.DARK_FREQ_SIDE], deg=2
-        )
-        log.info("Fitted R^2 = %f", r2)
-        mask = ~(table[Col.FREQ_SIDE].mask)
-        x = table[Col.ANGLE_SIDE][mask]
-        y1 = table[Col.FREQ_SIDE][mask]
-        y2 = table[Col.DARK_FREQ_SIDE][mask]
-        # Plot the FoV
-        axes.plot(x, y1, marker="o", linewidth=0, label="light data, side position")
-        # Plot the Dark room FoV
-        result = axes.plot(
-            x, y2, marker="^", label="dark data, side position", alpha=0.5, linewidth=0
-        )
-        # Plot the dark fitted line
-        axes.plot(angles, fitted_dark, alpha=0.5, linewidth=0.5, color=result[0].get_color())
-        # detect peak
-        peaks = detect_peaks(x, y1, height=1.5, distance=10.0)
-        for peak in peaks:
-            axes.axvline(x[peak], linestyle=":", label="peak, side position")
-        fwhm, _, _ = get_fwhm(x, y1)
-        if gauss_hermite:
-            y_fit, residuals = gauss_hermite_fit(
-                x,
-                y1,
-                p0_bg=p0.tolist()[: bg_poly_order + 1],
-                p0_peaks=[y1[peak], x[peak], fwhm / 2.355, 0, 0],
-                h3=0,
-                h4=0,
-            )
-        else:
-            y_fit, residuals = gauss_fit(
-                x,
-                y1,
-                p0_bg=p0.tolist()[: bg_poly_order + 1],
-                p0_peaks=[y1[peak], x[peak], fwhm / 2.355],
-            )
-
-        axes.plot(x, y_fit, label="fitted model, side position")
-        fwhm_side, _, _ = get_fwhm(x, y1)
-        log.info("FWHM = %f", fwhm_side)
-    if freq_up and freq_side:
-        plot_box(axes, (f"FWHM(up)={fwhm_up:0.1f}\nFWHM(side)={fwhm_side:0.1f}", 0.1, 0.8))
-    elif freq_up:
-        plot_box(axes, (f"FWHM(up)={fwhm_up:0.1f}", 0.1, 0.8))
-    elif freq_side:
-        plot_box(axes, (f"FWHM(side)={fwhm_side:0.1f}", 0.1, 0.8))
-
-    xlow = np.floor(min(np.min(table[Col.ANGLE_UP]), np.min(table[Col.ANGLE_SIDE])))
-    xhigh = np.ceil(max(np.max(table[Col.ANGLE_UP]), np.max(table[Col.ANGLE_SIDE])))
-    axes.set_xlim(xlow, xhigh)
+    else:
+        plot_box(axes, (f"FWHM({s[0].orient})={s[0].fwhm:0.0f}", 0.1, 0.8))
     axes.set_xlabel("Angle (Deg)")
     axes.set_ylabel("Signal (Hz)")
     axes.legend()
@@ -285,19 +241,67 @@ def plot_fov_stacked(
 def cli_plot_fov_single(args: Namespace) -> None:
     log.info("reading filter data %s", args.input_file)
     table: Table = astropy.io.ascii.read(args.input_file, format="csv")
-    # freq_up = False if args.side else True
-    # freq_side = False if args.up else True
-    log.info("args.up = %s, args.side = %s, args.both=%s", args.up, args.side, args.both)
-    freq_up = True if args.up or args.both else False
-    freq_side = True if args.side or args.both else False
-    log.info("freq_up = %s, freq_side = %s", freq_up, freq_side)
+    plot_single_specs = list()
+    for orientation, cols in zip(
+        ("up", "side"),
+        (
+            (Col.ANGLE_UP, Col.FREQ_UP, Col.DARK_FREQ_UP),
+            (Col.ANGLE_SIDE, Col.FREQ_SIDE, Col.DARK_FREQ_SIDE),
+        ),
+    ):
+        mask = ~(table[cols[1]].mask)
+        pls_angle = table[cols[0]][mask]
+        pls_freq = table[cols[1]][mask]
+        mask = ~(table[cols[2]].mask)
+        dk_angle = table[cols[0]][mask]
+        dk_freq = table[cols[2]][mask]
+        fit_dk_freq, r2, p0 = dark_fit(dk_angle, dk_freq, deg=2)
+        log.info("Fitted R^2 = %f", r2)
+        peaks = detect_peaks(pls_angle, pls_freq, height=1.5, distance=10.0)
+        assert len(peaks) == 1
+        peak = peaks[0]
+        fwhm, _, _ = get_fwhm(pls_angle, pls_freq)  # initail FWHM guess to input fit params
+        if args.gauss_hermite:
+            fit_pls_freq, _ = gauss_hermite_fit(
+                pls_angle,
+                pls_freq,
+                p0_bg=p0[:2],  # only use linear backround, not quadratic
+                p0_peaks=[pls_freq[peak], pls_angle[peak], fwhm / 2.355, 0, 0],
+                h3=0,
+                h4=0,
+            )
+        else:
+            fit_pls_freq, _ = gauss_fit(
+                pls_angle,
+                pls_freq,
+                p0_bg=p0[:2],  # only use linear backround, not quadratic
+                p0_peaks=[pls_freq[peak], pls_angle[peak], fwhm / 2.355, 0, 0],
+            )
+        fwhm, _, _ = get_fwhm(pls_angle, pls_freq)  # compute final FWHM
+        peak = peak if args.axis else None
+        log.info("FWHM = %f", fwhm)
+        plot_single_specs.append(
+            FoVSingle(
+                orientation,
+                pls_angle,
+                pls_freq,
+                dk_angle,
+                dk_freq,
+                peak,
+                fwhm,
+                fit_pls_freq,
+                fit_dk_freq,
+            )
+        )
+    if args.up and not args.both:
+        plot_single_specs = list(plot_single_specs[0])
+    elif args.side and not args.both:
+        plot_single_specs = list(plot_single_specs[1])
+    else:
+        pass
     plot_fov_single(
         phot_name=" ".join(args.label),
-        table=table,
-        freq_up=freq_up,
-        freq_side=freq_side,
-        bg_poly_order=args.poly,
-        gauss_hermite=True if args.gauss_hermite else False,
+        plot_specs=plot_single_specs,
     )
 
 
