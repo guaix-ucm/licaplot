@@ -619,7 +619,7 @@ fov2 labels="stars237 stars630":
     do
         files="${files} ${dir}/${label}.csv"
     done
-    uv run lica-fov --console --trace stacked -l ${labels} -i ${files}
+    uv run lica-fov --console --trace stacked -gh -l ${labels} -i ${files}
 
 
 # =============================
