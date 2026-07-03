@@ -67,7 +67,7 @@ log = logging.getLogger(__name__)
 
 # Load global style sheets
 plt.style.use("licatools.resources.global")
-mpl.rcParams["legend.fontsize"] = "xx-small"
+mpl.rcParams["legend.fontsize"] = "x-small"
 
 
 # -----
@@ -295,7 +295,7 @@ def plot_fov_stacked(
                 linewidth=0.5,
                 color=result[0].get_color(),
             )
-            fwhm_lst.append(f"FWHM({phot_name})={s[tag].fwhm:0.0f}")
+            fwhm_lst.append(f"FWHM {phot_name} = {s[tag].fwhm:0.0f}")
         plot_box(axe, ("\n".join(fwhm_lst), 0.1, 0.8))
         axe.set_xlabel("Angle (Deg)")
         axe.set_ylabel("Signal (Hz)")
