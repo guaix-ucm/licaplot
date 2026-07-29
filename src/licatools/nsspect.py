@@ -31,7 +31,7 @@ import astropy
 from astropy.table import Table
 from scipy import integrate
 from lica.cli import execute
-
+from lica.validators import vfile
 from lica.lab.photodiode import COL
 
 # ------------------------
@@ -91,6 +91,10 @@ class NightSky(StrEnum):
 # -------------------
 # Auxiliary functions
 # -------------------
+
+def trim(table: Table, xlow: float, xhigh: float) -> Table:
+    mask = (xlow <= table[COL.WAVE]) & (table[COL.WAVE] <= xhigh)
+    return table[mask]
 
 
 def normalize(x: FloatArray) -> FloatArray:
@@ -636,10 +640,67 @@ def plot_sand_sky(
     else:
         plt.show()
 
+def plot_photodiodes(
+    wavelength: FloatArray,
+    currents: Sequence[FloatArray],
+    labels: Sequence[str],
+    save_path: Optional[str] = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    for current, label in zip(currents, labels):
+        axes.plot(
+            wavelength,
+            current,
+            linewidth=0,
+            marker=".",
+            label=label,
+        )
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("Photodiode Current (A)")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title("Raw photodiode currents")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
 
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
+
+def cli_plot_photod(args: Namespace) -> None:
+    log.info("reading photodiode data %s", args.photod_file)
+    ph_names = ("Index", COL.WAVE, "Current", "Read Noise")
+    tables = [astropy.io.ascii.read(path, format="csv", delimiter="\t", names=ph_names) for path in args.photod_file]
+    for table in tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    tables = [trim(table, args.x_low, args.x_high) for table in tables]
+    plot_photodiodes(
+        wavelength=tables[0][COL.WAVE],
+        currents=[t["Current"] for t in tables],
+        labels=args.labels,
+        save_path=args.save_figure_path,
+    )
+    
+def cli_plot_spectral_stacked(args: Namespace) -> None:
+    log.info("reading photodiode data %s", args.photod_file)
+    log.info("reading TESS-W data %s", args.input_file)
+    ph_names = ("Index", COL.WAVE, "Current", "Read Noise")
+    ph_tables = [astropy.io.ascii.read(path, format="csv", delimiter="\t", names=ph_names) for path in args.photod_file]
+    for table in ph_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    ph_tables = [trim(table, args.x_low, args.x_high) for table in ph_tables]
+    tw_tables= [astropy.io.ascii.read(path, format="csv", delimiter=",") for path in args.input_file]
+    for table in tw_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
+    log.info(tw_tables)
 
 
 def cli_plot_filter(args: Namespace) -> None:
@@ -878,9 +939,46 @@ def mag() -> ArgumentParser:
     )
     return parser
 
+def photods() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-ph",
+        "--photod-file",
+        type=vfile,
+        required=True,
+        nargs="+",
+        metavar="<File>",
+        help="CSV/ECSV input files",
+    )
+    return parser
 
 def add_args(parser):
     subparser = parser.add_subparsers(dest="command")
+    parser_photod = subparser.add_parser(
+        "photod",
+        parents=[
+            photods(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+        ],
+        help="Plot photodiode measured current",
+    )
+    parser_photod.set_defaults(func=cli_plot_photod)
+
+    parser_spectral = subparser.add_parser(
+        "spectral",
+        parents=[
+            prs.ifiles(),
+            photods(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+        ],
+        help="Plot stacked TESS-W spectral responses",
+    )
+    parser_spectral.set_defaults(func=cli_plot_spectral_stacked)
+
     parser_sky = subparser.add_parser(
         "sky",
         parents=[

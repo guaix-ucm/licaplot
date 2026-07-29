@@ -335,7 +335,8 @@ def ifiles() -> ArgumentParser:
     parser.add_argument(
         "-i",
         "--input-file",
-        type=vecsvfile,
+        #type=vecsvfile,
+        type=vfile,
         required=True,
         nargs="+",
         metavar="<File>",

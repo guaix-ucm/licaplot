@@ -622,6 +622,23 @@ fov2 labels="stars237 stars630":
     uv run lica-fov --console --trace stacked -gh -l ${labels} -i ${files}
 
 
+nsspec-photod:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw/other"
+    uv run lica-nssky --console --trace photod  -xll 380 -xhl 900 -l stars3 stars470 stars618 stars1654 \
+        -ph ${dir}/stars3_20260724_142440.txt ${dir}/stars470_20260720_154216.txt ${dir}/stars618_20260723_163142.txt ${dir}/stars1654_20260721_122510.txt \
+
+
+nsspec-spectral:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw/other"
+    uv run lica-nssky --console --trace spectral  -xll 380 -xhl 900 \
+        -l stars3 stars470 stars618 stars1654 \
+        -ph ${dir}/stars3_20260724_142440.txt ${dir}/stars470_20260720_154216.txt ${dir}/stars618_20260723_163142.txt ${dir}/stars1654_20260721_122510.txt \
+        -i ${dir}/stars3.csv ${dir}/stars470.csv ${dir}/stars618.csv ${dir}/stars1654.csv
+
 # =============================
 # Generic data reduction recipe
 # =============================
