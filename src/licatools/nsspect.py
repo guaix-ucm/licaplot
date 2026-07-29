@@ -295,6 +295,13 @@ def tsl237_qe(wavelength: FloatArray) -> FloatArray:
     return qe
 
 
+def tessw_qe(wavelength, resp_ph, freq, current) -> FloatArray:
+    """
+    Calcula la QE del TESS-W entero (TSL237 y filtro) por medicion de laboratorio
+    contra el fotodiodo de referencia
+    """
+    return (resp_ph / wavelength) * (freq / current)
+
 # He probado con scipy find_peaks y peaks_width y no me ha funcionado bien
 # porque la curva tiene maximos locales por oscilaciones en la parte de arriba.
 # Asi que esta funcion mas manual funciona mejor
@@ -692,23 +699,36 @@ def cli_plot_photod(args: Namespace) -> None:
         labels=args.labels,
         save_path=args.save_figure_path,
     )
-    
+
+def tessw_qe(wavelength, resp_ph, freq, current) -> FloatArray:
+    return (resp_ph / wavelength) * (freq / current)
+
 def cli_plot_spectral_stacked(args: Namespace) -> None:
     log.info("reading photodiode data %s", args.photod_file)
     log.info("reading TESS-W data %s", args.input_file)
+
+    # read the TESS-W files
+    tw_tables= [astropy.io.ascii.read(path, format="csv", delimiter=",") for path in args.input_file]
+    for table in tw_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
+
+    # Read the photodiode files
     ph_names = ("Index", COL.WAVE, "Current", "Read Noise")
     ph_tables = [astropy.io.ascii.read(path, format="csv", delimiter="\t", names=ph_names) for path in args.photod_file]
     for table in ph_tables:
         table[COL.WAVE] = np.round(table[COL.WAVE], 0)
     ph_tables = [trim(table, args.x_low, args.x_high) for table in ph_tables]
-    tw_tables= [astropy.io.ascii.read(path, format="csv", delimiter=",") for path in args.input_file]
-    for table in tw_tables:
-        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
-    tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
+    
+    # Read the photodiode responsivvity, trim it and iterpolate to the
+    # wavelenths used in the measurements
     wavelength, responsivity = get_hama_photod_responsivity_resource()
     mask = (args.x_low <= wavelength) & (wavelength <= args.x_high)
     wavelength = wavelength[mask]
-
+    responsivity = responsivity[mask]
+    responsivity = np.interp(x=tw_tables[0][COL.WAVE], xp=wavelength, fp=responsivity, left=0, right=0)
+    qes = [ tessw_qe(tw_tables[0][COL.WAVE], responsivity, pair[0]["Mean freq"], pair[1]["Current"]) for pair in zip(tw_tables, ph_tables)]
+    log.info(qes)
 
 
 def cli_plot_filter(args: Namespace) -> None:
