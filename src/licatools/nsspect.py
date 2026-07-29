@@ -59,6 +59,7 @@ MADRID_2014_SKY_FILE = "UCM-SAND_1_2_spectra_201404.csv"
 MADRID_2020_SKY_FILE = "Madrid_sky_spectrum_alpy_20200518.csv"
 TSL237_RESP_LICA = "TSL237_responsivity_LICA.tsv"
 TSL237_RESP_DATA = "TSL237_responsivity_datasheet.csv"
+SS2281_PHOTOD = "S2281-1_responsivity.csv"
 
 REF_CUTOFF = 740  # theoretical UV/IR cutoff filter
 
@@ -135,6 +136,10 @@ def get_tsl237_responsivity_resource(lica: bool = False) -> Tuple[FloatArray, Fl
     else:
         result = resource(TSL237_RESP_DATA, delimiter=",")
         return result["Wavelength [nm]"], result["Responsivity (normalized)"]
+
+def get_hama_photod_responsivity_resource() -> Tuple[FloatArray, FloatArray]:
+    result = resource(SS2281_PHOTOD, delimiter=",")
+    return result["Wavelength"], result["Responsivity"]
 
 
 def caha_night_sky(wavelength: FloatArray) -> FloatArray:
@@ -700,7 +705,10 @@ def cli_plot_spectral_stacked(args: Namespace) -> None:
     for table in tw_tables:
         table[COL.WAVE] = np.round(table[COL.WAVE], 0)
     tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
-    log.info(tw_tables)
+    wavelength, responsivity = get_hama_photod_responsivity_resource()
+    mask = (args.x_low <= wavelength) & (wavelength <= args.x_high)
+    wavelength = wavelength[mask]
+
 
 
 def cli_plot_filter(args: Namespace) -> None:
