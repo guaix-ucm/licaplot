@@ -708,6 +708,44 @@ def plot_raw_tessw(
     else:
         plt.show()
 
+def plot_tessw_spectral_response(
+    wavelength: FloatArray,
+    spectral_responses: Sequence[FloatArray],
+    fwhms: Sequence[FloatArray],
+    labels: Sequence[str],
+    save_path: Optional[str] = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    colors = list()
+    for current, label in zip(spectral_responses, labels):
+        response_plot = axes.plot(
+            wavelength,
+            current,
+            label=label,
+        )
+        colors.append(response_plot[0].get_color())
+    #fwhm = "\n".join([f"FWHM {x[1]} = {x[0][2]:.0f}" for x in zip(fwhms, labels)])
+    #plot_box(axes, (fwhm,  0.77, 0.75))
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    for (fwhm, xfw1, xfw2), color, label in zip(fwhms, colors, labels):
+        axes.axvline(xfw2, linestyle=":", label=f"{label} FWHM {xfw2:.0f} nm", color=color)
+
+    #for x, color in ((REF_CUTOFF, "red"), (720, "black")):
+    #    axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("QE")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title("TESS-W Spectral response (normalized)")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
 # ===================================
 # MAIN ENTRY POINT SPECIFIC ARGUMENTS
 # ===================================
@@ -743,8 +781,6 @@ def cli_plot_raw_tessw(args: Namespace) -> None:
         save_path=args.save_figure_path,
     )
 
-def tessw_qe(wavelength, resp_ph, freq, current) -> FloatArray:
-    return (resp_ph / wavelength) * (freq / current)
 
 def cli_plot_spectral_stacked(args: Namespace) -> None:
     log.info("reading photodiode data %s", args.photod_file)
@@ -762,6 +798,7 @@ def cli_plot_spectral_stacked(args: Namespace) -> None:
     for table in ph_tables:
         table[COL.WAVE] = np.round(table[COL.WAVE], 0)
     ph_tables = [trim(table, args.x_low, args.x_high) for table in ph_tables]
+
     
     # Read the photodiode responsivvity, trim it and iterpolate to the
     # wavelenths used in the measurements
@@ -771,7 +808,20 @@ def cli_plot_spectral_stacked(args: Namespace) -> None:
     responsivity = responsivity[mask]
     responsivity = np.interp(x=tw_tables[0][COL.WAVE], xp=wavelength, fp=responsivity, left=0, right=0)
     qes = [ tessw_qe(tw_tables[0][COL.WAVE], responsivity, pair[0]["Mean freq"], pair[1]["Current"]) for pair in zip(tw_tables, ph_tables)]
-    log.info(qes)
+    max_val = np.vstack(qes).max()
+    qes = [ (qe / max_val) for qe in qes ] 
+    for qe in qes:
+        fwhm, xfw1, xfw2 = get_fwhm(tw_tables[0][COL.WAVE], qe)
+        log.info("FWHM = %0.2f, from x1 = %0.2f to x2 = %0.2f", fwhm, xfw1, xfw2)
+    fwhms = [ get_fwhm(tw_tables[0][COL.WAVE], qe) for qe in qes ]
+    plot_tessw_spectral_response(
+        wavelength = tw_tables[0][COL.WAVE],
+        spectral_responses= qes,
+        labels = args.labels,
+        fwhms=fwhms,
+        save_path=args.save_figure_path,
+     )
+
 
 
 def cli_plot_filter(args: Namespace) -> None:
