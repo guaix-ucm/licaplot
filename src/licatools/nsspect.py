@@ -972,6 +972,70 @@ def cli_plot_combi_simustacked(args: Namespace) -> None:
     )
 
 
+def cli_plot_combi_stacked(args: Namespace) -> None:
+    log.info("reading photodiode data %s", args.photod_file)
+    log.info("reading TESS-W data %s", args.input_file)
+    # read the TESS-W files
+    tw_tables= [astropy.io.ascii.read(path, format="csv", delimiter=",") for path in args.input_file]
+    for table in tw_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
+
+    # Read the photodiode files
+    ph_names = ("Index", COL.WAVE, "Current", "Read Noise")
+    ph_tables = [astropy.io.ascii.read(path, format="csv", delimiter="\t", names=ph_names) for path in args.photod_file]
+    for table in ph_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    ph_tables = [trim(table, args.x_low, args.x_high) for table in ph_tables]
+
+    
+    # Read the photodiode responsivvity, trim it and iterpolate to the
+    # wavelenths used in the measurements
+    wavelength, responsivity = get_hama_photod_responsivity_resource()
+    mask = (args.x_low <= wavelength) & (wavelength <= args.x_high)
+    wavelength = wavelength[mask]
+    responsivity = responsivity[mask]
+    responsivity = np.interp(x=tw_tables[0][COL.WAVE], xp=wavelength, fp=responsivity, left=0, right=0)
+    wavelength = tw_tables[0][COL.WAVE]  # new Common wavelength array for all
+
+    # Compute QE for each TESS-W ad adds it as a new column
+    for tw_table, ph_table in zip(tw_tables, ph_tables):
+        tw_table["QE"] = tessw_qe(tw_table[COL.WAVE], responsivity, tw_table["Mean freq"], ph_table["Current"])
+        tw_table["QE"] = tw_table["QE"] / np.max(tw_table["QE"]) # normalized
+    irrad = night_sky(wavelength, args.sky)
+    outputs, magnitudes, fwhms, qes = list(), list(), list(), list()
+    for tw_table in tw_tables:
+        fwhm, xfw1, xfw2 = get_fwhm(tw_table[COL.WAVE], tw_table["QE"])
+        log.info("FWHM = %0.2f, from x1 = %0.2f to x2 = %0.2f", fwhm, xfw1, xfw2)
+        output = irrad * tw_table["QE"]
+        flux = integrate.simpson(output, x=wavelength)
+        mag = 20.50 - 2.5 * np.log10(flux)
+        log.info(
+            "Integrated flux over [%d nm-%d nm] interval gives %e (m=%0.3f)",
+            args.x_low,
+            args.x_high,
+            flux,
+            mag,
+        )
+        qes.append(tw_table["QE"])
+        outputs.append(output)
+        magnitudes.append(mag)
+        fwhms.append((fwhm, xfw1, xfw2))
+    # convert to delta magnitudes wrt. the first item in the list
+    mag_diffs = [m - magnitudes[0] for m in magnitudes]
+    plot_combi_stacked(
+        wavelength=wavelength,
+        responses=qes,
+        labels=args.labels,
+        input_signal=irrad,
+        sky_label=f"{args.sky}",
+        outputs=outputs,
+        mag_diffs=mag_diffs,
+        base_magnitude=args.magnitude,
+        fwhms=fwhms,
+        save_path=args.save_figure_path,
+    )
+
 def cli_plot_sky(args: Namespace) -> None:
     if args.sky is not None:
         log.info("reading %s sky data", args.sky)
@@ -1190,6 +1254,22 @@ def add_args(parser):
         help="Plot several simulated TESS-W QE effects on a selected Night Sky spectrum",
     )
     parser_combi.set_defaults(func=cli_plot_combi_simustacked)
+
+    parser_combi = subparser.add_parser(
+        "stacked",
+        parents=[
+            prs.ifiles(),
+            photods(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+            sky(),
+            mag(),
+        ],
+        help="Plot several measured TESS-W QE effects on a selected Night Sky spectrum",
+    )
+    parser_combi.set_defaults(func=cli_plot_combi_stacked)
+
 
 
 # ================
