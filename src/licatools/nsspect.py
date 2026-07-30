@@ -1178,7 +1178,7 @@ def add_args(parser):
     parser_combi.set_defaults(func=cli_plot_combi)
 
     parser_combi = subparser.add_parser(
-        "stacked",
+        "simustacked",
         parents=[
             prs.ifiles(),
             prs.labels("plotting"),
@@ -1187,7 +1187,7 @@ def add_args(parser):
             sky(),
             mag(),
         ],
-        help="Plot several TESS-W effects on a selected Night Sky spectrum",
+        help="Plot several simulated TESS-W QE effects on a selected Night Sky spectrum",
     )
     parser_combi.set_defaults(func=cli_plot_combi_stacked)
 
