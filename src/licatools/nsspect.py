@@ -663,8 +663,6 @@ def plot_photodiodes(
         axes.plot(
             wavelength,
             current,
-            linewidth=0,
-            marker=".",
             label=label,
         )
     xlow = np.floor(np.min(wavelength))
@@ -675,6 +673,34 @@ def plot_photodiodes(
     axes.legend()
     axes.grid(True, alpha=0.3)
     axes.set_title("Raw photodiode currents")
+    plt.tight_layout()
+    if save_path is not None:
+        log.info("saving figure to %s", save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    else:
+        plt.show()
+
+def plot_raw_tessw(
+    wavelength: FloatArray,
+    frequencies: Sequence[FloatArray],
+    labels: Sequence[str],
+    save_path: Optional[str] = None,
+) -> None:
+    fig, axes = plt.subplots(1, 1)
+    for current, label in zip(frequencies, labels):
+        axes.plot(
+            wavelength,
+            current,
+            label=label,
+        )
+    xlow = np.floor(np.min(wavelength))
+    xhigh = np.ceil(np.max(wavelength))
+    axes.set_xlim(xlow, xhigh)
+    axes.set_xlabel("Wavelength (nm)")
+    axes.set_ylabel("TESS-W readings (Hz)")
+    axes.legend()
+    axes.grid(True, alpha=0.3)
+    axes.set_title("Raw TESS-W Readings")
     plt.tight_layout()
     if save_path is not None:
         log.info("saving figure to %s", save_path)
@@ -696,6 +722,23 @@ def cli_plot_photod(args: Namespace) -> None:
     plot_photodiodes(
         wavelength=tables[0][COL.WAVE],
         currents=[t["Current"] for t in tables],
+        labels=args.labels,
+        save_path=args.save_figure_path,
+    )
+
+def cli_plot_raw_tessw(args: Namespace) -> None:
+    log.info("reading raw tessw data %s", args.input_file)
+    tw_tables= [astropy.io.ascii.read(path, format="csv", delimiter=",") for path in args.input_file]
+    for table in tw_tables:
+        table[COL.WAVE] = np.round(table[COL.WAVE], 0)
+    tw_tables = [trim(table, args.x_low, args.x_high) for table in tw_tables]
+
+    for table in tw_tables:
+        log.info("X = %s", table[COL.WAVE].shape)
+        log.info("Y = %s", table["Mean freq"].shape)
+    plot_raw_tessw(
+        wavelength=tw_tables[0][COL.WAVE],
+        frequencies=[t["Mean freq"] for t in tw_tables],
         labels=args.labels,
         save_path=args.save_figure_path,
     )
@@ -990,9 +1033,20 @@ def add_args(parser):
             prs.savefig(),
             prs.xlim(),
         ],
-        help="Plot photodiode measured current",
+        help="Plot raw photodiode readings",
     )
     parser_photod.set_defaults(func=cli_plot_photod)
+    parser_tessw = subparser.add_parser(
+        "tessw",
+        parents=[
+            prs.ifiles(),
+            prs.labels("plotting"),
+            prs.savefig(),
+            prs.xlim(),
+        ],
+        help="Plot raw TESS-W spectral readings",
+    )
+    parser_tessw.set_defaults(func=cli_plot_raw_tessw)
 
     parser_spectral = subparser.add_parser(
         "spectral",
