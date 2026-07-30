@@ -926,7 +926,7 @@ def cli_plot_combi(args: Namespace) -> None:
     )
 
 
-def cli_plot_combi_stacked(args: Namespace) -> None:
+def cli_plot_combi_simustacked(args: Namespace) -> None:
     tables = list()
     for input_file in args.input_file:
         log.info("reading filter data %s", input_file)
@@ -1189,7 +1189,7 @@ def add_args(parser):
         ],
         help="Plot several simulated TESS-W QE effects on a selected Night Sky spectrum",
     )
-    parser_combi.set_defaults(func=cli_plot_combi_stacked)
+    parser_combi.set_defaults(func=cli_plot_combi_simustacked)
 
 
 # ================
