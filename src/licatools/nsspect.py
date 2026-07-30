@@ -1103,7 +1103,7 @@ def add_args(parser):
     parser_tessw.set_defaults(func=cli_plot_raw_tessw)
 
     parser_spectral = subparser.add_parser(
-        "spectral",
+        "qe",
         parents=[
             prs.ifiles(),
             photods(),
@@ -1111,7 +1111,7 @@ def add_args(parser):
             prs.savefig(),
             prs.xlim(),
         ],
-        help="Plot stacked TESS-W spectral responses",
+        help="Plot overlapped TESS-W QE",
     )
     parser_spectral.set_defaults(func=cli_plot_spectral_stacked)
 
