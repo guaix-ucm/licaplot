@@ -728,8 +728,12 @@ def plot_tessw_spectral_response(
     #plot_box(axes, (fwhm,  0.77, 0.75))
     xlow = np.floor(np.min(wavelength))
     xhigh = np.ceil(np.max(wavelength))
-    for (fwhm, xfw1, xfw2), color, label in zip(fwhms, colors, labels):
-        axes.axvline(xfw2, linestyle=":", label=f"{label} FWHM {xfw2:.0f} nm", color=color)
+    for (fwhm, xfw1, xfw2), color, label, qe in zip(fwhms, colors, labels, spectral_responses):
+        xmin= (xfw1-xlow)/(xhigh-xlow)
+        xmax= (xfw2-xlow)/(xhigh-xlow)
+        ymax=np.max(qe)/2.0
+        axes.axvline(xfw2, linestyle=":", ymin=0, ymax=ymax, label=f"{label} {xfw2:.0f} nm", color=color)
+        axes.axhline(np.max(qe)/2, xmin=xmin, xmax=xmax, linestyle=":",color=color)
 
     #for x, color in ((REF_CUTOFF, "red"), (720, "black")):
     #    axes.axvline(x, linestyle=":", label=f"{x} nm", color=color)
