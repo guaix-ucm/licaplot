@@ -599,8 +599,32 @@ nsspec-simutrio:
     #!/usr/bin/env bash
     set -exuo pipefail
     dir="data/filters/UVIR_cut"
-    uv run lica-nssky --console --trace simustacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
-    uv run lica-nssky --console --trace simustacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+    uv run lica-nssky --console --trace simustacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx \
+    -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+    uv run lica-nssky --console --trace simustacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx \
+    -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv 
+
+
+nsspec-simuquad:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace simustacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx stars13xx \
+    -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_130127_cut750.ecsv
+    uv run lica-nssky --console --trace simustacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars2xx stars618 stars15xx stars13xx \
+    -i ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_130127_cut750.ecsv
+
+
+nsspec-simuquad-618:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/filters/UVIR_cut"
+    uv run lica-nssky --console --trace simustacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 -l stars618 stars2xx stars15xx stars13xx \
+    -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv  ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_130127_cut750.ecsv
+    uv run lica-nssky --console --trace simustacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars618 stars2xx stars15xx stars13xx \
+    -i ${dir}/20260615_124720_stars618.ecsv ${dir}/20260615_141128_stars200-300.ecsv ${dir}/20260615_132917_ultimo.ecsv ${dir}/20260615_130127_cut750.ecsv
+
+
 
 nsspec-trio:
     #!/usr/bin/env bash
@@ -612,6 +636,19 @@ nsspec-trio:
     uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars470 stars618 stars1654 \
         -ph ${dir}/stars470_20260720_154216.txt ${dir}/stars618_20260723_163142.txt ${dir}/stars1654_20260721_122510.txt \
         -i ${dir}/stars470.csv ${dir}/stars618.csv ${dir}/stars1654.csv
+
+# As above but take stars618 as base
+nsspec-trio-618:
+    #!/usr/bin/env bash
+    set -exuo pipefail
+    dir="data/tessw/other"
+    uv run lica-nssky --console --trace stacked --sky CAHA --mag 21.5 -xll 380 -xhl 900 --l stars618 stars470 stars1654 \
+        -ph ${dir}/stars618_20260723_163142.txt ${dir}/stars470_20260720_154216.txt ${dir}/stars1654_20260721_122510.txt \
+        -i ${dir}/stars618.csv ${dir}/stars470.csv  ${dir}/stars1654.csv
+    uv run lica-nssky --console --trace stacked --sky "Madrid (2014)" --mag 18.0 -xll 380 -xhl 900 -l stars618 stars470 stars1654 \
+        -ph ${dir}/stars618_20260723_163142.txt ${dir}/stars470_20260720_154216.txt ${dir}/stars1654_20260721_122510.txt \
+        -i ${dir}/stars618.csv ${dir}/stars470.csv  ${dir}/stars1654.csv
+
 
 
 fov1 label="stars237":
